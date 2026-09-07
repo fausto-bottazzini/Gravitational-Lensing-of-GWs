@@ -21,11 +21,11 @@ lens) and a quasi-monochromatic wide binary (moving lens). See
 | paraxial/thin-lens validity, quantified | `theory/paraxial_validity.py` (theory.tex Sec. 4.3) |
 | wave-optics core code (point lens `F(w,y)`) | `src/gwlens/waveoptics.py` |
 | the one pinned system (m1, m2, M_L, orbit) | `src/gwlens/system.py` |
-| inner-binary waveforms | `src/gwlens/chirp.py` (leading order), `src/gwlens/taylorf2.py` (2PN, search-template form) |
+| inner-binary waveforms | `src/gwlens/chirp.py` (leading order), `src/gwlens/taylorf2.py` (2PN inspiral-only, fallback), `src/gwlens/imr_waveform.py` (picks pycbc's IMRPhenomD when available, else the fallback) |
 | outer-orbit / D_LS(t) geometry | `src/gwlens/geometry.py` |
 | correctness checks | `tests/` |
 | Case A (chirp, static lens) | `cases/case_A_chirp/` |
 | Case B (monochromatic, moving lens) | `cases/case_B_monochromatic/` |
 | final presentation | `report/report.html`, `report/report.pdf` |
-| independent fresh-agent review | `checks/independent_review/REVIEW.md` |
+| independent fresh-agent review | `checks/independent_review/REVIEW.md`, `REVIEW_v2.md` |
 | how to reproduce all of it | `README.md`, `reproduce.sh` |

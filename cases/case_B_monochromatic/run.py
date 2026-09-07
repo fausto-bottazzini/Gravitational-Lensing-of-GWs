@@ -129,8 +129,16 @@ def main():
     # y_max from min_y, NOT max_y: max(y_t) is dominated by the near-
     # divergent points close to the D_LS=0 crossing (Figure 1), which would
     # zoom the whole interesting pattern down to an invisible dot (caught by
-    # eye on the first version -- see wiki/log.md).
-    y_max = 8.0 * NUMBERS["min_y_during_observation"]
+    # eye on the first version -- see wiki/log.md). 8*min_y (~12.7) was
+    # still too tight, though: y(t) only sits that close to y_min for a
+    # narrow sliver of the lensed half -- the MEDIAN y among lensed samples
+    # is ~25.5, so the interactive marker (report.html) built on that
+    # y_max sat clamped at the frame edge 78% of the orbit (caught by an
+    # independent review; see wiki/log.md). y truly is unbounded toward
+    # each crossing, so no finite y_max keeps the marker on-frame the whole
+    # orbit -- this just widens the window enough that it is on-frame for
+    # roughly the lensed half's median, not just its sharpest dip.
+    y_max = 25.0
     r_grid = np.linspace(1e-3, y_max, 2000)
     F_r = np.array([wo.F_hybrid(w_B, r) for r in r_grid])
     mag2_r = np.abs(F_r) ** 2
@@ -144,9 +152,26 @@ def main():
                                      system.P_OUT_S, system.T_PERI_OUT)
     x_sky, y_sky, z_los = geo.orbital_plane_to_sky(r, nu, system.LITTLE_OMEGA_OUT,
                                                     np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT)
-    theta_E_typ = np.median(theta_E[lensed_mask])
-    y1_traj = x_sky / (system.D_L_PC) / theta_E_typ
-    y2_traj = y_sky / (system.D_L_PC) / theta_E_typ
+    # theta_E(t), NOT a single fixed/median value: it scales as sqrt(D_LS(t))
+    # (geometry.py, impact_parameter_of_time docstring) and varies
+    # substantially over the orbit -- a fixed median theta_E, applied to
+    # every point of the trajectory, distorted the plotted track by ~19% at
+    # the point that matters most (peak lensing, where theta_E is largest).
+    # Caught by an independent review; see wiki/log.md. Recompute it exactly
+    # on this same t[one_p] grid (same formula as geometry.py, using
+    # |z_los| rather than geometry.py's own lensed-only masking: this plot
+    # is illustrative and shows BOTH halves of the orbit continuously, and
+    # |D_LS| gives a smooth, well-defined theta_E(t) for the unlensed half
+    # too, purely for a consistent common length scale to plot in -- no
+    # lensing is claimed to happen there, per the D_LS<=0 discussion in
+    # theory.tex Sec. 4.2).
+    D_LS_traj_pc = np.abs(z_los)
+    theta_E_traj = np.sqrt(
+        4.0 * units.msun_to_meters(system.M_LENS_MSUN) * (D_LS_traj_pc * units.PC_SI)
+        / (system.D_L_PC * units.PC_SI) ** 2
+    )
+    y1_traj = x_sky / system.D_L_PC / theta_E_traj
+    y2_traj = y_sky / system.D_L_PC / theta_E_traj
 
     fig, ax = plt.subplots(figsize=(6.5, 5.5))
     im = ax.pcolormesh(axis, axis, pattern, shading="auto", cmap="inferno",

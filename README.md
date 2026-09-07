@@ -66,7 +66,14 @@ machine, without needing native Windows support at all):
 cd gw-lensing-hierarchical-triple      # the SAME repo, e.g. via /mnt/c/... on WSL
 python3 -m venv .venv-wsl
 source .venv-wsl/bin/activate
-pip install -r requirements.txt pycbc
+pip install pycbc mpmath                # do NOT use -r requirements.txt here:
+                                         # those numpy/scipy versions are pinned
+                                         # for the Windows fallback venv and can
+                                         # be too old for pycbc's own build/wheel
+                                         # requirements on a newer Python (as on
+                                         # a fresh WSL2 Ubuntu install) -- pip
+                                         # resolves compatible modern versions on
+                                         # its own; see wiki/log.md
 python3 cases/case_A_chirp/run.py      # now uses IMRPhenomD automatically
 ```
 
@@ -76,6 +83,15 @@ picks up `pycbc` automatically and produces the full inspiral-merger
 TaylorF2 automatically, with a clear label
 (`numbers.json`'s `waveform_source` field) recording which one actually
 ran. Case B, `tests/`, and everything else never touch `pycbc` at all.
+
+**Caution:** afterwards, running `reproduce.sh checks` (or `cases`/`all`) on
+*native* Windows will silently regenerate `tests/CHECKS_imr_waveform.json`
+and Case A's own `numbers.json`/figures with the TaylorF2 fallback, since
+that venv has no `pycbc` — overwriting the WSL-produced, pycbc-based results
+this repository actually ships. If you want to reproduce the exact committed
+Case A numbers and figures (including the ~3.4 s second-image echo), do it
+from the WSL venv above, and do it last, right before comparing against what
+is committed.
 
 ## Repository map
 

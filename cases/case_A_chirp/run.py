@@ -56,7 +56,15 @@ def build_waveform_fd():
     log("t_end_seconds", float(t_end))
     log("duration_seconds", float(t_end))
 
-    fs = 4.0 * system.F_ISCO_HZ  # >2x Nyquist margin
+    # NOT 4*f_isco: a real IMR waveform's ringdown has significant power
+    # well above f_isco (checked directly against pycbc's own IMRPhenomD
+    # output for this system: >1% of peak amplitude out to ~500 Hz, >0.1%
+    # to ~640 Hz) -- 4*f_isco=502 Hz undersamples that badly (caught by
+    # eye: the lensed merger/ringdown zoom looked suspiciously smooth/flat
+    # compared to the unlensed one, a classic aliasing symptom, not a
+    # lensing effect -- see wiki/log.md). 2048 Hz gives >3x margin above
+    # the observed high-frequency content.
+    fs = 2048.0
     n = int(np.ceil(t_end * fs))
     n = 1 << (n - 1).bit_length()
     n_pad = 1 << (2 * n - 1).bit_length()  # extra padding: frequency resolution for the fringes
@@ -165,9 +173,21 @@ def main():
     log("abs_F_at_f_start", float(abs(F_at_start)))
     log("abs_F_at_f_isco", float(abs(F_at_isco)))
 
-    mag_lensed = np.max(np.abs(h_lensed))
+    band_mask = (freqs >= system.F_A_START_HZ) & (freqs <= system.F_ISCO_HZ)
+    abs_F_band = np.abs(F[band_mask])
+    log("min_abs_F_in_band", float(abs_F_band.min()))
+    log("max_abs_F_in_band", float(abs_F_band.max()))
+
+    i_peak_lensed = np.argmax(np.abs(h_lensed))
+    mag_lensed = np.abs(h_lensed[i_peak_lensed])
     mag_unlensed = np.max(np.abs(h_unlensed))
     log("peak_strain_amplification", float(mag_lensed / mag_unlensed))
+    log("peak_time_lensed_s", float(t[i_peak_lensed]))
+    log("peak_time_lensed_minus_unlensed_s", float(t[i_peak_lensed] - t[np.argmax(np.abs(h_unlensed))]))
+
+    dT_dimensionless = wo.time_delay_difference(y_A)
+    t_char_seconds = 4.0 * units.msun_to_seconds(system.M_LENS_MSUN)  # 4GM/c^3
+    log("image_time_delay_seconds", float(dT_dimensionless * t_char_seconds))
     # Peak-sample amplification is a fragile statistic here: F(f) modulates
     # PHASE as well as amplitude across the band (arg F sweeps through many
     # cycles, Figure 1), so the lensed waveform is not simply a rescaled
@@ -178,6 +198,32 @@ def main():
     rms_lensed = np.sqrt(np.mean(h_lensed ** 2))
     rms_unlensed = np.sqrt(np.mean(h_unlensed ** 2))
     log("rms_strain_amplification", float(rms_lensed / rms_unlensed))
+
+    # ---- Genuine second-image echo: locate it empirically, don't assume --
+    # The naive prediction "echo at t_peak_unlensed + image_time_delay" turns
+    # out to be off by several tenths of a second: the interference between
+    # the two images shifts where the COMBINED near-merger peak sits (see
+    # peak_time_lensed_minus_unlensed_s above), and the fixed geometric delay
+    # ΔT(y) applies from the strong image's own (interference-free) arrival,
+    # not from the unlensed reference time. Rather than hand-wave which
+    # reference point is "right," we just search the envelope for the actual
+    # local maximum near the predicted delay and report how well it lines up
+    # -- this is the more honest, and more easily reproduced, check.
+    from scipy.signal import hilbert
+    env_u = np.abs(hilbert(h_unlensed))
+    env_l = np.abs(hilbert(h_lensed))
+    t_peak_unlensed = NUMBERS["peak_time_unlensed_s"]
+    predicted_echo_t = t_peak_unlensed + NUMBERS["image_time_delay_seconds"]
+    search = (t > predicted_echo_t - 1.0) & (t < predicted_echo_t + 1.0)
+    echo_idx_local = np.argmax(env_l[search])
+    echo_t = float(t[search][echo_idx_local])
+    log("echo_peak_time_s", echo_t)
+    log("echo_peak_time_minus_prediction_s", float(echo_t - predicted_echo_t))
+    log("echo_peak_env_lensed", float(env_l[search][echo_idx_local]))
+    # same instant on the unlensed envelope, as a noise-floor / sanity check
+    # (the unlensed signal has already ended by here -- this should be small)
+    i_at_echo_unlensed = int(np.argmin(np.abs(t - echo_t)))
+    log("echo_time_env_unlensed", float(env_u[i_at_echo_unlensed]))
 
     # ---- Figure 1: F(f) across the chirp (interference fringes) ---------
     # The fringes are far too fine to resolve over the full 10-125 Hz band
@@ -205,24 +251,49 @@ def main():
     plt.close(fig)
 
     # ---- Figure 2: lensed vs unlensed time-domain strain -----------------
-    t_peak = NUMBERS["peak_time_unlensed_s"]
-    fig, axes = plt.subplots(2, 1, figsize=(8, 6.5))
-    axes[0].plot(t, h_unlensed, lw=0.6, color="#888888", label="unlensed")
-    axes[0].plot(t, h_lensed, lw=0.6, color="#2b6cb0", label="lensed", alpha=0.85)
+    # Three panels: overview (now extended past merger to include the
+    # predicted second-image echo), a merger/ringdown zoom, and a dedicated
+    # echo zoom -- the echo is the unambiguous causality signature (a
+    # second, weaker, LATER copy of the signal) and was missing from this
+    # figure entirely before an independent review asked about the
+    # (real, but subtler and causality-neutral) earlier-looking shift of
+    # the merger peak itself; see wiki/log.md.
+    t_peak = t_peak_unlensed
+    fig, axes = plt.subplots(3, 1, figsize=(8, 9.0))
+    t_hi = min(t[-1], echo_t + 1.0)
+    view = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_hi)
+    axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888", label="unlensed")
+    axes[0].plot(t[view], h_lensed[view], lw=0.5, color="#2b6cb0", label="lensed", alpha=0.85)
     axes[0].set_xlabel(f"t [s] (merger at t={t_peak:.2f} s)")
     axes[0].set_ylabel("h(t) [arb. units]")
-    axes[0].set_xlim(t_peak - 1.15 * NUMBERS["t_end_seconds"], t_peak + 0.3)
-    axes[0].axvspan(t_peak - 0.03, t_peak + 0.12, color="gold", alpha=0.3)
+    axes[0].axvspan(t_peak - 0.05, t_peak + 0.3, color="gold", alpha=0.3)
+    axes[0].axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.3)
     axes[0].set_title(f"Case A: lensed vs. unlensed waveform\n({NUMBERS['waveform_source']})", fontsize=10)
     axes[0].legend(loc="upper left", fontsize=8)
 
-    zoom = (t > t_peak - 0.03) & (t < t_peak + 0.12)
+    # window wide enough to comfortably contain BOTH the unlensed peak (at
+    # t_peak, by definition) and the lensed curve's own peak, which is not
+    # guaranteed to sit at t_peak too -- F(f) dephases the lensed merger,
+    # so its extremum can be offset from the unlensed one (an earlier,
+    # narrower window here missed it; see wiki/log.md)
+    zoom = (t > t_peak - 0.05) & (t < t_peak + 0.3)
     axes[1].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.0, color="#888888", label="unlensed")
     axes[1].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.0, color="#2b6cb0", alpha=0.85, label="lensed")
     axes[1].set_xlabel("t - t_merger [s]")
     axes[1].set_ylabel("h(t) [arb. units]")
-    axes[1].set_title("Zoom: merger and ringdown")
+    axes[1].set_title("Zoom: merger and ringdown (gold band above)", fontsize=10)
     axes[1].legend(loc="upper right", fontsize=8)
+
+    echo_zoom = (t > echo_t - 0.3) & (t < echo_t + 0.3)
+    axes[2].plot(t[echo_zoom] - t_peak, h_unlensed[echo_zoom], lw=1.0, color="#888888", label="unlensed (should be ~0: signal already ended)")
+    axes[2].plot(t[echo_zoom] - t_peak, h_lensed[echo_zoom], lw=1.0, color="#2ca02c", alpha=0.9, label="lensed (the echo)")
+    axes[2].set_xlabel("t - t_merger [s]")
+    axes[2].set_ylabel("h(t) [arb. units]")
+    axes[2].set_title(
+        f"Zoom: the second-image echo, observed at t_merger+{echo_t - t_peak:.2f} s "
+        f"(geometric-optics prediction: +{NUMBERS['image_time_delay_seconds']:.2f} s; "
+        f"green band above) -- the causality check made visible", fontsize=10)
+    axes[2].legend(loc="upper right", fontsize=8)
     fig.tight_layout()
     fig.savefig(OUT / "caseA_strain_time.png", dpi=170)
     plt.close(fig)
@@ -258,17 +329,21 @@ def main():
     plt.close(fig)
 
     # ---- Figure 4: simple idealized detector view -------------------------
-    fig, ax = plt.subplots(figsize=(8, 3.0))
-    from scipy.signal import hilbert
-    env_u = np.abs(hilbert(h_unlensed))
-    env_l = np.abs(hilbert(h_lensed))
-    ax.plot(t, env_u, color="#888888", lw=1.0, label="unlensed envelope")
-    ax.plot(t, env_l, color="#2b6cb0", lw=1.0, label="lensed envelope")
+    # Log-scale y-axis and a window extended past the echo: the echo is
+    # ~1-2 orders of magnitude below the merger peak, so a linear axis over
+    # the full window (as used pre-fix) would hide it entirely.
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    view4 = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_hi)
+    ax.plot(t[view4], env_u[view4], color="#888888", lw=1.0, label="unlensed envelope")
+    ax.plot(t[view4], env_l[view4], color="#2b6cb0", lw=1.0, label="lensed envelope")
+    ax.axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.25,
+               label=f"observed echo (t_merger+{echo_t - t_peak:.2f} s)")
+    ax.set_yscale("log")
     ax.set_xlabel("t [s]")
-    ax.set_ylabel("strain envelope [arb. units]")
-    ax.set_xlim(t_peak - 1.15 * NUMBERS["t_end_seconds"], t_peak + 0.3)
-    ax.set_title("Case A: idealized detector view (strain envelope, no noise/antenna pattern)")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("strain envelope [arb. units, log scale]")
+    ax.set_title("Case A: idealized detector view (strain envelope, no noise/antenna pattern)\n"
+                 "note the second, weaker peak: the second-image echo", fontsize=10)
+    ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
     fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170)
     plt.close(fig)

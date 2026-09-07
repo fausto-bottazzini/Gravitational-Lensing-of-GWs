@@ -189,3 +189,93 @@ Append-only. What was decided, ingested, corrected, and when.
   holds across the full scrub range. This DOM-mock pass is a real but partial substitute for
   actually looking at the rendered page (no verification of layout, CSS, or that things look
   right) -- flagged here rather than implied to be equivalent to visual QA.
+- **2026-09-07** — Second independent fresh-agent review run, after the pycbc integration, the
+  Spanish translation and the interactive `report.html`
+  (`checks/independent_review/REVIEW_v2.md`). This one *did* render `report.html` for real
+  (headless Chrome `--screenshot`, plus four temporary copies with an injected scrub-setter to
+  drive both animations). Verdict: the reproducibility machinery still holds up --
+  `reproduce.sh` (checks + cases + theory + report) ran end to end with no intervention, 26/26
+  checks passed, `report.html` rebuilt byte-identical, Case B reproduced bit-for-bit, and every
+  number in `RESULTS.md`/`report`/`theory.tex` Table 4.1 traced to its `numbers.json` (the first
+  review's two nitpicks are fixed) -- but it found one **critical physics bug the first review
+  missed**: `F` is written in Takahashi & Nakamura's Fourier convention (delay = `+i*w*DeltaT`)
+  and then multiplied into a waveform that is inverted with `numpy.fft.irfft`, whose convention
+  is the opposite, so Case A's saddle-point image arrives 3.43 s *before* the merger instead of
+  after it, and `wiki/conventions.md`'s Fourier paragraph states the wrong pairing as its
+  justification -- the same class of error the log records catching twice in `taylorf2.py` and
+  `imr_waveform.py`, missed in the one file the project is actually about, because every
+  `tests/test_waveoptics.py` check compares evaluators of `F` to each other (all sharing the
+  convention) and none checks the time-domain response. `|F|` is unaffected, so all of Case B,
+  every diffraction figure and `rms_strain_amplification` stand; `peak_strain_amplification`
+  (0.962) and the "smeared lensed merger" story do not, and must be recomputed in WSL. Also
+  found: the Case A animation is decimated to 84 Hz against a 125.6 Hz signal (the merger panel
+  is aliased, and its apparent peak ratio 0.60 contradicts the 0.962 printed beside it, while
+  the already-exported Hilbert envelopes that would have fixed it go unused); the Case B marker
+  is clamped to the frame edge for 78% of the orbit and is plotted at a fixed median `theta_E`
+  rather than `theta_E(t)` (19% too far out at peak lensing); Ch. 5's retro-lensing argument
+  forward-references an estimate that exists in neither section; two hard-coded `Capítulo~5`
+  refs now point at the wrong chapter; §2.1's `lambda_GW << R_E` criterion is violated by
+  Case B's own `w_B=0.31` design; `reproduce.sh` never actually uses the venv it creates on
+  Windows (no `python3` in a Windows venv, so pip installs into the global interpreter); and
+  `wiki/todo.md`/`index.md` still describe pycbc as abandoned and the animation as dropped.
+  Full list, with file/line for each, in `REVIEW_v2.md`.
+- **2026-09-07** — Fixed the critical `REVIEW_v2.md` sign-convention bug and everything it
+  touched, code-side (exposition/results files deliberately left for a later pass, per
+  instruction). `wiki/conventions.md`'s Fourier-convention paragraph had it backwards: in this
+  project's stated convention (`h(f)=∫h(t)e^{-2πift}dt`, matching `numpy.fft.rfft`/`irfft`), a
+  LATER-arriving copy of a signal gets phase `e^{-i2πfΔt}`, not `+i2πfΔt` as the doc claimed --
+  standard delay theorem, checked directly against `numpy.fft.irfft(numpy.fft.rfft(pulse) *
+  numpy.exp(-2j*np.pi*f*dt))` on a test pulse. `waveoptics.py`'s four `F(w,y)` evaluators
+  (`F_bruteforce_2d`, `F_radial_1d`, `F_point_lens`, `F_geometric_optics`) had all been derived
+  self-consistently from the wrong pairing, so they agreed with each other perfectly while
+  disagreeing with `numpy`'s actual FFT convention -- fixed by conjugating each evaluator's
+  output (`|F|` is conjugation-invariant, so this changes nothing about Case B, the diffraction
+  figures, or `rms_strain_amplification`; it only changes phase-sensitive time-domain
+  reconstructions, i.e. Case A's waveform shape). Added
+  `tests/test_waveoptics.py::check_causality_of_lensed_pulse`, first in the CHECKS list: builds
+  a short Gaussian pulse, lenses it exactly as the case script does (FFT, multiply by `F`,
+  IFFT), and checks the weak (saddle-point) image lands AFTER the main pulse, not before --
+  this is the only kind of check that can catch a *global* sign-convention bug, since every
+  other check in the file compares `F` evaluators to each other and both share whichever
+  convention is (mis)implemented. Re-ran the full case A pipeline in WSL (pycbc/IMRPhenomD):
+  `peak_strain_amplification` goes from 0.962 (wrong-sign artifact) to 1.091;
+  `peak_time_lensed_minus_unlensed_s=-0.60s` (the combined near-merger peak now looks slightly
+  *earlier*, not later -- this is real, but it's an interference effect between two
+  always-past images, not acausality; see below). Also caught and fixed while re-deriving these
+  numbers: the sample rate `fs=4*f_isco=502.5 Hz` (chosen back when only an inspiral-only
+  waveform existed) undersamples real IMRPhenomD ringdown content, which the review's own
+  screenshots showed carrying >0.1% power out to ~640 Hz -- raised to `fs=2048 Hz`.
+  User asked, on seeing the -0.60s shift: "tiene sentido eso?" (does that make sense?). It does:
+  Case A's lensed signal is the coherent SUM of a strong (minimum-time) image and a weak
+  (saddle-point) image separated by a FIXED delay `ΔT(y)=image_time_delay_seconds=3.434s`
+  (both images individually causal, both built only from the pulse's own past). Near merger the
+  frequency sweeps fast enough that `F(f)`'s phase varies rapidly across the band, so the two
+  images' interference pattern can shift where the *combined* envelope peaks, by an amount
+  unrelated to `ΔT`; it does not mean any information arrived early. Independent confirmation:
+  a real, physically separate SECOND copy of the whole merger *does* appear later, as
+  `image_time_delay_seconds` predicts -- a distinct echo of the full IMR waveform, ~2 orders of
+  magnitude fainter, visible in the lensed strain and absent (down to a ~1e-22 FFT-artifact
+  floor) in the unlensed strain at the same instant. Where exactly it lands was itself an
+  instructive check: naively adding `ΔT` to the UNLENSED merger time misses it by ~0.6s --
+  because the fixed geometric delay applies from the strong image's own (interference-free)
+  arrival, and the combined near-merger peak (used as its proxy) is itself shifted by
+  interference, by almost exactly that same ~0.6s (`echo_peak_time_minus_prediction_s=-0.603s`,
+  matching `peak_time_lensed_minus_unlensed_s=-0.6025s` to three digits -- not a coincidence,
+  the same interference effect explains both numbers). Rather than assume a reference point,
+  `case_A_chirp/run.py` now searches the lensed envelope for the actual local maximum near the
+  predicted delay and logs both the observed time and its offset from the naive prediction
+  (`echo_peak_time_s`, `echo_peak_time_minus_prediction_s`, `echo_peak_env_lensed`,
+  `echo_time_env_unlensed`) -- more honest, and the discrepancy is itself a small physics
+  lesson worth keeping visible rather than silently fixing away. `caseA_strain_time.png` gained
+  a third panel zoomed on this echo (a fainter but recognisable replay of the whole chirp/
+  merger/ringdown shape, exactly as the geometric-optics superposition picture predicts) and
+  `caseA_detector_envelope.png` switched to a log-scale y-axis spanning both peaks, since the
+  echo is ~2 orders of magnitude below merger and invisible on a linear scale. Regenerated
+  `tests/CHECKS_imr_waveform.json` via WSL so the committed file shows
+  `pycbc_merger_time_alignment` genuinely passing rather than `SKIPPED` (it had last been
+  committed from a native-Windows run, where pycbc isn't installed) -- and re-learned, again,
+  that running `reproduce.sh checks` on native Windows afterwards silently overwrites this one
+  file back to `SKIPPED` (same class of issue as the earlier `case_A` overwrite, see above);
+  the fix there is procedural, not code: always regenerate this specific file from WSL *last*,
+  right before committing. Full 6-file test suite re-run clean on both native Windows
+  (TaylorF2 fallback path) and WSL (pycbc path).

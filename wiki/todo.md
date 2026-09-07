@@ -28,9 +28,18 @@
   (`theory.tex` Sec. 4.3) -- quantified as not worth the complexity given
   what it would and wouldn't change, but a genuinely open problem if
   someone wanted to push further.
-- [ ] `pycbc`/LALSimulation as a cross-check against `taylorf2.py`, if a
-  working Windows install path is ever found (the attempt this session
-  hung indefinitely resolving lalsuite; abandoned, see `wiki/log.md`).
-- [ ] A literal animation/movie of Case B's diffraction pattern (dropped in
-  favor of the static pattern+orbit-track figure, which shows the same
-  information without a video file in the repo).
+- [x] `pycbc`/LALSimulation as the real inspiral-merger-ringdown waveform
+  (IMRPhenomD, Khan et al. 2016) for Case A -- native Windows install still
+  hangs indefinitely resolving `lalsuite`, but pycbc installs cleanly under
+  WSL2, which is what the professor's own machine runs anyway; see
+  `wiki/log.md` and `wiki/running_on_wsl.md` for the documented workflow.
+  `taylorf2.py`'s 2PN inspiral-only waveform remains the automatic fallback
+  when pycbc isn't importable, so `reproduce.sh` still runs end to end with
+  no manual steps on any platform -- only the WSL path reproduces the exact
+  committed Case A merger/ringdown/echo figures. WSL setup documented in
+  `README.md`.
+- [x] An interactive visualization of Case B's (and Case A's) orbit,
+  interference/diffraction pattern, and idealized detector view, synced to
+  a scrub control -- built as `report/report.html` (vanilla JS + canvas,
+  data inlined from `caseX_animation_data.json`, no video file or chart
+  library in the repo); see `wiki/log.md`.

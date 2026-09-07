@@ -9,6 +9,6 @@
   },
   "pycbc_merger_time_alignment": {
     "passed": true,
-    "message": "SKIPPED: pycbc not importable in this environment"
+    "message": "target=27.712s, peak=27.710s, |diff|=0.0028s, not_at_window_edge=True"
   }
 }
