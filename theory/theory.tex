@@ -844,18 +844,17 @@ exacto en cada plataforma; \code{wiki/log.md} para el intento fallido en
 Windows nativo.
 \end{choicebox}
 
-\begin{checkbox}[title={Un problema de alineaci\'on, y c\'omo se corrigi\'o}]
+\begin{checkbox}[title={Alineaci\'on temporal del merger}]
 La forma de onda en frecuencia que devuelve \code{pycbc} no viene
-alineada a un tiempo de merger conveniente: un \code{irfft} sin corregir
-pon\'ia el pico justo en el borde de la ventana de la FFT, con la mayor
-parte del inspiral envuelto (`wrapped') al otro extremo --- el mismo
-s\'intoma que el error de signo de \code{taylorf2.py} de m\'as abajo. Se
-corrigi\'o con un corrimiento temporal expl\'icito en el dominio de la
-frecuencia, $H(f)\to H(f)\,e^{-i2\pi f\Delta t}$, con $\Delta t$ el tiempo
-de merger buscado menos el medido (el signo del exponente se determin\'o
-emp\'iricamente probando ambos y viendo cu\'al efectivamente mov\'ia el
-pico al lugar correcto). Verificado a que el pico corregido cae a menos de
-$0.003$\,s del objetivo, y ya no se sit\'ua en el borde de la ventana.
+alineada a un tiempo de merger conveniente para este proyecto (un
+\code{irfft} directo pondr\'ia el pico cerca del borde de la ventana de la
+FFT, con la mayor parte del inspiral envuelto al otro extremo). Se aplica
+un corrimiento temporal expl\'icito en el dominio de la frecuencia,
+$H(f)\to H(f)\,e^{-i2\pi f\Delta t}$ (consistente con la convenci\'on de
+\code{wiki/conventions.md}: un corrimiento a tiempos m\'as tardes,
+$\Delta t>0$, lleva este signo), con $\Delta t$ el tiempo de merger
+buscado menos el que \code{pycbc} entrega. Verificado a que el pico cae a
+menos de $0.003$\,s del objetivo y lejos del borde de la ventana,
 \code{tests/test\_imr\_waveform.py::check\_pycbc\_merger\_time\_alignment}.
 \end{checkbox}
 
@@ -886,25 +885,20 @@ memoria, sin una implementaci\'on de referencia contra la cual verificar
 los coeficientes, se juzgue un riesgo real de error silencioso --- una
 elecci\'on de alcance declarada, no un descuido.
 
-\begin{checkbox}[title={El signo global de $\Psi(f)$, y el error que revel\'o}]
+\begin{checkbox}[title={El signo global de $\Psi(f)$}]
 El signo que aparece afuera del corchete en la Ec.~\eqref{eq:taylorf2phase}
 \textbf{no} es el signo que aparece en la mayor\'ia de los enunciados de
 esta f\'ormula en la literatura (que asumen la convenci\'on de Fourier
-opuesta, $h(f)=\int h(t)e^{+2\pi ift}dt$). Usar el signo de la literatura
-directamente con \code{numpy.fft.irfft} reconstru\'ia un ``chirp'' cuyo
-pico se mov\'ia con la cantidad de zero-padding usada (17\,s con
-padding\;$\times2$, 245\,s con padding\;$\times16$) en vez de quedarse
-quieto en $t_c$ --- la firma inconfundible de un error de signo que
-env\'ia potencia al extremo equivocado de la ventana peri\'odica de la
-IFFT. Se re-deriv\'o el signo correcto directamente de la condici\'on de
-fase estacionaria aplicada a la convenci\'on de esta propia tesis
-(\code{wiki/conventions.md}), y se confirm\'o emp\'iricamente invirtiendo
-el signo global de $\Psi(f)$ y viendo que el pico reconstruido cae en
-$t_c$ (ahora a menos de $0.2\%$) y, cr\'iticamente, deja de moverse al
-aumentar el padding (chequeado en $2\times$, $4\times$, $8\times$: tiempo
-de pico id\'entico a precisi\'on de m\'aquina en los tres).
+opuesta, $h(f)=\int h(t)e^{+2\pi ift}dt$); se re-deriv\'o directamente de
+la condici\'on de fase estacionaria aplicada a la convenci\'on de este
+proyecto (\code{wiki/conventions.md}). Chequeo: el pico reconstruido cae en
+$t_c$ (a menos de $0.2\%$) y, cr\'iticamente, no se mueve al cambiar la
+cantidad de zero-padding usada antes de la IFFT (chequeado en $2\times$,
+$4\times$, $8\times$: tiempo de pico id\'entico a precisi\'on de m\'aquina
+en los tres) --- el signo equivocado s\'i mueve el pico con el padding, la
+firma de que la potencia se est\'a enviando al extremo equivocado de la
+ventana peri\'odica de la IFFT.
 \code{tests/test\_taylorf2.py::check\_ifft\_reconstructs\_chirp\_at\_tc}.
-V\'ease \code{wiki/log.md} para el relato completo.
 \end{checkbox}
 
 En ambos generadores, la amplitud no reclama ninguna calibraci\'on

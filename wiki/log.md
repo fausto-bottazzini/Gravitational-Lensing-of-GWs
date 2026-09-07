@@ -279,3 +279,61 @@ Append-only. What was decided, ingested, corrected, and when.
   the fix there is procedural, not code: always regenerate this specific file from WSL *last*,
   right before committing. Full 6-file test suite re-run clean on both native Windows
   (TaylorF2 fallback path) and WSL (pycbc path).
+- **2026-09-07** — User pass over the presentation layer (not the physics): reordered
+  `README.md` (physics before logistics), trimmed `wiki/conventions.md`'s Fourier section to
+  state-the-convention-and-move-on (full narrative stays in this log), fixed a real duplication
+  bug in that same page (`y` defined twice under different-looking names with no note they're
+  the same quantity; `psi(x)=ln|x|`'s "defined up to a constant" caveat missing entirely, which
+  is exactly the fact behind the reference-phase bug two entries up). Removed
+  `checks/independent_review/` from the repo (kept locally, `.gitignore`d): three working
+  documents from getting here, not part of the deliverable.
+  Added `bibliography/` with the PDF of every arXiv-available cited paper, and switched both
+  `theory.tex`/`report.tex` from author-year to numbered, hyperlinked citations
+  (`natbib`'s `numbers` option; each downloaded paper's `refs.bib` entry gets a `url` pointing
+  at its local PDF, rendered as a link by `unsrtnat`). This surfaced two real bugs: both
+  documents were printing an auto-generated bibliography heading (natbib's own, English,
+  `\bibname`/`\refname`) directly under a manually-added one, wasting a whole near-blank page
+  in `theory.tex` (`\chapter*` always starts fresh); and `report.tex`'s figures were `[h]`-only
+  with no `t`/`b`/`p` fallback, so the ones that didn't fit backed up into a float queue that
+  only drained after the bibliography, dumping six pages of pure floating figures at the very
+  end instead of each figure sitting near the text that refers to it (fixed with the `float`
+  package's `[H]`).
+  While fixing the citation links, re-grepped `theory.tex`'s own `\chapter{...}` commands to
+  double check chapter numbers before touching any `Cap\'itulo~N` cross-reference, and got a
+  different count than earlier in this session: one chapter (`M\'as all\'a de este proyecto`,
+  labelled `ch:beyond`) is written as `\chapter[short]{long title}`, which a plain
+  `grep "chapter{"` silently misses. That means the *first* count (used earlier to reject
+  `REVIEW_v2.md` Finding 6, "these `Cap\'itulo~5` refs should be `Cap\'itulo~6`") was wrong and
+  the review was right: the binaria-interna/waveform chapter genuinely is Chapter 6, not 5.
+  Fixed the two hardcoded refs, and — so this can't silently happen again — replaced every
+  hardcoded chapter number anywhere in `theory.tex` with `\label`/`\ref` (the two chapters
+  that had no label yet, "Planteo y alcance" and "La binaria interna como fuente", now do).
+  Lesson logged plainly: a grep-based structural check is only as good as the pattern, and a
+  literal-substring pattern missed an optional-argument macro call outright, silently, with no
+  error -- worth remembering next time a "let me just grep for X" verification feels
+  sufficient.
+  Separately, fixed several figures after actually looking at the committed PNGs rather than
+  just the code: legend boxes with no headroom covering real data in three panels (two in
+  `caseB_detector_view.png`, one in the now-removed `caseB_y_of_t.png`); a diffraction-pattern
+  colorbar labelling its unit-value tick "$10^0$" instead of "$1$"; `caseB_y_of_t.png` itself
+  dropped entirely (the two formal divergences dominate the plot and it added nothing beyond
+  what `fraction_of_time_lensed` and `caseB_pattern_with_orbit.png` already show);
+  `caseB_detector_view.png`'s zoom-panel title claimed to show "the peak of one lensing pulse"
+  when a pulse's actual shape (sinc-like diffraction ringing) lives on a ~day timescale, far
+  wider than that panel's +-200s window -- retitled to say what it actually shows (carrier-cycle
+  dephasing at the peak instant, not the pulse's own shape). Most substantively,
+  `caseA_F_of_f.png`'s full-band panel plotted the raw, ~400-fringe |F(f)| curve at a scale
+  where it renders as a dense, uninformative-looking blob; since F is in the geometric-optics
+  regime for the whole chirp (already established), that envelope is not merely hard to
+  resolve visually, it is EXACTLY two constant lines, `sqrt(mu_+) +- sqrt(|mu_-|)`, for every
+  f in the band -- redrawn to show that constant band directly. Also derived and logged that
+  the fringe period itself is exactly constant across the band too
+  (`fringe_period_hz = 1/image_time_delay_seconds`, since `Delta_T` is fixed for a static lens
+  and the oscillation phase `2*pi*f*Delta_T` is exactly linear in `f`), so the existing zoom
+  inset -- drawn at the start of the band for concreteness -- is representative of any
+  equal-width window anywhere in it, not something special about the start.
+  Finally, `theory.tex`'s "checkbox" asides describing bugs found and fixed during development
+  (the sign-convention fix, the reference-phase fix, the TaylorF2/pycbc alignment fixes) were
+  rewritten as plain formal derivation/verification notes -- theory.tex is meant to read as a
+  textbook chapter, not a debugging diary; the full development narrative already belongs here,
+  in this log, and stays here.
