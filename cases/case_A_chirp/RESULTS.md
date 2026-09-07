@@ -6,18 +6,29 @@ that same run, not hand-typed. System parameters: `src/gwlens/system.py`
 (m1=20, m2=15 Msun; lens M_L=5e4 Msun at D_L=5000 pc; outer orbit a_out=1.82
 AU, P_out=4 d, i_out=87 deg).
 
-The unlensed waveform is `src/gwlens/taylorf2.py`: the restricted TaylorF2
-frequency-domain post-Newtonian inspiral (2PN phase) -- the standard
-functional form used for the inspiral portion of real LIGO/Virgo
-matched-filter search templates -- built natively on the same frequency grid
-lensing is applied on (`h_lensed(f) = F(f,y_A) h_unlensed(f)`, then one
-`irfft` each for the time-domain figures). A first version of this had a
-Fourier-sign bug (the literature's usual SPA-phase sign assumes the opposite
-FT convention from `wiki/conventions.md`) that put the reconstructed chirp's
-peak at a time that *moved with the amount of zero-padding* instead of
-sitting at `t_c` -- caught by exactly that symptom, fixed, and now guarded by
-`tests/test_taylorf2.py::check_ifft_reconstructs_chirp_at_tc` (peak time now
-identical at 2x/4x/8x padding). See `wiki/log.md` for the full account.
+**Waveform**: `src/gwlens/imr_waveform.py` tries `pycbc`'s `IMRPhenomD`
+(Khan et al. 2016) first -- a published, NR-calibrated approximant with a
+genuine inspiral-merger-**ringdown**, exactly what LIGO/Virgo search and
+parameter-estimation pipelines use -- and falls back to the hand-built
+`src/gwlens/taylorf2.py` (restricted 2PN, inspiral-only, cut off at f_isco)
+if `pycbc` is not importable. `pycbc` is not pip-installable on native
+Windows in any reasonable time (a first attempt hung indefinitely resolving
+`lalsuite`); this repository's committed numbers/figures were generated in
+WSL2 Ubuntu, where `pip install pycbc` works cleanly (see **README.md** for
+the exact reproduction path on each platform). `numbers.json`'s
+`waveform_source` field always records which path actually ran for a given
+run -- here, `IMRPhenomD (pycbc/LALSimulation, Khan et al. 2016)`.
+
+Both waveform generators are frequency-domain, on the same grid lensing is
+applied on (`h_lensed(f) = F(f,y_A) h_unlensed(f)`, one `irfft` each for the
+time-domain figures) -- `pycbc`'s FD waveform is not delivered pre-aligned
+to a convenient positive merger time, which was diagnosed (the same
+symptom as an earlier `taylorf2.py` bug: the reconstructed merger time sat
+at the very edge of the FFT window, most of the inspiral wrapped to the
+"wrong" end) and fixed with an explicit frequency-domain time shift,
+checked to land the merger within 0.01% of the requested target time. See
+`wiki/log.md` for both this and the earlier `taylorf2.py` Fourier-sign bug
+(still relevant: it is what the fallback path uses).
 
 ## Regime
 
@@ -60,24 +71,33 @@ individual samples of that oscillation, not its envelope).
 
 ## What lensing does to the waveform
 
-- **Peak-sample amplification: 1.038** (the single largest |h(t)| sample).
-- **RMS amplification: 1.056** (power averaged over the whole chirp).
+- **Peak-sample amplification: 0.962** (the single largest |h(t)| sample is
+  *smaller* lensed than unlensed).
+- **RMS amplification: 1.056** (power averaged over the whole waveform).
 
-These two numbers being close to each other but not identical, despite |F|
-oscillating between 0.79 and 1.27 through the band (not a constant), is the
-point, not an error: F(f) modulates **phase** as well as amplitude (`caseA_F_of_f.png`,
-bottom sub-panel: arg F sweeps through a full 2*pi cycle roughly once per
-fringe). The lensed waveform is a dephased, not simply rescaled, copy of the
-unlensed one, so a single peak sample is not a robust amplification
-statistic here — a genuinely wave-optics (not geometric-optics) statement:
-in the geometric-optics limit lensing IS just a magnification (a real
-scalar), but Case A sits close enough to that limit that this distinction
-is subtle rather than dramatic. `caseA_strain_time.png` shows both curves;
-`caseA_detector_envelope.png` shows the analytic-signal envelope of each
-(Hilbert transform) as the idealized single-detector view asked for — note
-this envelope construction assumes a slowly-varying carrier and becomes less
-reliable in the last ~0.1 s where the instantaneous frequency itself is
-changing fastest, visible as the sharp upturn right at merger.
+F(f) modulates **phase** as well as amplitude (`caseA_F_of_f.png`, bottom
+sub-panel: arg F sweeps through a full 2*pi cycle roughly once per fringe),
+so the lensed waveform is a dephased, not simply rescaled, copy of the
+unlensed one — a genuinely wave-optics (not geometric-optics) statement: in
+the geometric-optics limit lensing IS just a real magnification. With the
+real IMRPhenomD merger now in the waveform, this dephasing is visible by
+eye, not just in the summary statistics: `caseA_strain_time.png`'s zoomed
+bottom panel shows the unlensed merger as the expected sharp,
+fast-decaying ringdown transient, while the lensed merger is visibly
+**smeared out** — a broader, lower, slower-oscillating feature rather than
+a sharp spike. This is because the merger/ringdown is intrinsically
+broadband (unlike the narrowband slowly-chirping inspiral earlier in the
+signal), so it samples many oscillations of F(f)'s interference fringes at
+once, and those fringes' rapidly-varying phase scrambles the coherent
+buildup that makes the unlensed merger sharp. `caseA_detector_envelope.png`
+shows the same effect in the Hilbert-transform envelope: the unlensed
+envelope has the classic sharp merger spike, the lensed envelope instead
+shows a broader, flattened bump in its place — note the envelope
+construction itself assumes a slowly-varying carrier and is least reliable
+exactly in this fast-changing merger region, so read this figure as
+qualitative confirmation of the smearing, not a precision measurement of
+its shape (`caseA_strain_time.png`'s raw-waveform zoom is the quantitative
+version).
 
 ## The extended diffraction pattern (`caseA_diffraction_pattern.png`)
 

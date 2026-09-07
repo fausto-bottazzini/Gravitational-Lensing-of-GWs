@@ -8,13 +8,15 @@
   "sample_rate_Hz": 502.5342582903321,
   "n_samples": 16384,
   "frequency_resolution_Hz": 0.030672256975728278,
+  "waveform_source": "IMRPhenomD (pycbc/LALSimulation, Khan et al. 2016) -- full inspiral-merger-ringdown",
+  "merger_time_target_s": 27.712339547514425,
   "D_eff_Mpc": 0.005,
-  "F_evaluation_seconds": 0.40276408195495605,
-  "peak_time_unlensed_s": 15.17110500274658,
+  "F_evaluation_seconds": 0.37471795082092285,
+  "peak_time_unlensed_s": 27.70955366779199,
   "w_at_f_start": 61.89554471412633,
   "w_at_f_isco": 777.615791359739,
   "abs_F_at_f_start": 1.2364587025102514,
-  "abs_F_at_f_isco": 1.1372346885885987,
-  "peak_strain_amplification": 1.0379774909888773,
-  "rms_strain_amplification": 1.0558485053976254
+  "abs_F_at_f_isco": 1.1372346885885989,
+  "peak_strain_amplification": 0.961714329762583,
+  "rms_strain_amplification": 1.0555110234883738
 }

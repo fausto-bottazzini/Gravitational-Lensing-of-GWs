@@ -27,7 +27,7 @@ from scipy.interpolate import interp1d
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
-from gwlens import system, chirp, taylorf2, waveoptics as wo, geometry as geo, units
+from gwlens import system, chirp, imr_waveform, waveoptics as wo, geometry as geo, units
 
 OUT = HERE
 NUMBERS = {}
@@ -38,35 +38,20 @@ def log(name, value):
     return value
 
 
-def _band_taper(freqs, f_lo, f_hi, taper_frac=0.03):
-    """Half-cosine taper at both edges of [f_lo,f_hi], zero outside --
-    applied to |h(f)| to control the time-domain Gibbs ringing a hard
-    band edge would otherwise cause after the inverse FFT."""
-    w = np.zeros_like(freqs)
-    inband = (freqs >= f_lo) & (freqs <= f_hi)
-    w[inband] = 1.0
-    band_width = f_hi - f_lo
-    taper_hz = taper_frac * band_width
-    lo_ramp = (freqs >= f_lo) & (freqs < f_lo + taper_hz)
-    hi_ramp = (freqs > f_hi - taper_hz) & (freqs <= f_hi)
-    w[lo_ramp] = 0.5 * (1 - np.cos(np.pi * (freqs[lo_ramp] - f_lo) / taper_hz))
-    w[hi_ramp] = 0.5 * (1 - np.cos(np.pi * (f_hi - freqs[hi_ramp]) / taper_hz))
-    return w
-
-
 def build_waveform_fd():
-    """Frequency-domain TaylorF2 (src/gwlens/taylorf2.py, 2PN restricted
-    SPA -- the standard search-template functional form, not the
-    leading-order-only time-domain chirp this project started with; see
-    wiki/log.md), banded to [F_A_START_HZ, f_isco] with a half-cosine edge
-    taper. Lensing is a single complex multiplication by F(f) on this same
-    grid -- the natural representation for it, since F(f) IS a
-    frequency-domain object (Eq. Fdimless, theory.tex)."""
+    """The unlensed waveform in the frequency domain, via
+    src/gwlens/imr_waveform.py: real inspiral-merger-ringdown (IMRPhenomD,
+    pycbc) where pycbc is importable, else the inspiral-only TaylorF2
+    fallback (src/gwlens/taylorf2.py) -- see README.md for which
+    environments give which, and wiki/log.md for why both exist. Lensing
+    is a single complex multiplication by F(f) on this same grid -- the
+    natural representation for it, since F(f) IS a frequency-domain object
+    (Eq. Fdimless, theory.tex)."""
     f0 = system.F_A_START_HZ
     Mc = system.MCHIRP_MSUN
     t_c = chirp.time_to_merger(f0, Mc)
     tau_isco = chirp.time_to_merger(system.F_ISCO_HZ, Mc)
-    t_end = t_c - tau_isco  # time at which f(t) = f_isco
+    t_end = t_c - tau_isco  # time at which the LEADING-ORDER f(t) = f_isco
     log("t_c_seconds", float(t_c))
     log("t_end_seconds", float(t_end))
     log("duration_seconds", float(t_end))
@@ -81,11 +66,12 @@ def build_waveform_fd():
     log("frequency_resolution_Hz", float(freqs[1] - freqs[0]))
 
     D_eff_mpc = system.D_L_PC / 1.0e6  # same physical distance as the lens (~5 kpc)
-    taper = _band_taper(freqs, system.F_A_START_HZ, system.F_ISCO_HZ)
-    H_unlensed = np.zeros_like(freqs, dtype=complex)
-    inband = taper > 0
-    H_unlensed[inband] = taper[inband] * taylorf2.htilde(
-        freqs[inband], system.M1_MSUN, system.M2_MSUN, t_c, D_eff_mpc)
+    merger_time = 0.85 * (n_pad / fs)  # leaves inspiral before and ringdown after in-window
+    H_unlensed, source_label = imr_waveform.get_unlensed_htilde_fd(
+        freqs, system.M1_MSUN, system.M2_MSUN, t_c, D_eff_mpc, f0,
+        merger_time=merger_time)
+    log("waveform_source", source_label)
+    log("merger_time_target_s", float(merger_time))
 
     return freqs, H_unlensed, fs, D_eff_mpc, n_pad
 
@@ -219,14 +205,24 @@ def main():
     plt.close(fig)
 
     # ---- Figure 2: lensed vs unlensed time-domain strain -----------------
-    fig, ax = plt.subplots(figsize=(8, 3.5))
-    ax.plot(t, h_unlensed, lw=0.6, color="#888888", label="unlensed")
-    ax.plot(t, h_lensed, lw=0.6, color="#2b6cb0", label="lensed", alpha=0.85)
-    ax.set_xlabel(f"t [s] (merger at t={NUMBERS['t_end_seconds']:.2f} s)")
-    ax.set_ylabel("h(t) [arb. units]")
-    ax.set_xlim(-0.5, 1.3 * NUMBERS["t_end_seconds"])
-    ax.set_title("Case A: lensed vs. unlensed chirp")
-    ax.legend(loc="upper left", fontsize=8)
+    t_peak = NUMBERS["peak_time_unlensed_s"]
+    fig, axes = plt.subplots(2, 1, figsize=(8, 6.5))
+    axes[0].plot(t, h_unlensed, lw=0.6, color="#888888", label="unlensed")
+    axes[0].plot(t, h_lensed, lw=0.6, color="#2b6cb0", label="lensed", alpha=0.85)
+    axes[0].set_xlabel(f"t [s] (merger at t={t_peak:.2f} s)")
+    axes[0].set_ylabel("h(t) [arb. units]")
+    axes[0].set_xlim(t_peak - 1.15 * NUMBERS["t_end_seconds"], t_peak + 0.3)
+    axes[0].axvspan(t_peak - 0.03, t_peak + 0.12, color="gold", alpha=0.3)
+    axes[0].set_title(f"Case A: lensed vs. unlensed waveform\n({NUMBERS['waveform_source']})", fontsize=10)
+    axes[0].legend(loc="upper left", fontsize=8)
+
+    zoom = (t > t_peak - 0.03) & (t < t_peak + 0.12)
+    axes[1].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.0, color="#888888", label="unlensed")
+    axes[1].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.0, color="#2b6cb0", alpha=0.85, label="lensed")
+    axes[1].set_xlabel("t - t_merger [s]")
+    axes[1].set_ylabel("h(t) [arb. units]")
+    axes[1].set_title("Zoom: merger and ringdown")
+    axes[1].legend(loc="upper right", fontsize=8)
     fig.tight_layout()
     fig.savefig(OUT / "caseA_strain_time.png", dpi=170)
     plt.close(fig)
@@ -270,7 +266,7 @@ def main():
     ax.plot(t, env_l, color="#2b6cb0", lw=1.0, label="lensed envelope")
     ax.set_xlabel("t [s]")
     ax.set_ylabel("strain envelope [arb. units]")
-    ax.set_xlim(-0.5, 1.3 * NUMBERS["t_end_seconds"])
+    ax.set_xlim(t_peak - 1.15 * NUMBERS["t_end_seconds"], t_peak + 0.3)
     ax.set_title("Case A: idealized detector view (strain envelope, no noise/antenna pattern)")
     ax.legend(fontsize=8)
     fig.tight_layout()

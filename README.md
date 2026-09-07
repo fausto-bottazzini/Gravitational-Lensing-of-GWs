@@ -25,18 +25,57 @@ git clone <this repo>
 cd gw-lensing-hierarchical-triple
 ./reproduce.sh          # checks + both cases (~1-2 min, creates .venv)
 ./reproduce.sh theory   # rebuilds theory/theory.pdf (needs a LaTeX install)
+./reproduce.sh report   # rebuilds report/report.pdf (needs a LaTeX install)
 ```
 
 No step needs anything pre-installed beyond Python 3.11+ and (for the
-`theory` step only) a working LaTeX distribution (MiKTeX/TeX Live, with
-`pdflatex` and `bibtex` on `PATH`) — `reproduce.sh` creates its own venv and
-installs the four pinned dependencies (`requirements.txt`) into it. Nothing
-in `cases/` or `tests/` needs LaTeX.
+`theory`/`report` steps only) a working LaTeX distribution (MiKTeX/TeX Live,
+with `pdflatex` and `bibtex` on `PATH`) — `reproduce.sh` creates its own venv
+and installs the four pinned dependencies (`requirements.txt`) into it.
+Nothing in `tests/` needs LaTeX.
 
 Each case script (`cases/case_A_chirp/run.py`,
 `cases/case_B_monochromatic/run.py`) is also runnable on its own and takes
 well under a minute; each `tests/test_*.py` is runnable on its own too and
 prints a PASS/FAIL line per check.
+
+### One waveform, two possible sources — read this before Case A surprises you
+
+Case A's unlensed gravitational waveform (`src/gwlens/imr_waveform.py`)
+tries, in order:
+
+1. **`pycbc`'s `IMRPhenomD`** (Khan et al. 2016) — a published,
+   NR-calibrated approximant with a real merger and ringdown, exactly what
+   LIGO/Virgo pipelines use. This is what the figures and numbers
+   *committed in this repository* were generated with.
+2. If `pycbc` cannot be imported: **`src/gwlens/taylorf2.py`**, a
+   hand-built, from-scratch, restricted 2PN inspiral — validated on its own
+   terms (`tests/test_taylorf2.py`) but with no merger or ringdown (cut off
+   at the ISCO frequency, where the post-Newtonian approximation itself
+   stops being valid).
+
+**`pycbc` is not in `requirements.txt`** and is not expected to install on
+native Windows in any reasonable time (`lalsuite`'s dependency resolution
+hangs there — see `wiki/log.md`). It installs cleanly with a plain
+`pip install pycbc` on Linux and macOS, **including WSL2** (this is exactly
+how this repository's own Case A results were produced, from a Windows
+machine, without needing native Windows support at all):
+
+```
+# inside WSL2 Ubuntu (or any Linux/macOS shell):
+cd gw-lensing-hierarchical-triple      # the SAME repo, e.g. via /mnt/c/... on WSL
+python3 -m venv .venv-wsl
+source .venv-wsl/bin/activate
+pip install -r requirements.txt pycbc
+python3 cases/case_A_chirp/run.py      # now uses IMRPhenomD automatically
+```
+
+Nothing else changes: the same script, the same command, on Linux/macOS/WSL2
+picks up `pycbc` automatically and produces the full inspiral-merger
+-ringdown result; on native Windows without `pycbc` it falls back to
+TaylorF2 automatically, with a clear label
+(`numbers.json`'s `waveform_source` field) recording which one actually
+ran. Case B, `tests/`, and everything else never touch `pycbc` at all.
 
 ## Repository map
 
@@ -44,7 +83,7 @@ prints a PASS/FAIL line per check.
 |---|---|
 | `report/` | the results: `report.html` and `report.pdf`, the two documents this project is presented from |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
-| `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform, the one pinned system |
+| `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
 | `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |
 | `cases/case_B_monochromatic/` | the moving-lens case: script, figures, `RESULTS.md`, `provenance/` |
 | `tests/` | every correctness check referenced from `theory.tex` and the case `RESULTS.md` files |

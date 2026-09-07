@@ -131,3 +131,32 @@ Append-only. What was decided, ingested, corrected, and when.
   default is 30; `test_system.py`'s comment says `T_OBS_B_S = 8 outer periods` though the
   code and every result say 6) plus two nitpick-level rounding/prose mismatches, none of
   which affect any reported number or figure.
+- **2026-09-07** — User pushed back on the TaylorF2-only waveform (fair: no merger, no
+  ringdown, formally diverges and has to be cut off by hand at f_isco) and asked to try
+  `pycbc` again via WSL2, since this machine has it installed and the professor uses Linux
+  anyway. `pip install pycbc` inside a fresh WSL2 Ubuntu venv worked cleanly (~2 min,
+  prebuilt wheels for numpy 2.3.5/scipy 1.16.3/lalsuite 7.26.15/pycbc 2.11.0, Python
+  3.14) — confirms the native-Windows failure earlier was Windows-specific, not
+  pycbc/lalsuite being broken in general. `get_fd_waveform(approximant="IMRPhenomD", ...)`
+  generates a real inspiral-merger-ringdown waveform in ~1 s.
+  **A second alignment bug, same symptom as the earlier TaylorF2 sign bug**: pycbc's FD
+  waveform is not delivered pre-aligned to a convenient positive merger time — an
+  unshifted `irfft` put the peak right at the edge of the FFT window (`t=32.59s` for a
+  32.6s window), with most of the inspiral wrapped to the "wrong" end. Fixed with an
+  explicit frequency-domain time shift, `H *= exp(-i*2*pi*f*(t_target - t_measured))`
+  (the sign of the exponent found empirically by testing both and checking which one
+  actually moved the peak to `t_target` — see `src/gwlens/imr_waveform.py`); confirmed
+  the shifted peak lands within 0.003s of the 27.71s target.
+  `src/gwlens/imr_waveform.py` added: tries `pycbc`/IMRPhenomD (Khan et al. 2016) first,
+  falls back to `taylorf2.py` (inspiral-only) if `pycbc` is not importable — so
+  `cases/case_A_chirp/run.py` runs unmodified on any platform, just with a better
+  waveform where `pycbc` is available. This repo's own committed Case A figures/numbers
+  were generated inside WSL2 (`.venv-wsl/`, gitignored, not part of the reproducibility
+  contract for platforms without WSL) — see README.md for exactly which command runs
+  where. Payoff: with a real merger, the wave-optics dephasing already documented for the
+  inspiral is now visible by eye in the merger itself — the lensed merger transient comes
+  out visibly smeared (broader, lower peak) compared to the unlensed one's sharp spike,
+  because the broadband merger samples many F(f) interference fringes at once where the
+  narrowband inspiral only sampled a slowly-varying few. Not derived in detail, reported
+  as an observed, physically-plausible consequence of the already-validated F(f), not an
+  independently re-derived result on its own.

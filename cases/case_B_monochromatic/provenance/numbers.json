@@ -4,7 +4,7 @@
   "min_y_during_observation": 1.58900454986686,
   "n_outer_periods_observed": 6.0,
   "n_samples": 3600,
-  "F_evaluation_seconds": 1.5946078300476074,
+  "F_evaluation_seconds": 1.5041258335113525,
   "max_abs_F": 1.176655857549728,
   "mean_abs_F2_over_observation": 1.0061016782664711,
   "f_start_Hz": 0.04999999999999999,

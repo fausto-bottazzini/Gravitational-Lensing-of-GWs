@@ -1,0 +1,14 @@
+{
+  "fallback_matches_taylorf2_directly": {
+    "passed": true,
+    "message": "max relative error, banded fallback vs direct taylorf2.htilde (mid-band, untapered) = 0.00e+00"
+  },
+  "fallback_used_without_pycbc": {
+    "passed": true,
+    "message": "label='TaylorF2 2PN inspiral-only (pycbc not available in this environment -- fallback, see wiki/log.md; no merger/ringdown)', nonzero bins=2312"
+  },
+  "pycbc_merger_time_alignment": {
+    "passed": true,
+    "message": "SKIPPED: pycbc not importable in this environment"
+  }
+}

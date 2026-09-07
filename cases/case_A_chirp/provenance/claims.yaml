@@ -30,31 +30,36 @@ claims:
     numbers: [w_at_f_start, w_at_f_isco]
   - id: dephasing_not_simple_amplification
     statement: >
-      Peak-sample amplification (1.038) and RMS amplification (1.056)
+      Peak-sample amplification (0.962) and RMS amplification (1.056)
       differ from each other and from a naive "average |F|" expectation
       because F(f) modulates phase as well as amplitude across the band;
       the lensed waveform is a dephased copy of the unlensed one, not a
-      rescaled one.
+      rescaled one. With the real IMRPhenomD merger, this is visible by eye
+      as a smeared-out lensed merger transient (sharp in the unlensed case).
     evidence:
       - run.py::main (rms/peak amplification computation)
-      - caseA_strain_time.png
+      - caseA_strain_time.png (merger/ringdown zoom panel)
+      - caseA_detector_envelope.png
       - caseA_F_of_f.png (bottom sub-panel: arg F)
     numbers: [peak_strain_amplification, rms_strain_amplification]
-  - id: taylorf2_waveform_and_sign_fix
+  - id: imr_waveform_and_bugs_fixed
     statement: >
-      The unlensed waveform is the restricted TaylorF2 (2PN) frequency
-      -domain PN inspiral, the functional form used in real matched-filter
-      search templates, not a hand-built leading-order chirp. An earlier
-      version had the SPA phase's overall sign backwards relative to this
-      project's Fourier convention (diagnosed because the IFFT-reconstructed
-      merger time moved with the amount of zero-padding); fixed, and now
-      guarded by a regression check that the peak time is independent of
-      padding.
+      The unlensed waveform is IMRPhenomD (pycbc/LALSimulation, Khan et al.
+      2016) where pycbc is importable (WSL2/Linux -- see README.md), a
+      real inspiral-merger-ringdown; TaylorF2 (2PN inspiral-only) is used
+      as an automatic fallback on native Windows where pycbc does not
+      install. Two Fourier/alignment bugs were caught and fixed getting
+      here: TaylorF2's SPA phase had its overall sign backwards relative
+      to this project's Fourier convention, and pycbc's FD waveform is not
+      delivered pre-aligned to a convenient positive merger time -- both
+      diagnosed by the same symptom (reconstructed merger time moving with
+      the amount of zero-padding) and both now guarded by regression checks.
     evidence:
+      - src/gwlens/imr_waveform.py
       - src/gwlens/taylorf2.py::spa_phase
       - tests/test_taylorf2.py::check_ifft_reconstructs_chirp_at_tc
       - wiki/log.md
-    numbers: [peak_time_unlensed_s, t_c_seconds]
+    numbers: [peak_time_unlensed_s, t_c_seconds, merger_time_target_s, waveform_source]
 figures:
   - file: caseA_F_of_f.png
     produced_by: run.py::main
@@ -71,12 +76,17 @@ figures:
     supports: [w_regime]
   - file: caseA_strain_time.png
     produced_by: run.py::main
-    shows: Lensed vs. unlensed time-domain chirp strain.
-    from_scratch: Restricted-PN time-domain waveform generation and lensing via FFT/IFFT.
-    from_library: numpy.fft, matplotlib.
+    shows: >
+      Lensed vs. unlensed time-domain inspiral-merger-ringdown strain (top),
+      plus a zoomed merger/ringdown panel (bottom).
+    from_scratch: >
+      Frequency-domain lensing via FFT/IFFT; the merger-time alignment
+      shift; the zoom window choice.
+    from_library: pycbc (IMRPhenomD) or taylorf2.py fallback, numpy.fft, matplotlib.
     choices:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
-    supports: [dephasing_not_simple_amplification]
+      - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
+    supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed]
   - file: caseA_diffraction_pattern.png
     produced_by: run.py::main (make_ring_pattern)
     shows: >
