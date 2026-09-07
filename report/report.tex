@@ -1,0 +1,202 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[round]{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{caption}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\Msun}{M_{\odot}}
+
+\title{\Large Wave-Optics Gravitational Lensing of Gravitational Waves\\
+in a Hierarchical Triple\\[4pt]
+\large Results}
+\author{Final project --- Gravitational Waves and AI-Assisted Research}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+We compute how a gravitational wave (GW) from a compact binary is lensed,
+in wave optics, by a third, more massive body in the same hierarchical
+triple, for the same triple at two epochs of the inner binary's inspiral: a
+late chirp (lens frozen for the whole observation) and an earlier,
+quasi-monochromatic phase (the outer orbit's motion is resolved, producing
+periodic "repeated lensing"). All figures and numbers here are produced by
+the scripts in \code{cases/}, checked against independent methods in
+\code{tests/}, and derived from first principles in
+\href{../theory/theory.pdf}{\code{theory/theory.pdf}}, which this document
+does not repeat. This page/PDF is the results; the repository behind it
+(\code{README.md}) is what makes them reproducible.
+\end{abstract}
+
+\tableofcontents
+
+\section{The system}
+
+One hierarchical triple (\code{src/gwlens/system.py}), followed at two
+points in its own evolution:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+inner binary (the source) & $m_1=20\,\Msun$, $m_2=15\,\Msun$ ($\mathcal M=15.05\,\Msun$) \\
+lens & $M_L=5\times10^4\,\Msun$, at $D_L=5$ kpc \\
+outer orbit & $a_\mathrm{out}=1.82$ AU, $P_\mathrm{out}=4$ d, $i_\mathrm{out}=87^\circ$, circular \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The lens mass is chosen (not astrophysically typical) so that the
+wave-optics parameter $w=8\pi GM_Lf/c^3$ is not extreme at either epoch's
+frequency; the hierarchy $a_\mathrm{in}\ll a_\mathrm{out}$ holds by 2--6
+orders of magnitude at both. Full justification: \code{theory/theory.pdf}
+Ch.~1, \S6.1; regime checks: \code{tests/test\_system.py}.
+
+\section{Case A --- the chirp, static lens}
+\label{sec:caseA}
+
+The inner binary inspirals from $f=10$~Hz to $f_\mathrm{isco}=125.6$~Hz in
+\textbf{15.18 s} --- $4.4\times10^{-5}$ of the 4-day outer period, so the
+lens sits at one impact parameter, $y_A=1.589$ (the phase of closest
+projected approach during the outer orbit), for the entire chirp. The
+unlensed waveform is the restricted TaylorF2 (2PN) frequency-domain
+post-Newtonian inspiral --- the functional form used in real LIGO/Virgo
+matched-filter search templates, not a hand-built approximation
+(\code{src/gwlens/taylorf2.py}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_F_of_f.png}
+\caption{The amplification factor $F(f)$ across the whole chirp band (top)
+and zoomed to 3 Hz (bottom), where the individual two-image interference
+fringes are resolved. $w$ spans 62 (band start) to 778 (merger) here ---
+well above where \code{tests/test\_waveoptics.py} validates the fast
+geometric-optics evaluator against the exact closed form to $<4\%$, so this
+is genuinely wave interference, just too densely packed to resolve at the
+full-band scale: the checked transition toward geometric optics as merger
+approaches.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_diffraction_pattern.png}
+\caption{The extended amplification pattern on the source plane: concentric
+diffraction rings around the lens with a central Einstein-ring bright spike
+(finite in wave optics, where the geometric-optics magnification formally
+diverges --- the GW analogue of the optical Arago/Poisson spot). Left: full
+pattern at band start ($w=61.9$). Right: zoomed to $|\Delta y|<0.15$ near
+merger ($w=777.6$) --- the same rings, now so closely spaced they look like
+near-straight fringes at this zoom.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{../cases/case_A_chirp/caseA_strain_time.png}
+\caption{Lensed vs.\ unlensed time-domain chirp strain (arbitrary units,
+$D_\mathrm{eff}=5$ kpc --- an illustratively loud, nearby hypothetical
+event, not a rate-realistic distance).}
+\end{figure}
+
+Peak-sample amplification is $1.038$; RMS amplification (averaged over the
+whole chirp) is $1.056$. These being close but not equal, despite $|F|$
+ranging $0.79$--$1.27$ across the band, is itself informative: $F(f)$
+modulates \emph{phase} as well as amplitude, so the lensed waveform is a
+\emph{dephased} copy of the unlensed one, not simply a rescaled one --- a
+genuinely wave-optics statement (in the geometric-optics limit, lensing
+\emph{is} just a real magnification).
+
+\section{Case B --- quasi-monochromatic, moving lens}
+\label{sec:caseB}
+
+Earlier in the same inspiral: $f=0.05$~Hz, drifting only $4\%$ over a
+24-day (6 outer period) observation, with 60.2 outer periods still left
+before merger --- quasi-monochromatic. $w_B=0.309$ throughout (fixed; only
+the impact parameter $y(t)$ varies): squarely in the diffraction-dominated
+regime.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{../cases/case_B_monochromatic/caseB_pattern_with_orbit.png}
+\caption{The same kind of fixed diffraction pattern as Case A (here at the
+much smaller $w_B=0.309$) with the source's actual sky-projected outer
+-orbit track overlaid: cyan where the source is lensed (behind the lens
+along the line of sight), dashed green where it is not (in front of it ---
+see below).}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{../cases/case_B_monochromatic/caseB_repeated_pulses.png}
+\caption{$|F(w_B,y(t))|^2$ over the full 24-day observation: six periodic
+amplification pulses, one per outer period, peaking at $|F|^2=1.385$, with
+diffraction ringing visible on both sides of each peak.}
+\end{figure}
+
+Because the lens and source are in the \emph{same} system rather than at
+the usual well-separated cosmological distances, $D_{LS}(t)$ is set by the
+outer orbit itself and vanishes twice per period; \textbf{exactly half the
+orbit turns out to be unlensed} (source in front of the lens, not behind
+it, so no lensing geometry exists there at all --- not an approximation,
+$F=1$ by construction). This is the origin of the periodic pulses above,
+the wave-optics analogue of the "repeated lensing" found in the
+geometric-optics limit by \citet{DOrazioLoeb2020}. Full derivation:
+\code{theory/theory.pdf} \S4.2--4.3 (which also quantifies exactly how far
+this pushes the standard thin-lens approximation, and shows the effect is
+confined to a $\sim$60 s window per crossing, coincident with the already
+-trivial $F\approx1$ region --- not a concern for anything shown here).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{../cases/case_B_monochromatic/caseB_detector_view.png}
+\caption{Idealized detector view. Top: strain envelope over the full
+observation, six clean pulses riding on the slowly-drifting carrier.
+Bottom: a fine time grid zoomed on one pulse peak, where the lensed and
+unlensed waveforms visibly dephase over a handful of carrier cycles.}
+\end{figure}
+
+\section{What the two cases show together}
+
+The same lens, the same formalism, two very different-looking signatures,
+governed entirely by one timescale ratio (merger duration vs.\ outer
+period vs.\ observation length):
+
+\begin{itemize}
+  \item Case A: a single, frozen diffraction pattern sampled at one point,
+    swept across in \emph{frequency} by the chirp itself --- dense
+    interference fringes, checked to approach the geometric-optics limit
+    as $w\to\infty$.
+  \item Case B: the same kind of pattern, at fixed frequency, sampled in
+    \emph{time} by the outer orbital motion --- periodic pulses, with
+    exactly half the orbit unlensed by the triple's own geometry.
+  \item Both cases: lensing is not simply "make it brighter." $F(f)$ (or
+    $F(t)$) is complex, and its phase leaves a real, checkable mark on the
+    waveform beyond an overall amplitude.
+\end{itemize}
+
+\section{Scope and limitations}
+
+Stated explicitly, not left implicit (each also logged in \code{wiki/log.md}
+at the point it was decided):
+\begin{itemize}
+  \item Point-mass lens only; no extended mass distribution.
+  \item TaylorF2 truncated at 2PN (Case A); Case B's underlying frequency
+    evolution is leading-order only.
+  \item No absolute strain calibration (inclination/polarization
+    prefactors folded into an $O(1)$ constant) --- only relative amplitudes
+    and the lensing amplification factor are physical claims here.
+  \item The idealized detector view has no noise, antenna pattern, or
+    matched filtering --- illustrative only, as scoped from the start.
+  \item The thin-lens/paraxial approximation is quantifiably pushed near
+    each Case B front/back crossing (\S\ref{sec:caseB}); shown not to
+    affect anything reported.
+\end{itemize}
+
+\bibliographystyle{plainnat}
+\bibliography{../theory/refs}
+
+\end{document}

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wave-Optics Gravitational Lensing of Gravitational Waves in a Hierarchical Triple — Results</title>
+<style>
+  :root {
+    --ink: #1a1a1a; --sub: #555; --rule: #ddd; --accent: #b5651d;
+    --bg: #fefdfb; --panel: #f7f5f1; --code-bg: #f0eee9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.6 Georgia, "Times New Roman", serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  header.title { text-align: center; margin-bottom: 2.5rem; }
+  header.title h1 { font-size: 1.7rem; line-height: 1.3; margin: 0 0 0.3rem; }
+  header.title .subtitle { font-size: 1.15rem; color: var(--sub); margin-bottom: 1rem; }
+  header.title .byline { font-size: 0.95rem; color: var(--sub); font-family: -apple-system, sans-serif; }
+  .abstract {
+    background: var(--panel); border-left: 3px solid var(--accent);
+    padding: 1.1rem 1.4rem; margin: 2rem 0; font-size: 0.97rem;
+  }
+  .abstract .label { font-weight: 700; font-family: -apple-system, sans-serif;
+    text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem; color: var(--accent); }
+  nav.toc {
+    font-family: -apple-system, sans-serif; font-size: 0.92rem; margin: 2rem 0;
+    border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.4rem;
+  }
+  nav.toc .label { font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    font-size: 0.75rem; color: var(--sub); margin-bottom: .5rem; display: block; }
+  nav.toc ol { margin: 0; padding-left: 1.2rem; }
+  nav.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--sub); }
+  h2 { font-size: 1.35rem; margin-top: 3rem; border-bottom: 2px solid var(--accent); padding-bottom: .3rem; }
+  h3 { font-size: 1.1rem; margin-top: 1.6rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--rule); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--panel); font-family: -apple-system, sans-serif; font-size: 0.82rem;
+       text-transform: uppercase; letter-spacing: .04em; color: var(--sub); }
+  code { background: var(--code-bg); padding: .1em .35em; border-radius: 3px;
+         font-family: "SF Mono", Consolas, monospace; font-size: 0.86em; }
+  figure { margin: 2rem 0; text-align: center; }
+  figure img { max-width: 100%; border: 1px solid var(--rule); border-radius: 4px; }
+  figcaption { font-size: 0.88rem; color: var(--sub); text-align: left; margin-top: .6rem;
+               font-family: -apple-system, sans-serif; line-height: 1.5; }
+  figcaption b { color: var(--ink); }
+  .callout {
+    background: #fff8ec; border: 1px solid #f0d9a8; border-radius: 6px;
+    padding: 1rem 1.3rem; margin: 1.5rem 0; font-size: 0.95rem;
+  }
+  ul, ol.plain { padding-left: 1.4rem; }
+  li { margin: 0.4rem 0; }
+  .metric { font-weight: 700; }
+  a { color: #2b6cb0; }
+  .refs { font-size: 0.92rem; }
+  .refs li { margin-bottom: .6rem; }
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
+           font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--sub); }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e8e6e1; --sub: #a8a49c; --rule: #3a3733; --accent: #e0a458;
+            --bg: #171614; --panel: #201f1c; --code-bg: #241f18; }
+    figure img { filter: brightness(0.92) contrast(1.05); }
+    .callout { background: #241d10; border-color: #4a3a1a; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>Wave-Optics Gravitational Lensing of Gravitational Waves<br>in a Hierarchical Triple</h1>
+  <div class="subtitle">Results</div>
+  <div class="byline">Final project — Gravitational Waves and AI-Assisted Research · September 2026</div>
+</header>
+
+<div class="abstract">
+  <span class="label">Abstract</span>
+  <p>We compute how a gravitational wave (GW) from a compact binary is lensed, in wave optics,
+  by a third, more massive body in the same hierarchical triple, for the same triple at two
+  epochs of the inner binary's inspiral: a late chirp (lens frozen for the whole observation)
+  and an earlier, quasi-monochromatic phase (the outer orbit's motion is resolved, producing
+  periodic &ldquo;repeated lensing&rdquo;). All figures and numbers here are produced by the
+  scripts in <code>cases/</code>, checked against independent methods in <code>tests/</code>,
+  and derived from first principles in
+  <a href="../theory/theory.pdf"><code>theory/theory.pdf</code></a>, which this document does
+  not repeat. This page/PDF is the results; the repository behind it
+  (<a href="../README.md"><code>README.md</code></a>) is what makes them reproducible.</p>
+</div>
+
+<nav class="toc">
+  <span class="label">Contents</span>
+  <ol>
+    <li><a href="#system">The system</a></li>
+    <li><a href="#caseA">Case A — the chirp, static lens</a></li>
+    <li><a href="#caseB">Case B — quasi-monochromatic, moving lens</a></li>
+    <li><a href="#together">What the two cases show together</a></li>
+    <li><a href="#scope">Scope and limitations</a></li>
+  </ol>
+</nav>
+
+<h2 id="system">1. The system</h2>
+<p>One hierarchical triple (<code>src/gwlens/system.py</code>), followed at two points in its
+own evolution:</p>
+<table>
+  <tr><th>Inner binary (the source)</th><td>m<sub>1</sub>=20 M<sub>&#8857;</sub>, m<sub>2</sub>=15 M<sub>&#8857;</sub> (chirp mass 15.05 M<sub>&#8857;</sub>)</td></tr>
+  <tr><th>Lens</th><td>M<sub>L</sub>=5&times;10<sup>4</sup> M<sub>&#8857;</sub>, at D<sub>L</sub>=5 kpc</td></tr>
+  <tr><th>Outer orbit</th><td>a<sub>out</sub>=1.82 AU, P<sub>out</sub>=4 d, i<sub>out</sub>=87&deg;, circular</td></tr>
+</table>
+<p>The lens mass is chosen (not astrophysically typical) so that the wave-optics parameter
+<code>w = 8&pi;GM<sub>L</sub>f/c&sup3;</code> is not extreme at either epoch's frequency; the
+hierarchy a<sub>in</sub> &laquo; a<sub>out</sub> holds by 2&ndash;6 orders of magnitude at both.
+Full justification: <code>theory/theory.pdf</code> Ch. 1, &sect;6.1; regime checks:
+<code>tests/test_system.py</code>.</p>
+
+<h2 id="caseA">2. Case A — the chirp, static lens</h2>
+<p>The inner binary inspirals from f=10 Hz to f<sub>isco</sub>=125.6 Hz in
+<span class="metric">15.18 s</span> — 4.4&times;10<sup>&minus;5</sup> of the 4-day outer
+period, so the lens sits at one impact parameter, y<sub>A</sub>=1.589 (the phase of closest
+projected approach during the outer orbit), for the entire chirp. The unlensed waveform is the
+restricted TaylorF2 (2PN) frequency-domain post-Newtonian inspiral — the functional form used
+in real LIGO/Virgo matched-filter search templates, not a hand-built approximation
+(<code>src/gwlens/taylorf2.py</code>).</p>
+
+<figure>
+  <img src="../cases/case_A_chirp/caseA_F_of_f.png" alt="Amplification factor across the chirp, full band and zoomed">
+  <figcaption><b>Figure 1.</b> The amplification factor F(f) across the whole chirp band (top)
+  and zoomed to 3 Hz (bottom), where the individual two-image interference fringes are
+  resolved. w spans 62 (band start) to 778 (merger) here — well above where
+  <code>tests/test_waveoptics.py</code> validates the fast geometric-optics evaluator against
+  the exact closed form to &lt;4%, so this is genuinely wave interference, just too densely
+  packed to resolve at the full-band scale: the checked transition toward geometric optics as
+  merger approaches.</figcaption>
+</figure>
+
+<figure>
+  <img src="../cases/case_A_chirp/caseA_diffraction_pattern.png" alt="Extended diffraction pattern on the source plane">
+  <figcaption><b>Figure 2.</b> The extended amplification pattern on the source plane:
+  concentric diffraction rings around the lens with a central Einstein-ring bright spike
+  (finite in wave optics, where the geometric-optics magnification formally diverges — the GW
+  analogue of the optical Arago/Poisson spot). Left: full pattern at band start (w=61.9).
+  Right: zoomed to |&Delta;y|&lt;0.15 near merger (w=777.6) — the same rings, now so closely
+  spaced they look like near-straight fringes at this zoom.</figcaption>
+</figure>
+
+<figure>
+  <img src="../cases/case_A_chirp/caseA_strain_time.png" alt="Lensed vs unlensed chirp strain">
+  <figcaption><b>Figure 3.</b> Lensed vs. unlensed time-domain chirp strain (arbitrary units,
+  D<sub>eff</sub>=5 kpc — an illustratively loud, nearby hypothetical event, not a
+  rate-realistic distance).</figcaption>
+</figure>
+
+<p>Peak-sample amplification is <span class="metric">1.038</span>; RMS amplification (averaged
+over the whole chirp) is <span class="metric">1.056</span>. These being close but not equal,
+despite |F| ranging 0.79&ndash;1.27 across the band, is itself informative: F(f) modulates
+<em>phase</em> as well as amplitude, so the lensed waveform is a <em>dephased</em> copy of the
+unlensed one, not simply a rescaled one — a genuinely wave-optics statement (in the
+geometric-optics limit, lensing <em>is</em> just a real magnification).</p>
+
+<h2 id="caseB">3. Case B — quasi-monochromatic, moving lens</h2>
+<p>Earlier in the same inspiral: f=0.05 Hz, drifting only 4% over a 24-day (6 outer period)
+observation, with 60.2 outer periods still left before merger — quasi-monochromatic.
+w<sub>B</sub>=0.309 throughout (fixed; only the impact parameter y(t) varies): squarely in the
+diffraction-dominated regime.</p>
+
+<figure>
+  <img src="../cases/case_B_monochromatic/caseB_pattern_with_orbit.png" alt="Diffraction pattern with orbit track overlaid">
+  <figcaption><b>Figure 4.</b> The same kind of fixed diffraction pattern as Case A (here at
+  the much smaller w<sub>B</sub>=0.309) with the source's actual sky-projected outer-orbit
+  track overlaid: cyan where the source is lensed (behind the lens along the line of sight),
+  dashed green where it is not (in front of it).</figcaption>
+</figure>
+
+<figure>
+  <img src="../cases/case_B_monochromatic/caseB_repeated_pulses.png" alt="Repeated lensing pulses over 6 outer periods">
+  <figcaption><b>Figure 5.</b> |F(w<sub>B</sub>,y(t))|&sup2; over the full 24-day observation:
+  six periodic amplification pulses, one per outer period, peaking at |F|&sup2;=1.385, with
+  diffraction ringing visible on both sides of each peak.</figcaption>
+</figure>
+
+<p>Because the lens and source are in the <em>same</em> system rather than at the usual
+well-separated cosmological distances, D<sub>LS</sub>(t) is set by the outer orbit itself and
+vanishes twice per period; <strong>exactly half the orbit turns out to be unlensed</strong>
+(source in front of the lens, not behind it, so no lensing geometry exists there at all — not
+an approximation, F=1 by construction). This is the origin of the periodic pulses above, the
+wave-optics analogue of the &ldquo;repeated lensing&rdquo; found in the geometric-optics limit
+by D'Orazio &amp; Loeb (2020). Full derivation: <code>theory/theory.pdf</code> &sect;4.2&ndash;4.3
+(which also quantifies exactly how far this pushes the standard thin-lens approximation, and
+shows the effect is confined to a &sim;60 s window per crossing, coincident with the
+already-trivial F&asymp;1 region — not a concern for anything shown here).</p>
+
+<figure>
+  <img src="../cases/case_B_monochromatic/caseB_detector_view.png" alt="Idealized detector view">
+  <figcaption><b>Figure 6.</b> Idealized detector view. Top: strain envelope over the full
+  observation, six clean pulses riding on the slowly-drifting carrier. Bottom: a fine time grid
+  zoomed on one pulse peak, where the lensed and unlensed waveforms visibly dephase over a
+  handful of carrier cycles.</figcaption>
+</figure>
+
+<h2 id="together">4. What the two cases show together</h2>
+<p>The same lens, the same formalism, two very different-looking signatures, governed entirely
+by one timescale ratio (merger duration vs. outer period vs. observation length):</p>
+<ul>
+  <li><strong>Case A:</strong> a single, frozen diffraction pattern sampled at one point, swept
+  across in <em>frequency</em> by the chirp itself — dense interference fringes, checked to
+  approach the geometric-optics limit as w&rarr;&infin;.</li>
+  <li><strong>Case B:</strong> the same kind of pattern, at fixed frequency, sampled in
+  <em>time</em> by the outer orbital motion — periodic pulses, with exactly half the orbit
+  unlensed by the triple's own geometry.</li>
+  <li><strong>Both cases:</strong> lensing is not simply &ldquo;make it brighter.&rdquo; F(f)
+  (or F(t)) is complex, and its phase leaves a real, checkable mark on the waveform beyond an
+  overall amplitude.</li>
+</ul>
+
+<h2 id="scope">5. Scope and limitations</h2>
+<p>Stated explicitly, not left implicit (each also logged in <code>wiki/log.md</code> at the
+point it was decided):</p>
+<div class="callout">
+<ul>
+  <li>Point-mass lens only; no extended mass distribution.</li>
+  <li>TaylorF2 truncated at 2PN (Case A); Case B's underlying frequency evolution is
+  leading-order only.</li>
+  <li>No absolute strain calibration (inclination/polarization prefactors folded into an O(1)
+  constant) — only relative amplitudes and the lensing amplification factor are physical claims
+  here.</li>
+  <li>The idealized detector view has no noise, antenna pattern, or matched filtering —
+  illustrative only, as scoped from the start.</li>
+  <li>The thin-lens/paraxial approximation is quantifiably pushed near each Case B front/back
+  crossing (&sect;3); shown not to affect anything reported.</li>
+</ul>
+</div>
+
+<h3>Reference</h3>
+<ul class="refs">
+  <li>D'Orazio, D. J. &amp; Loeb, A. (2020). Repeated gravitational lensing of gravitational
+  waves in hierarchical black hole triples. <em>Physical Review D</em>, 101, 083031.
+  doi:10.1103/PhysRevD.101.083031</li>
+</ul>
+
+<footer>
+  Full derivation: <a href="../theory/theory.pdf">theory/theory.pdf</a>. Reproduce everything:
+  <a href="../README.md">README.md</a> &rarr; <code>./reproduce.sh</code>. Every number on this
+  page traces to <code>cases/*/provenance/numbers.json</code> and a check in
+  <code>tests/</code>.
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Reproduce every result in this repository from a clean checkout.
 #
-#   ./reproduce.sh          # everything: checks, both cases, report
+#   ./reproduce.sh          # everything: checks, both cases
 #   ./reproduce.sh checks   # just the correctness checks (fast, ~30s)
 #   ./reproduce.sh cases    # just the two case studies (figures + numbers)
 #   ./reproduce.sh theory   # rebuild theory/theory.pdf (needs a LaTeX install)
+#   ./reproduce.sh report   # rebuild report/report.pdf (needs a LaTeX install;
+#                           #   report/report.html needs no rebuild step, it
+#                           #   just references the same PNGs cases/ writes)
 #
 # Nothing here is required to already exist: a venv is created, pinned
 # dependencies (requirements.txt) are installed into it, then everything
@@ -49,12 +52,23 @@ run_theory() {
     rm -f *.aux *.bbl *.blg *.log *.out *.toc )
 }
 
+run_report() {
+  echo "== rebuilding report/report.pdf (requires pdflatex + bibtex; needs cases/ figures to already exist) =="
+  ( cd report && \
+    pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
+    bibtex report && \
+    pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
+    pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
+    rm -f *.aux *.bbl *.blg *.log *.out *.toc )
+}
+
 case "$STEP" in
   checks) run_checks ;;
   cases)  run_cases ;;
   theory) run_theory ;;
+  report) run_report ;;
   all)    run_checks; run_cases ;;
-  *) echo "usage: $0 [checks|cases|theory|all]"; exit 1 ;;
+  *) echo "usage: $0 [checks|cases|theory|report|all]"; exit 1 ;;
 esac
 
 echo "== done =="
