@@ -11,7 +11,7 @@
   "waveform_source": "IMRPhenomD (pycbc/LALSimulation, Khan et al. 2016) -- full inspiral-merger-ringdown",
   "merger_time_target_s": 27.712339547514425,
   "D_eff_Mpc": 0.005,
-  "F_evaluation_seconds": 0.3780221939086914,
+  "F_evaluation_seconds": 0.37068843841552734,
   "peak_time_unlensed_s": 27.70955366779199,
   "w_at_f_start": 61.89554471412633,
   "w_at_f_isco": 777.615791359739,
