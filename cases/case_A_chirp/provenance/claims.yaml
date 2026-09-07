@@ -30,18 +30,43 @@ claims:
     numbers: [w_at_f_start, w_at_f_isco]
   - id: dephasing_not_simple_amplification
     statement: >
-      Peak-sample amplification (0.962) and RMS amplification (1.056)
+      Peak-sample amplification (1.091) and RMS amplification (1.056)
       differ from each other and from a naive "average |F|" expectation
       because F(f) modulates phase as well as amplitude across the band;
       the lensed waveform is a dephased copy of the unlensed one, not a
-      rescaled one. With the real IMRPhenomD merger, this is visible by eye
-      as a smeared-out lensed merger transient (sharp in the unlensed case).
+      rescaled one. RMS amplification is identical to a naive |F|-only
+      calculation (Parseval's theorem: it depends only on |F(f)|, never on
+      Fourier-phase convention), unlike the peak/echo timing claims below.
     evidence:
       - run.py::main (rms/peak amplification computation)
-      - caseA_strain_time.png (merger/ringdown zoom panel)
-      - caseA_detector_envelope.png
       - caseA_F_of_f.png (bottom sub-panel: arg F)
     numbers: [peak_strain_amplification, rms_strain_amplification]
+  - id: causality_and_echo
+    statement: >
+      The combined lensed merger peak sits 0.60 s before the unlensed one
+      (peak_time_lensed_minus_unlensed_s) -- an interference effect between
+      two always-causal images (strong + weak, separated by a FIXED delay
+      image_time_delay_seconds=3.434s), not acausality. Independent
+      confirmation: a second, ~2-orders-fainter, genuinely separate copy of
+      the whole merger/ringdown appears later (echo_peak_time_s), with the
+      unlensed envelope at its noise floor at that same instant
+      (echo_time_env_unlensed) while the lensed envelope is ~60x above it
+      (echo_peak_env_lensed). The echo's observed arrival differs from the
+      naive prediction (t_peak_unlensed + ΔT) by exactly the same 0.60 s as
+      the near-merger interference shift (echo_peak_time_minus_prediction_s
+      matches peak_time_lensed_minus_unlensed_s to three digits) -- both
+      trace to the same cause. A prior version of this analysis had the
+      project's Fourier sign convention backwards, making this look
+      genuinely acausal; see wiki/log.md and wiki/conventions.md.
+    evidence:
+      - run.py::main (echo search, after the RMS/peak-amplification block)
+      - src/gwlens/waveoptics.py::time_delay_difference
+      - tests/test_waveoptics.py::check_causality_of_lensed_pulse
+      - caseA_strain_time.png (third panel: echo zoom)
+      - caseA_detector_envelope.png (log-scale, both peaks visible)
+    numbers: [peak_time_lensed_minus_unlensed_s, image_time_delay_seconds,
+      echo_peak_time_s, echo_peak_time_minus_prediction_s,
+      echo_peak_env_lensed, echo_time_env_unlensed]
   - id: imr_waveform_and_bugs_fixed
     statement: >
       The unlensed waveform is IMRPhenomD (pycbc/LALSimulation, Khan et al.
@@ -77,16 +102,21 @@ figures:
   - file: caseA_strain_time.png
     produced_by: run.py::main
     shows: >
-      Lensed vs. unlensed time-domain inspiral-merger-ringdown strain (top),
-      plus a zoomed merger/ringdown panel (bottom).
+      Lensed vs. unlensed time-domain inspiral-merger-ringdown strain: a full
+      overview (top, extended past merger to include the echo), a zoomed
+      merger/ringdown panel (middle), and a zoomed echo panel (bottom) --
+      the latter a fainter but recognisable replay of the whole chirp/
+      merger/ringdown, as the geometric-optics image superposition predicts.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
-      shift; the zoom window choice.
-    from_library: pycbc (IMRPhenomD) or taylorf2.py fallback, numpy.fft, matplotlib.
+      shift; the zoom window choices; the empirical echo-peak search
+      (echo_peak_time_s and related numbers).
+    from_library: pycbc (IMRPhenomD) or taylorf2.py fallback, numpy.fft, scipy.signal.hilbert, matplotlib.
     choices:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
-    supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed]
+      - "Echo panel centered on the empirically-found peak, not the naive t_peak_unlensed+ΔT prediction, which misses by ~0.6s (see causality_and_echo)."
+    supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]
   - file: caseA_diffraction_pattern.png
     produced_by: run.py::main (make_ring_pattern)
     shows: >
@@ -102,9 +132,13 @@ figures:
     supports: [y_A_value, w_regime]
   - file: caseA_detector_envelope.png
     produced_by: run.py::main
-    shows: Idealized single-detector strain envelope (Hilbert transform), lensed vs. unlensed.
-    from_scratch: Envelope comparison and the merger-time annotation.
+    shows: >
+      Idealized single-detector strain envelope (Hilbert transform), lensed
+      vs. unlensed, log-scale, extended to show both the merger peak and the
+      fainter second-image echo.
+    from_scratch: Envelope comparison and the echo-window annotation.
     from_library: scipy.signal.hilbert.
     choices:
       - "No noise, antenna pattern, or PSD -- explicitly an idealized/illustrative detector view, as scoped in wiki/conventions.md."
-    supports: [dephasing_not_simple_amplification]
+      - "Log-scale y-axis: the echo is ~2 orders of magnitude below the merger peak and invisible on a linear scale."
+    supports: [dephasing_not_simple_amplification, causality_and_echo]

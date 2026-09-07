@@ -71,33 +71,50 @@ individual samples of that oscillation, not its envelope).
 
 ## What lensing does to the waveform
 
-- **Peak-sample amplification: 0.962** (the single largest |h(t)| sample is
-  *smaller* lensed than unlensed).
-- **RMS amplification: 1.056** (power averaged over the whole waveform).
+- **Peak-sample amplification: 1.091** (the single largest |h(t)| sample is
+  larger lensed than unlensed).
+- **RMS amplification: 1.056** (power averaged over the whole waveform —
+  by Parseval's theorem this depends only on |F(f)|, so it is identical
+  whichever Fourier-phase convention is used; see the causality note below).
 
 F(f) modulates **phase** as well as amplitude (`caseA_F_of_f.png`, bottom
 sub-panel: arg F sweeps through a full 2*pi cycle roughly once per fringe),
 so the lensed waveform is a dephased, not simply rescaled, copy of the
 unlensed one — a genuinely wave-optics (not geometric-optics) statement: in
-the geometric-optics limit lensing IS just a real magnification. With the
-real IMRPhenomD merger now in the waveform, this dephasing is visible by
-eye, not just in the summary statistics: `caseA_strain_time.png`'s zoomed
-bottom panel shows the unlensed merger as the expected sharp,
-fast-decaying ringdown transient, while the lensed merger is visibly
-**smeared out** — a broader, lower, slower-oscillating feature rather than
-a sharp spike. This is because the merger/ringdown is intrinsically
-broadband (unlike the narrowband slowly-chirping inspiral earlier in the
-signal), so it samples many oscillations of F(f)'s interference fringes at
-once, and those fringes' rapidly-varying phase scrambles the coherent
-buildup that makes the unlensed merger sharp. `caseA_detector_envelope.png`
-shows the same effect in the Hilbert-transform envelope: the unlensed
-envelope has the classic sharp merger spike, the lensed envelope instead
-shows a broader, flattened bump in its place — note the envelope
-construction itself assumes a slowly-varying carrier and is least reliable
-exactly in this fast-changing merger region, so read this figure as
-qualitative confirmation of the smearing, not a precision measurement of
-its shape (`caseA_strain_time.png`'s raw-waveform zoom is the quantitative
-version).
+the geometric-optics limit lensing IS just a real magnification.
+
+**A note on causality, and a genuine echo.** An earlier version of this
+analysis had the project's Fourier sign convention backwards (documented in
+`wiki/log.md` and `wiki/conventions.md`); fixed, `caseA_strain_time.png`'s
+merger/ringdown zoom now shows something that can look alarming at first
+glance: the combined lensed merger peak sits **0.60 s *before*** the
+unlensed one (`peak_time_lensed_minus_unlensed_s=-0.6025`). This is *not*
+acausal. Case A's lensed signal is the coherent sum of two images — a
+strong (minimum-time) and a weak (saddle-point) image — separated by a
+**fixed** delay `ΔT(y_A)=image_time_delay_seconds=3.434 s`
+(`src/gwlens/waveoptics.py::time_delay_difference`); both are built only
+from the source's own past. Near merger the GW frequency sweeps fast enough
+that F(f)'s phase varies rapidly across the band, so the *interference*
+between the two images can shift where their *sum*'s envelope peaks, by an
+amount unrelated to ΔT and with no information arriving early. The
+independent, unambiguous confirmation is `caseA_strain_time.png`'s third
+panel and `caseA_detector_envelope.png` (log-scale): a second, genuinely
+separate, ~2-orders-of-magnitude-fainter copy of the *entire* merger/
+ringdown waveform appears at `echo_peak_time_s` — this project's proxy for
+the weak image alone, since the two lensed images share no waveform
+features until they've each individually finished. Naively predicting this
+echo's arrival as `t_peak_unlensed + ΔT` misses by ~0.6 s
+(`echo_peak_time_minus_prediction_s=-0.603`) — the *same* 0.6 s as the
+near-merger interference shift above, to three digits, because ΔT applies
+from the strong image's own (interference-free) arrival, and the combined
+near-merger peak used as its proxy is shifted by that same interference.
+Rather than assume either reference point, `run.py` searches the lensed
+envelope directly for this echo's actual peak and logs both the observed
+time and its offset from the naive prediction. At that instant the
+*unlensed* envelope (`echo_time_env_unlensed=1.5e-22`) is at its FFT-array
+noise floor — the unlensed signal has long since ended — while the lensed
+envelope (`echo_peak_env_lensed=9.65e-21`) is ~60x above it: a real,
+separate, later-arriving signal, present only because of the lens.
 
 ## The extended diffraction pattern (`caseA_diffraction_pattern.png`)
 

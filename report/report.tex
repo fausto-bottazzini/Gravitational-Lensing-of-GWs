@@ -110,26 +110,63 @@ espaciados que parecen franjas casi rectas a este zoom.}
 \caption{Strain lensado vs.\ no lensado en el dominio del tiempo (unidades
 arbitrarias, $D_\mathrm{eff}=5$ kpc --- un evento hipot\'etico
 ilustrativamente fuerte y cercano, no una distancia realista en tasa de
-eventos), con zoom al merger y ringdown abajo.}
+eventos): vista general extendida m\'as all\'a del merger (arriba), zoom al
+merger y ringdown (medio), y zoom al eco de segunda imagen (abajo, ver
+texto) --- una r\'eplica m\'as d\'ebil pero reconocible de todo el chirp/
+merger/ringdown, exactamente como predice la superposici\'on de im\'agenes
+de \'optica geom\'etrica.}
 \end{figure}
 
-La amplificaci\'on de la muestra pico es $0.962$ (la muestra $|h(t)|$
-individual m\'as grande es \emph{menor} lensada que no lensada); la
-amplificaci\'on RMS (promediada sobre toda la forma de onda) es $1.056$.
-Con el merger real de IMRPhenomD, esta diferencia entre estad\'isticas se
-ve a simple vista, no s\'olo en los n\'umeros: el zoom al merger/ringdown en
-la figura de arriba muestra el transitorio no lensado como el pico agudo y
-de decaimiento r\'apido esperado, mientras que el merger lensado aparece
-visiblemente \textbf{esparcido} --- una caracter\'istica m\'as ancha, m\'as
-baja y de oscilaci\'on m\'as lenta en su lugar. Esto es porque el
-merger/ringdown es intr\'insecamente de banda ancha (a diferencia del
-inspiral, angosto en banda y de evoluci\'on lenta, m\'as temprano en la
-se\~nal), as\'i que muestrea muchas oscilaciones de las franjas de
-interferencia de $F(f)$ a la vez, y la fase de esas franjas, que var\'ia
-r\'apidamente, revuelve la acumulaci\'on coherente que hace agudo al merger
-no lensado --- una afirmaci\'on genuinamente de \'optica de ondas (en el
-l\'imite de \'optica geom\'etrica, el lensing \emph{es} s\'olo una
-magnificaci\'on real).
+La amplificaci\'on de la muestra pico es $1.091$ (la muestra $|h(t)|$
+individual m\'as grande es mayor lensada que no lensada); la amplificaci\'on
+RMS (promediada sobre toda la forma de onda) es $1.056$ --- por el teorema
+de Parseval, esta \'ultima depende s\'olo de $|F(f)|$, nunca de la
+convenci\'on de fase de Fourier usada.
+
+$F(f)$ modula \textbf{fase} adem\'as de amplitud (figura anterior, subpanel
+inferior: $\arg F$ barre un ciclo completo de $2\pi$ aproximadamente una
+vez por franja), as\'i que la forma de onda lensada es una copia
+\emph{desfasada}, no simplemente reescalada, de la no lensada --- una
+afirmaci\'on genuinamente de \'optica de ondas (en el l\'imite de \'optica
+geom\'etrica, el lensing \emph{es} s\'olo una magnificaci\'on real).
+
+\paragraph{Una nota sobre causalidad, y un eco genuino.}
+El zoom al merger/ringdown de la figura de arriba muestra algo que a
+primera vista puede alarmar: el pico lensado combinado se ubica $0.60$~s
+\emph{antes} que el no lensado (\code{peak\_time\_lensed\_minus\_unlensed\_s
+$=-0.6025$}). Esto \textbf{no} es acausal. La se\~nal lensada del Caso A es
+la suma coherente de dos im\'agenes --- una fuerte (tiempo m\'inimo) y una
+d\'ebil (punto silla) --- separadas por un retraso \textbf{fijo}
+$\Delta T(y_A)=3.434$~s (\code{image\_time\_delay\_seconds}); ambas se
+construyen s\'olo a partir del pasado de la fuente. Cerca del merger la
+frecuencia barre lo bastante r\'apido como para que la fase de $F(f)$ var\'ie
+r\'apidamente a trav\'es de la banda, as\'i que la \emph{interferencia}
+entre las dos im\'agenes puede desplazar d\'onde su \emph{suma} alcanza el
+pico, sin que llegue informaci\'on antes de tiempo. La confirmaci\'on
+independiente, inequ\'ivoca, es el panel inferior de la figura de arriba
+(\code{caseA\_detector\_envelope.png}, en \code{cases/case\_A\_chirp/},
+muestra la misma confirmaci\'on en escala logar\'itmica sobre toda la
+observaci\'on): una segunda copia, genuinamente separada, del
+merger/ringdown completo, $\sim$2 \'ordenes de magnitud m\'as d\'ebil,
+aparece en
+\code{echo\_peak\_time\_s} --- la se\~nal no lensada, en ese mismo
+instante, est\'a en su piso de ruido
+(\code{echo\_time\_env\_unlensed}$=1.5\times10^{-22}$), mientras la lensada
+est\'a $\sim$60 veces por encima (\code{echo\_peak\_env\_lensed}
+$=9.65\times10^{-21}$): una se\~nal real, separada, que llega despu\'es,
+presente s\'olo por el lente. Predecir ingenuamente su llegada como
+$t_\mathrm{peak,no\ lensado}+\Delta T$ falla por $\sim0.6$~s
+(\code{echo\_peak\_time\_minus\_prediction\_s$=-0.603$}) --- el
+\emph{mismo} desplazamiento de $0.6$~s que el del pico cercano al merger,
+a tres cifras: $\Delta T$ aplica desde la llegada de la imagen fuerte
+\emph{sola} (libre de interferencia), y el pico combinado usado como su
+proxy est\'a desplazado por esa misma interferencia. En vez de asumir una
+u otra referencia, \code{run.py} busca directamente el m\'aximo real de la
+envolvente lensada y registra tanto el tiempo observado como su diferencia
+con la predicci\'on ingenua. Una versi\'on anterior de este an\'alisis
+ten\'ia la convenci\'on de signo de Fourier del proyecto invertida, lo que
+hac\'ia que esto pareciera genuinamente acausal; v\'ease
+\code{wiki/log.md} y \code{wiki/conventions.md}.
 
 \section{Caso B --- cuasi-monocrom\'atico, lente en movimiento}
 \label{sec:caseB}
