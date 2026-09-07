@@ -22,5 +22,9 @@
   "einstein_radius_scaling": {
     "passed": true,
     "message": "theta_E(2M)/theta_E(M) = 1.4142135624 (expect sqrt(2)=1.4142135624)"
+  },
+  "time_varying_impact_parameter": {
+    "passed": true,
+    "message": "lensed fraction=0.497 (expect ~0.5), finite&positive y on lensed half: True"
   }
 }

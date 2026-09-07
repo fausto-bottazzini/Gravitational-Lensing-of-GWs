@@ -83,14 +83,55 @@ def orbital_plane_to_sky(r, nu, omega, i, Omega):
 
 
 def impact_parameter_of_time(t, a_out, e_out, period_out, i_out, Omega_out,
-                              omega_out, t_peri, M_lens_msun, D_L_pc, D_S_pc):
+                              omega_out, t_peri, M_lens_msun, D_L_pc):
     """y(t): dimensionless source-plane impact parameter from the outer
-    Keplerian orbit, projected onto the sky and scaled by the angular
-    Einstein radius. `a_out` in the same physical length unit as the
-    distances (pc here, for consistency with D_L/D_S)."""
+    Keplerian orbit of the source (binary CM) around the lens (M_lens,
+    effectively fixed at the system barycenter since M_lens >> M_binary).
+
+    IMPORTANT and easy to get wrong: unlike textbook cosmological lensing,
+    here the lens and source are in the SAME physical system, so D_LS is NOT
+    a large, ~fixed distance -- it IS the (time-dependent) line-of-sight
+    separation between them, `z_los(t)` from `orbital_plane_to_sky`, at the
+    AU-to-sub-pc scale of the outer orbit itself, while D_L (source-to-
+    observer) is set by D_L (kpc-to-pc scale, effectively also D_S to
+    superb approximation: |z_los|/D_L ~ 1e-8 here, dropped everywhere
+    EXCEPT in D_LS itself, where it is the whole story):
+
+        theta_E(t)^2 = (4 G M_lens/c^2) * D_LS(t) / (D_L * D_S(t))
+                     ~ (4 G M_lens/c^2) * z_los(t) / D_L^2   (D_S ~ D_L)
+
+    Two direct physical consequences, both real, not approximation
+    artefacts:
+      * z_los(t) < 0 (source instantaneously nearer Earth than the lens,
+        i.e. in FRONT of it) -> D_LS<0 -> no lensing geometry exists for
+        that half of the orbit. Returned as `lensed=False`, y=inf, F=1
+        should be used by the caller.
+      * z_los(t) -> 0+ (source crossing the plane through the lens
+        perpendicular to the line of sight) -> theta_E -> 0 -> y -> infinity
+        for any nonzero transverse offset -> effectively unlensed there too,
+        with NO special-casing needed: the formula does this on its own.
+    This is exactly the origin of the "repeated lensing" pulses once per
+    outer orbit found in hierarchical-triple GW lensing (only the far-side
+    half-orbit is lensed at all) -- see D'Orazio & Loeb (2020) and
+    theory/theory.tex Sec. 5.
+
+    Returns (y, lensed_mask, theta_E_rad) -- y is np.inf where lensed_mask
+    is False.
+    """
+    t = np.atleast_1d(np.asarray(t, dtype=float))
     r, nu = relative_separation(t, a_out, e_out, period_out, t_peri)
-    x_sky, y_sky, _ = orbital_plane_to_sky(r, nu, omega_out, i_out, Omega_out)
-    rho_pc = np.hypot(x_sky, y_sky)  # projected transverse offset, pc
-    theta_rad = rho_pc / D_S_pc      # small-angle: physical offset / D_S
-    theta_E_rad = einstein_radius_angle(M_lens_msun, D_L_pc, D_S_pc)
-    return theta_rad / theta_E_rad, theta_E_rad
+    x_sky, y_sky, z_los = orbital_plane_to_sky(r, nu, omega_out, i_out, Omega_out)
+    rho_pc = np.hypot(x_sky, y_sky)          # projected transverse offset, pc
+    D_LS_pc = z_los                          # exact in this approximation
+    lensed_mask = D_LS_pc > 0.0
+
+    theta_E_rad = np.zeros_like(t)
+    theta_E_rad[lensed_mask] = np.sqrt(
+        4.0 * units.msun_to_meters(M_lens_msun) * (D_LS_pc[lensed_mask] * units.PC_SI)
+        / (D_L_pc * units.PC_SI) ** 2
+    )
+    theta_rad = rho_pc / (D_L_pc)  # D_S ~ D_L; rho_pc/D_L_pc is already the (dimensionless) small angle in rad since both in pc
+
+    y = np.full_like(t, np.inf)
+    y[lensed_mask] = theta_rad[lensed_mask] / theta_E_rad[lensed_mask]
+    return y, lensed_mask, theta_E_rad

@@ -67,6 +67,22 @@ def check_einstein_radius_scaling():
     return ok, f"theta_E(2M)/theta_E(M) = {ratio:.10f} (expect sqrt(2)={np.sqrt(2):.10f})"
 
 
+def check_time_varying_impact_parameter():
+    """impact_parameter_of_time: roughly half an (i != 0) outer orbit must
+    be unlensed (source in front of the lens, D_LS<0), and y must stay
+    finite and positive throughout the lensed half."""
+    a_out_pc = 1.0 * 4.84814e-6  # 1 AU in pc
+    P_out = 4 * 86400.0
+    t = np.linspace(0, P_out, 400)
+    y, lensed, theta_E = geo.impact_parameter_of_time(
+        t, a_out_pc, e_out=0.0, period_out=P_out, i_out=np.deg2rad(89.0),
+        Omega_out=0.0, omega_out=0.0, t_peri=0.0, M_lens_msun=5.0e4, D_L_pc=5000.0)
+    frac = np.mean(lensed)
+    finite_and_positive = np.all(np.isfinite(y[lensed])) and np.all(y[lensed] > 0)
+    ok = abs(frac - 0.5) < 0.05 and finite_and_positive
+    return ok, f"lensed fraction={frac:.3f} (expect ~0.5), finite&positive y on lensed half: {finite_and_positive}"
+
+
 CHECKS = [
     ("kepler_equation_inverts", check_kepler_equation_inverts),
     ("circular_orbit_constant_radius", check_circular_orbit_constant_radius),
@@ -74,6 +90,7 @@ CHECKS = [
     ("edge_on_orbit_projects_to_a_line", check_edge_on_orbit_projects_to_a_line),
     ("face_on_orbit_projects_full_ellipse", check_face_on_orbit_projects_full_ellipse),
     ("einstein_radius_scaling", check_einstein_radius_scaling),
+    ("time_varying_impact_parameter", check_time_varying_impact_parameter),
 ]
 
 
