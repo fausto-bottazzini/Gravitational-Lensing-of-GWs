@@ -1,0 +1,26 @@
+{
+  "kepler_equation_inverts": {
+    "passed": true,
+    "message": "max |M - (E - e sinE)| over e in [0,0.3,0.7,0.95] = 8.88e-16"
+  },
+  "circular_orbit_constant_radius": {
+    "passed": true,
+    "message": "circular-orbit r range [1.000000000000, 1.000000000000] (expect exactly 1.0)"
+  },
+  "kepler_third_law_period": {
+    "passed": true,
+    "message": "nu(t=0)=0.0000000000, nu(t=P)=6.2831853072 (should differ by 2*pi mod 2*pi)"
+  },
+  "edge_on_orbit_projects_to_a_line": {
+    "passed": true,
+    "message": "max|y_sky| for edge-on orbit = 5.84e-17 (expect ~0)"
+  },
+  "face_on_orbit_projects_full_ellipse": {
+    "passed": true,
+    "message": "face-on: max|rho-r|=2.22e-16, max|z|=0.00e+00"
+  },
+  "einstein_radius_scaling": {
+    "passed": true,
+    "message": "theta_E(2M)/theta_E(M) = 1.4142135624 (expect sqrt(2)=1.4142135624)"
+  }
+}

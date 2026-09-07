@@ -38,3 +38,16 @@ Append-only. What was decided, ingested, corrected, and when.
     3e-5 at `w=1000`, shrinking with `w` as expected for an asymptotic
     expansion — recorded as the check in
     `tests/test_waveoptics.py::test_geometric_optics_limit`.
+- **2026-09-07** — `src/gwlens/chirp.py` (leading-order chirp): inverting
+  `time_to_merger(f)` for `f(t)` by hand produced a wrong exponent on both
+  `(5/256)` and `Mchirp` (a bracket-power slip); caught immediately because
+  `freq_of_time(t=0)` did not reproduce the input `f0`. Fixed by writing the
+  inversion out as separate factors instead of one clever bracket. Then
+  `tests/test_chirp.py`'s own first draft had two more errors (this time in
+  the *tests*, not the code): expected `f_isco(60 Msun)` in 100–300 Hz
+  (checked by hand: correct value is ~73 Hz, matching the standard
+  `f_isco ~ 4400 Hz * (Msun/M)` rule of thumb), and expected
+  `Mchirp/Mtotal=2^(-1/5)` at equal mass instead of the algebraically correct
+  `2^(-6/5)`. Both test bugs fixed by re-deriving the expected numbers by
+  hand rather than guessing; `src/gwlens/chirp.py` itself needed no further
+  changes. All 4 checks in `tests/test_chirp.py` now pass.

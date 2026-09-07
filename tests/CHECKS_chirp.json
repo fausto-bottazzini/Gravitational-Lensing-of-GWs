@@ -1,0 +1,18 @@
+{
+  "freq_of_time_matches_f0": {
+    "passed": true,
+    "message": "f(t=0)=20.000000 Hz vs input f0=20.0 Hz, relerr=3.55e-16"
+  },
+  "closed_form_matches_numeric_ode": {
+    "passed": true,
+    "message": "max relative error closed-form vs solve_ivp = 6.13e-09 (tol 1e-6)"
+  },
+  "isco_frequency_reasonable": {
+    "passed": true,
+    "message": "f_isco(M=60 Msun) = 73.29 Hz vs ~4400/M approx = 73.33 Hz, relerr=6.42e-04"
+  },
+  "chirp_mass_symmetry": {
+    "passed": true,
+    "message": "Mc(20,40)=24.334574=Mc(40,20)=24.334574; Mc/Mtot at equal mass=0.435275 vs 2^-6/5=0.435275"
+  }
+}
