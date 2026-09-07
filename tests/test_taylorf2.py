@@ -59,8 +59,8 @@ def check_ifft_reconstructs_chirp_at_tc():
     peak_times = []
     for pad_mult in [2, 4, 8]:
         n = int(np.ceil((t_c - chirp.time_to_merger(f_isco, Mc)) * fs))
-        n = 1 << (n - 1).bit_length()
-        n_pad = 1 << (n * pad_mult - 1).bit_length()
+        n = 1 << (n - 1).bit_length()  # round up to a power of two
+        n_pad = n * pad_mult  # n already a power of two, so this equals 1 << (n*pad_mult-1).bit_length()
         freqs = np.fft.rfftfreq(n_pad, d=1.0 / fs)
         inband = (freqs >= f0) & (freqs <= f_isco)
         H = np.zeros_like(freqs, dtype=complex)
@@ -71,7 +71,13 @@ def check_ifft_reconstructs_chirp_at_tc():
     spread = max(peak_times) - min(peak_times)
     close_to_tc = all(abs(pt - t_c) / t_c < 0.05 for pt in peak_times)
     ok = spread < 0.05 * t_c and close_to_tc
-    return ok, f"peak times at pad_mult=[2,4,8]: {peak_times} (t_c={t_c:.3f}); spread={spread:.4f}s"
+    # float(), not the bare np.float64 list: numpy >=2.0 reprs those as
+    # "np.float64(...)", numpy <2.0 as a plain number, so this message (and
+    # so this committed CHECKS_taylorf2.json) was not byte-reproducible
+    # across the repo's own two supported environments; caught by an
+    # independent review, see wiki/log.md.
+    peak_times_f = [float(pt) for pt in peak_times]
+    return ok, f"peak times at pad_mult=[2,4,8]: {peak_times_f} (t_c={t_c:.3f}); spread={spread:.4f}s"
 
 
 def check_amplitude_consistency_with_chirp_module():
@@ -101,7 +107,7 @@ def check_pn_terms_are_small_corrections():
     phi2 = 3715.0 / 756.0 + 55.0 * eta / 9.0
     phi3 = -16.0 * np.pi
     phi4 = 15293365.0 / 508032.0 + 27145.0 * eta / 504.0 + 3085.0 * eta ** 2 / 72.0
-    terms = [phi2 * v ** 2, phi3 * v ** 3, phi4 * v ** 4]
+    terms = [float(phi2 * v ** 2), float(phi3 * v ** 3), float(phi4 * v ** 4)]
     ok = all(abs(t) < 1.0 for t in terms)
     return ok, f"v={v:.4f}; PN correction terms at f=20Hz: {terms} (all should be < 1 in magnitude)"
 

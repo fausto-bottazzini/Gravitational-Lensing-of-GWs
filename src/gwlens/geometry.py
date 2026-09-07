@@ -64,10 +64,19 @@ def relative_separation(t, a, e, period, t_peri=0.0):
 
 def orbital_plane_to_sky(r, nu, omega, i, Omega):
     """Rotate a position (r,nu) in the orbital plane into the observer
-    frame: z = line of sight (toward the observer), (x,y) = sky plane.
-    Standard R_z(Omega) R_x(i) R_z(omega) rotation (e.g. Murray & Dermott
-    Sec. 2.8, adapted: i=0 is face-on/orbital plane == sky plane, i=pi/2 is
-    edge-on with the line of sight in the orbital plane).
+    frame: z = line of sight, INCREASING AWAY FROM the observer (so a more
+    positive z_los is farther from Earth, i.e. more nearly "behind" whatever
+    is at z=0 -- consistent with `impact_parameter_of_time`'s use of
+    `z_los>0` for "source behind the lens", the only place the SIGN of this
+    axis is actually load-bearing; a previous version of this docstring said
+    "toward the observer" instead, backwards -- caught by an independent
+    review, no numerical consequence for the circular (e_out=0) orbit
+    actually used in cases/, since the lensed half is symmetric either way
+    and only WHICH half is lensed (a P_out/2 phase choice, itself arbitrary)
+    would flip; see wiki/log.md). (x,y) = sky plane. Standard
+    R_z(Omega) R_x(i) R_z(omega) rotation (e.g. Murray & Dermott Sec. 2.8,
+    adapted: i=0 is face-on/orbital plane == sky plane, i=pi/2 is edge-on
+    with the line of sight in the orbital plane).
 
     Returns (x_sky, y_sky, z_los), same shape as r/nu.
     """
@@ -94,7 +103,7 @@ def impact_parameter_of_time(t, a_out, e_out, period_out, i_out, Omega_out,
     separation between them, `z_los(t)` from `orbital_plane_to_sky`, at the
     AU-to-sub-pc scale of the outer orbit itself, while D_L (source-to-
     observer) is set by D_L (kpc-to-pc scale, effectively also D_S to
-    superb approximation: |z_los|/D_L ~ 1e-8 here, dropped everywhere
+    superb approximation: |z_los|/D_L ~ 2e-9 here, dropped everywhere
     EXCEPT in D_LS itself, where it is the whole story):
 
         theta_E(t)^2 = (4 G M_lens/c^2) * D_LS(t) / (D_L * D_S(t))

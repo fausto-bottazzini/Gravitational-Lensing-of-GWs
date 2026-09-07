@@ -79,8 +79,8 @@ def main():
     log("f_start_Hz", float(f_t[0]))
     log("f_end_Hz", float(f_t[-1]))
     log("fractional_freq_drift", float((f_t[-1] - f_t[0]) / f_t[0]))
-    _, phase = chirp.phase_of_time(t, lambda tt: chirp.freq_of_time(tt, t_c, system.MCHIRP_MSUN), 0.0, t[-1])
-    tt_fine, _ = chirp.phase_of_time(t, lambda tt: chirp.freq_of_time(tt, t_c, system.MCHIRP_MSUN), 0.0, t[-1])
+    tt_fine, phase = chirp.phase_of_time(
+        lambda tt: chirp.freq_of_time(tt, t_c, system.MCHIRP_MSUN), 0.0, t[-1])
     phase_t = interp1d(tt_fine, phase, kind="cubic")(t)
 
     D_eff_mpc = system.D_L_PC / 1.0e6
@@ -114,13 +114,28 @@ def main():
     fig.savefig(OUT / "caseB_y_of_t.png", dpi=170)
     plt.close(fig)
 
-    # Fig 2: |F(t)|^2 over the whole observation -- repeated lensing pulses
-    fig, ax = plt.subplots(figsize=(8, 3.2))
-    ax.plot(t / 86400.0, np.abs(F_t) ** 2, color="#c0392b", lw=0.8)
-    ax.set_xlabel("t [days]")
-    ax.set_ylabel(r"$|F(w_B,y(t))|^2$")
-    ax.set_title(f"Case B: repeated lensing pulses over {n_periods:.0f} outer periods "
-                 f"(w_B={w_B:.2f})")
+    # Fig 2: |F(t)|^2 over the whole observation -- repeated lensing pulses,
+    # plus a one-period zoom: the diffraction ringing flanking each pulse is
+    # genuine (not aliasing -- re-checked on a 40x finer grid, agrees
+    # point-for-point) but is compressed into a few pixels at the full
+    # 24-day width and was not actually visible in a single-panel version of
+    # this figure despite RESULTS.md/report.tex describing it as such; an
+    # independent review caught this, see wiki/log.md.
+    abs_F2 = np.abs(F_t) ** 2
+    fig, axes = plt.subplots(2, 1, figsize=(8, 6.0))
+    axes[0].plot(t / 86400.0, abs_F2, color="#c0392b", lw=0.8)
+    axes[0].set_xlabel("t [days]")
+    axes[0].set_ylabel(r"$|F(w_B,y(t))|^2$")
+    axes[0].set_title(f"Case B: repeated lensing pulses over {n_periods:.0f} outer periods "
+                       f"(w_B={w_B:.2f})")
+
+    i_peak = int(np.argmax(abs_F2))
+    t_peak_days = t[i_peak] / 86400.0
+    zoom = (np.abs(t / 86400.0 - t_peak_days) < 1.0)
+    axes[1].plot(t[zoom] / 86400.0 - t_peak_days, abs_F2[zoom], color="#c0392b", lw=1.0)
+    axes[1].set_xlabel("t - t_peak [days]")
+    axes[1].set_ylabel(r"$|F(w_B,y(t))|^2$")
+    axes[1].set_title("Zoom: one pulse -- the diffraction ringing flanking it")
     fig.tight_layout()
     fig.savefig(OUT / "caseB_repeated_pulses.png", dpi=170)
     plt.close(fig)
@@ -165,7 +180,15 @@ def main():
     # too, purely for a consistent common length scale to plot in -- no
     # lensing is claimed to happen there, per the D_LS<=0 discussion in
     # theory.tex Sec. 4.2).
-    D_LS_traj_pc = np.abs(z_los)
+    # Floored away from exactly zero: at the two front/back crossings each
+    # orbit D_LS_traj_pc=0 exactly (a measure-zero set of samples on this
+    # grid), which would divide by zero and emit non-finite NaN/Infinity
+    # into the exported JSON below (not valid JSON, though it happens to
+    # work as inlined JavaScript, where those are valid identifiers -- an
+    # independent review caught this; see wiki/log.md). The floor only ever
+    # affects those isolated samples; theta_E(t) is still continuous and
+    # correct everywhere else.
+    D_LS_traj_pc = np.maximum(np.abs(z_los), 1e-12)
     theta_E_traj = np.sqrt(
         4.0 * units.msun_to_meters(system.M_LENS_MSUN) * (D_LS_traj_pc * units.PC_SI)
         / (system.D_L_PC * units.PC_SI) ** 2
@@ -208,7 +231,8 @@ def main():
     # 1/f_B=20 s carrier -- plotting "raw waveform" from it just aliases
     # (an earlier version of this figure did exactly that; see wiki/log.md).
     # Build a dedicated fine grid around the first pulse instead.
-    t_pulse = t[np.argmax(np.abs(F_t))]
+    i_pulse = int(np.argmax(np.abs(F_t)))
+    t_pulse = t[i_pulse]
     t_fine = np.linspace(t_pulse - 200.0, t_pulse + 200.0, 4000)  # dt=0.1s, >>Nyquist for f_B=0.05Hz
     y_fine, lensed_fine, _ = geo.impact_parameter_of_time(
         t_fine, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
@@ -217,7 +241,7 @@ def main():
     F_fine = np.array([wo.F_hybrid(w_B, y) if lm else 1.0 + 0.0j
                         for y, lm in zip(y_fine, lensed_fine)])
     f_fine = chirp.freq_of_time(t_fine, t_c, system.MCHIRP_MSUN)
-    phase_fine = 2.0 * np.pi * f_fine * (t_fine - t_fine[0]) + phase_t[np.argmax(np.abs(F_t))]
+    phase_fine = 2.0 * np.pi * f_fine * (t_fine - t_fine[0]) + phase_t[i_pulse]
     amp_fine = chirp.restricted_pn_amplitude_td(f_fine, system.MCHIRP_MSUN, D_eff_mpc)
     z_u_fine = amp_fine * np.exp(1j * phase_fine)
     z_l_fine = F_fine * z_u_fine

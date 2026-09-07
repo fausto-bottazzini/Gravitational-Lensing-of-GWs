@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Reproduce every result in this repository from a clean checkout.
 #
-#   ./reproduce.sh          # everything: checks, both cases
+#   ./reproduce.sh          # everything: checks, both cases (incl. report.html)
 #   ./reproduce.sh checks   # just the correctness checks (fast, ~30s)
-#   ./reproduce.sh cases    # just the two case studies (figures + numbers)
+#   ./reproduce.sh cases    # the two case studies (figures + numbers) AND
+#                           #   report.html, which inlines their output --
+#                           #   needs no LaTeX, just the venv's python
+#   ./reproduce.sh html     # just report.html, from whatever case data
+#                           #   already exists on disk
 #   ./reproduce.sh theory   # rebuild theory/theory.pdf (needs a LaTeX install)
-#   ./reproduce.sh report   # rebuild report/report.pdf and report.html (needs
-#                           #   a LaTeX install for the PDF; the HTML step
-#                           #   needs no LaTeX, just the venv's python)
+#   ./reproduce.sh report   # rebuild report/report.pdf AND report.html
+#                           #   (needs a LaTeX install, for the PDF)
 #
 # Nothing here is required to already exist: a venv is created, pinned
 # dependencies (requirements.txt) are installed into it, then everything
@@ -58,6 +61,19 @@ run_cases() {
   "$PY" cases/case_A_chirp/run.py
   echo "== Case B: quasi-monochromatic, moving lens =="
   "$PY" cases/case_B_monochromatic/run.py
+  run_html
+}
+
+run_html() {
+  # No LaTeX needed -- just the venv's python, inlining
+  # cases/*/caseX_animation_data.json into report/report.html. Kept as its
+  # own step (called from both `cases` and `report` below) so report.html
+  # never goes stale relative to freshly-regenerated case data even on a
+  # machine with no LaTeX install, which `run_report` alone requires (an
+  # independent review caught `all`/`cases` leaving report.html out of sync
+  # with the JSON it inlines; see wiki/log.md).
+  echo "== rebuilding report/report.html (inlines cases/*/caseX_animation_data.json) =="
+  "$PY" report/build_report.py
 }
 
 run_theory() {
@@ -78,17 +94,17 @@ run_report() {
     pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
     pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
     rm -f *.aux *.bbl *.blg *.log *.out *.toc )
-  echo "== rebuilding report/report.html (inlines cases/*/caseX_animation_data.json) =="
-  "$PY" report/build_report.py
+  run_html
 }
 
 case "$STEP" in
   checks) run_checks ;;
   cases)  run_cases ;;
+  html)   run_html ;;
   theory) run_theory ;;
   report) run_report ;;
   all)    run_checks; run_cases ;;
-  *) echo "usage: $0 [checks|cases|theory|report|all]"; exit 1 ;;
+  *) echo "usage: $0 [checks|cases|html|theory|report|all]"; exit 1 ;;
 esac
 
 echo "== done =="

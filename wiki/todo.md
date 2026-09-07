@@ -1,7 +1,7 @@
 # Todo / open items
 
 - [x] Pin exact `(m1, m2, M_L, a_out, e_out, i_out)` numbers — `src/gwlens/system.py`.
-- [x] `theory.tex`: full derivation, `theory/theory.pdf` (18 pages).
+- [x] `theory.tex`: full derivation, `theory/theory.pdf` (23 pages).
 - [x] `src/gwlens`: wave optics core, orbits, chirp waveform, TaylorF2, one
   pinned system. No separate "detector toy model" module ended up needed --
   the idealized detector view (Hilbert-transform envelope, no noise/antenna
@@ -32,7 +32,7 @@
   (IMRPhenomD, Khan et al. 2016) for Case A -- native Windows install still
   hangs indefinitely resolving `lalsuite`, but pycbc installs cleanly under
   WSL2, which is what the professor's own machine runs anyway; see
-  `wiki/log.md` and `wiki/running_on_wsl.md` for the documented workflow.
+  `wiki/log.md` for how this was found and fixed.
   `taylorf2.py`'s 2PN inspiral-only waveform remains the automatic fallback
   when pycbc isn't importable, so `reproduce.sh` still runs end to end with
   no manual steps on any platform -- only the WSL path reproduces the exact

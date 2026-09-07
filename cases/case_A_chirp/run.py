@@ -66,8 +66,8 @@ def build_waveform_fd():
     # the observed high-frequency content.
     fs = 2048.0
     n = int(np.ceil(t_end * fs))
-    n = 1 << (n - 1).bit_length()
-    n_pad = 1 << (2 * n - 1).bit_length()  # extra padding: frequency resolution for the fringes
+    n = 1 << (n - 1).bit_length()  # round up to a power of two
+    n_pad = 2 * n  # extra padding: frequency resolution for the fringes (n already a power of two, so this equals 1 << (2*n-1).bit_length())
     freqs = np.fft.rfftfreq(n_pad, d=1.0 / fs)
     log("sample_rate_Hz", fs)
     log("n_samples", n_pad)
@@ -122,14 +122,22 @@ def make_ring_pattern(w, y_max=3.0, n_grid=481, n_radial=4000,
     r_max_needed = np.hypot(max(abs(x1), abs(x2)), max(abs(y1), abs(y2)))
 
     r_grid = np.linspace(1e-3, r_max_needed, n_radial)
-    F_r = np.array([wo.F_hybrid(w, r) for r in r_grid])
+    # F_hybrid switches evaluator on w alone, not on r -- at high w (as used
+    # for the LEFT/full-pattern panel here) it always returns
+    # F_geometric_optics, which formally diverges as r->0 (mu_+ -> infinity).
+    # An independent review caught this: the plotted "Einstein-ring
+    # diffraction spike" was actually that divergence, cut off only by the
+    # innermost grid sample, not the true (finite) wave-optics value -- the
+    # opposite of what the figure's caption claims. Force the exact closed
+    # form near the axis regardless of w; see wiki/log.md.
+    F_r = np.array([wo.F_point_lens(w, r) if r < 0.5 else wo.F_hybrid(w, r) for r in r_grid])
     mag2 = np.abs(F_r) ** 2
     interp = interp1d(r_grid, mag2, bounds_error=False, fill_value=(mag2[0], mag2[-1]))
 
     xs = np.linspace(x1, x2, n_grid)
     ys = np.linspace(y1, y2, n_grid)
     Y1, Y2 = np.meshgrid(xs, ys)
-    R = np.hypot(Y1 - 0.0, Y2 - 0.0)  # radius from the LENS at the origin
+    R = np.hypot(Y1, Y2)  # radius from the LENS at the origin
     return xs, ys, interp(R)
 
 
@@ -183,7 +191,7 @@ def main():
     mag_unlensed = np.max(np.abs(h_unlensed))
     log("peak_strain_amplification", float(mag_lensed / mag_unlensed))
     log("peak_time_lensed_s", float(t[i_peak_lensed]))
-    log("peak_time_lensed_minus_unlensed_s", float(t[i_peak_lensed] - t[np.argmax(np.abs(h_unlensed))]))
+    log("peak_time_lensed_minus_unlensed_s", float(t[i_peak_lensed] - NUMBERS["peak_time_unlensed_s"]))
 
     dT_dimensionless = wo.time_delay_difference(y_A)
     t_char_seconds = 4.0 * units.msun_to_seconds(system.M_LENS_MSUN)  # 4GM/c^3
@@ -200,15 +208,15 @@ def main():
     log("rms_strain_amplification", float(rms_lensed / rms_unlensed))
 
     # ---- Genuine second-image echo: locate it empirically, don't assume --
-    # The naive prediction "echo at t_peak_unlensed + image_time_delay" turns
-    # out to be off by several tenths of a second: the interference between
-    # the two images shifts where the COMBINED near-merger peak sits (see
-    # peak_time_lensed_minus_unlensed_s above), and the fixed geometric delay
-    # ΔT(y) applies from the strong image's own (interference-free) arrival,
-    # not from the unlensed reference time. Rather than hand-wave which
-    # reference point is "right," we just search the envelope for the actual
-    # local maximum near the predicted delay and report how well it lines up
-    # -- this is the more honest, and more easily reproduced, check.
+    # F(w,y) is referenced to the strong image's own arrival (waveoptics.py
+    # module docstring, "REFERENCE-PHASE NORMALIZATION FIX"), so the naive
+    # prediction "echo at t_peak_unlensed + image_time_delay" should now be
+    # exact -- search near it and report how well it lines up, rather than
+    # assume: this is the more honest, and more easily reproduced, check.
+    # (An earlier version of this code, before that normalization fix, found
+    # this naive prediction off by ~0.6s and mis-attributed the offset to
+    # interference between the two images; it was actually the un-subtracted
+    # reference phase this fix removes -- see wiki/log.md.)
     from scipy.signal import hilbert
     env_u = np.abs(hilbert(h_unlensed))
     env_l = np.abs(hilbert(h_lensed))
@@ -225,6 +233,22 @@ def main():
     i_at_echo_unlensed = int(np.argmin(np.abs(t - echo_t)))
     log("echo_time_env_unlensed", float(env_u[i_at_echo_unlensed]))
 
+    # How much fainter than the MERGER PEAK itself (not the noise floor
+    # above) is the echo -- the number that actually answers "how faint is
+    # it", and the cleanest independent validation of F available: in the
+    # geometric-optics limit (which the whole in-band F is, here -- see
+    # RESULTS.md) the echo/peak envelope ratio should equal sqrt(|mu_-|),
+    # the weak image's own magnification, exactly.
+    unlensed_peak_env = float(np.max(env_u))
+    log("unlensed_peak_env", unlensed_peak_env)
+    echo_to_unlensed_peak_ratio = float(NUMBERS["echo_peak_env_lensed"] / unlensed_peak_env)
+    log("echo_to_unlensed_peak_ratio", echo_to_unlensed_peak_ratio)
+    x_plus_A, x_minus_A = wo.image_positions(y_A)
+    sqrt_mu_minus = float(np.sqrt(np.abs(wo.magnification(x_minus_A))))
+    log("sqrt_mu_minus_geometric", sqrt_mu_minus)
+    log("echo_ratio_vs_sqrt_mu_minus_relerr",
+        float(abs(echo_to_unlensed_peak_ratio - sqrt_mu_minus) / sqrt_mu_minus))
+
     # ---- Figure 1: F(f) across the chirp (interference fringes) ---------
     # The fringes are far too fine to resolve over the full 10-125 Hz band
     # at print resolution (w up to 778 means thousands of oscillations); a
@@ -234,7 +258,12 @@ def main():
     f_zoom_lo, f_zoom_hi = system.F_A_START_HZ, system.F_A_START_HZ + 3.0
     zmask = (freqs >= f_zoom_lo) & (freqs <= f_zoom_hi)
 
-    fig, axes = plt.subplots(2, 1, figsize=(7, 6.5))
+    # Three panels: |F(f)| over the whole band, |F(f)| zoomed (fringes
+    # resolved), and arg F(f) over that same zoom -- an earlier version of
+    # this figure had only the two |F| panels while RESULTS.md/claims.yaml
+    # already described an "arg F" sub-panel that did not exist; an
+    # independent review caught the mismatch, see wiki/log.md.
+    fig, axes = plt.subplots(3, 1, figsize=(7, 9.2))
     axes[0].plot(freqs[mask], np.abs(F[mask]), lw=0.4, color="#2b6cb0")
     axes[0].axvspan(f_zoom_lo, f_zoom_hi, color="gold", alpha=0.3)
     axes[0].set_ylabel(r"$|F(f)|$")
@@ -246,18 +275,30 @@ def main():
     axes[1].set_xlabel("f [Hz]")
     axes[1].set_title(f"Zoom: {f_zoom_lo:.0f}-{f_zoom_hi:.0f} Hz -- individual "
                        "interference fringes resolved")
+    axes[2].plot(freqs[zmask], np.angle(F[zmask]), lw=1.0, color="#c05621")
+    axes[2].set_ylabel(r"$\arg F(f)$ [rad]")
+    axes[2].set_xlabel("f [Hz]")
+    # F traces a circle of radius sqrt(mu_-) centered on sqrt(mu_+) in the
+    # complex plane as w*DeltaT sweeps 2*pi per fringe (the strong image is
+    # the fixed reference, weak image the rotating arm) -- since mu_- < mu_+
+    # here, that circle does not enclose the origin, so arg F oscillates
+    # (bounded, not a full 2*pi wrap) once per fringe, in phase with |F|
+    # above.
+    axes[2].set_title("Same zoom: phase -- bounded oscillation in phase with each fringe above")
     fig.tight_layout()
     fig.savefig(OUT / "caseA_F_of_f.png", dpi=170)
     plt.close(fig)
 
     # ---- Figure 2: lensed vs unlensed time-domain strain -----------------
-    # Three panels: overview (now extended past merger to include the
-    # predicted second-image echo), a merger/ringdown zoom, and a dedicated
-    # echo zoom -- the echo is the unambiguous causality signature (a
-    # second, weaker, LATER copy of the signal) and was missing from this
-    # figure entirely before an independent review asked about the
-    # (real, but subtler and causality-neutral) earlier-looking shift of
-    # the merger peak itself; see wiki/log.md.
+    # Three panels: overview (extended past merger to include the
+    # second-image echo), a merger/ringdown zoom, and a dedicated echo zoom
+    # -- the echo is the unambiguous causality signature (a second, weaker,
+    # LATER copy of the signal). With F referenced to the strong image's own
+    # arrival (waveoptics.py, "REFERENCE-PHASE NORMALIZATION FIX"), the
+    # lensed merger now peaks at (to within a sample of) the SAME time as
+    # the unlensed one -- see wiki/log.md for the earlier, incorrect version
+    # of this story, where an un-subtracted reference phase looked like a
+    # genuine 0.6s early shift and was mis-attributed to interference.
     t_peak = t_peak_unlensed
     fig, axes = plt.subplots(3, 1, figsize=(8, 9.0))
     t_hi = min(t[-1], echo_t + 1.0)
@@ -320,22 +361,26 @@ def main():
         ax.set_xlabel(r"$y_1$")
         ax.plot(y_A, 0, "w+", ms=12, mew=2)
     axes[0].set_ylabel(r"$y_2$")
-    fig.suptitle("Case A: extended amplification pattern on the source plane\n"
-                 "(point lens: axisymmetric rings; central bright spot = "
-                 "Einstein-ring diffraction spike; source at fixed "
-                 fr"$y_A={y_A:.3f}$, marked)")
-    fig.tight_layout()
+    # A wider, single-line-per-row suptitle was getting clipped at both
+    # edges of this fairly narrow figure; shortened and set explicitly
+    # inside the axes bounding box (independent review, see wiki/log.md).
+    fig.suptitle("Case A: amplification pattern on the source plane\n"
+                 "(axisymmetric rings; central spot = Einstein-ring "
+                 fr"diffraction spike; source at $y_A={y_A:.3f}$, marked)",
+                 fontsize=10)
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.90))
     fig.savefig(OUT / "caseA_diffraction_pattern.png", dpi=170)
     plt.close(fig)
 
     # ---- Figure 4: simple idealized detector view -------------------------
     # Log-scale y-axis and a window extended past the echo: the echo is
-    # ~1-2 orders of magnitude below the merger peak, so a linear axis over
-    # the full window (as used pre-fix) would hide it entirely.
+    # ~4x (0.6 dex) below the merger peak envelope
+    # (echo_to_unlensed_peak_ratio, matching sqrt(|mu_-|) to <1%, see above)
+    # -- clear on a log axis, easy to under-sell on a linear one.
     fig, ax = plt.subplots(figsize=(8, 3.6))
-    view4 = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_hi)
-    ax.plot(t[view4], env_u[view4], color="#888888", lw=1.0, label="unlensed envelope")
-    ax.plot(t[view4], env_l[view4], color="#2b6cb0", lw=1.0, label="lensed envelope")
+    # same window as Figure 2's overview panel above -- identical expression, reused rather than rebuilt
+    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="unlensed envelope")
+    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="lensed envelope")
     ax.axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.25,
                label=f"observed echo (t_merger+{echo_t - t_peak:.2f} s)")
     ax.set_yscale("log")

@@ -99,6 +99,16 @@ CHECKS = [
 
 
 def main():
+    # A skipped check (pycbc not importable here) returned (True, "SKIPPED:
+    # ...") and main() wrote "passed": true for it -- the module docstring's
+    # promise ("skipped checks are reported as such") was only kept in the
+    # free-text message, not in any field a machine (or a skimming human)
+    # could act on without parsing prose. An independent review caught this
+    # (this file's own CHECKS_imr_waveform.json, committed from a
+    # native-Windows run with no pycbc, showed a check that never ran
+    # reported as a pass); see wiki/log.md. Fixed by detecting the
+    # "SKIPPED:" message prefix and writing an explicit "skipped" field,
+    # with "passed" set to null (neither true nor false) rather than true.
     results = {}
     all_ok = True
     for name, fn in CHECKS:
@@ -106,9 +116,14 @@ def main():
             ok, msg = fn()
         except Exception as exc:  # noqa: BLE001
             ok, msg = False, f"EXCEPTION: {exc!r}"
-        all_ok &= ok
-        results[name] = {"passed": bool(ok), "message": msg}
-        print(f"[{'PASS' if ok else 'FAIL'}] {name}: {msg}")
+        skipped = bool(ok) and msg.startswith("SKIPPED:")
+        if skipped:
+            results[name] = {"passed": None, "skipped": True, "message": msg}
+            print(f"[SKIP] {name}: {msg}")
+        else:
+            all_ok &= ok
+            results[name] = {"passed": bool(ok), "skipped": False, "message": msg}
+            print(f"[{'PASS' if ok else 'FAIL'}] {name}: {msg}")
     out = Path(__file__).parent / "CHECKS_imr_waveform.json"
     out.write_text(json.dumps(results, indent=2))
     print(f"\nwrote {out}")

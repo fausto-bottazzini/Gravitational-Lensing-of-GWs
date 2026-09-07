@@ -42,8 +42,7 @@ def get_unlensed_htilde_fd(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower,
     try:
         H, label = _pycbc_imrphenomd(freqs, m1_msun, m2_msun, d_eff_mpc, f_lower)
     except ImportError:
-        H = np.zeros_like(freqs, dtype=complex)
-        H[:] = _taylorf2_banded(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower)
+        H = _taylorf2_banded(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower)
         label = ("TaylorF2 2PN inspiral-only (pycbc not available in this "
                  "environment -- fallback, see wiki/log.md; no merger/ringdown)")
 

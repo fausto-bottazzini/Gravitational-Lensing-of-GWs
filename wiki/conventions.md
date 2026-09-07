@@ -11,9 +11,9 @@ examples:
 - **Inner binary** (the GW *source*): two compact objects, masses `m1, m2`,
   total mass `Mb = m1+m2`, that inspiral and eventually merge.
 - **Outer body** (the GW *lens*): a third, more massive point mass `M_L`
-  (IMBH range, ~10^2-10^4 Msun — chosen in `wiki/log.md` so that the wave-optics
-  parameter `w` is O(1) at both frequencies used below, not to be astrophysically
-  "typical").
+  (IMBH range; `system.py` uses `M_LENS_MSUN = 5e4` — chosen in `wiki/log.md`
+  so that the wave-optics parameter `w` is O(1) at both frequencies used
+  below, not to be astrophysically "typical").
 - Hierarchy: `a_in << a_out` (inner semi-major axis vs. the outer orbit of the
   binary's center of mass around `M_L`). This is standard triple-stability
   hierarchy and is *also* the condition that lets us treat the binary as a
@@ -118,10 +118,15 @@ solved for the GW case.
   t_0)` in the standard astronomical sense; `i_out` measured from the plane of
   the sky (`i_out=0` face-on ⇒ no lensing modulation from orbital motion in the
   y-direction alone — a deliberate degenerate case used as a check).
-- Inner binary phase/frequency evolution: leading-order (Newtonian/quadrupole,
-  restricted) `df/dt`, i.e. the standard `dominant harmonic` chirp; explicitly
-  *not* full PN — logged as a choice (the lensing physics, not the waveform
-  accuracy, is the point of this project).
+- Inner binary phase/frequency evolution: Case A's unlensed waveform is
+  IMRPhenomD (Khan et al. 2016, via `pycbc`/LALSimulation where available --
+  WSL2/Linux, see `README.md`), a full inspiral-merger-ringdown NR-calibrated
+  model; `src/gwlens/taylorf2.py`'s leading-order (Newtonian/quadrupole,
+  restricted) 2PN inspiral-only `df/dt` is the automatic fallback when
+  `pycbc` is not importable (native Windows), and is what
+  `src/gwlens/chirp.py` and Case B's quasi-monochromatic treatment use
+  throughout (no merger is ever reached there) — logged as a choice, see
+  `wiki/log.md`.
 
 ## File-naming / provenance pattern
 
