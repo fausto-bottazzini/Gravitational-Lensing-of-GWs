@@ -29,10 +29,14 @@ exactly at each front/back crossing, where `D_LS->0`.
 
 The minimum impact parameter reached, **y=1.589**, coincides with Case A's
 y_A to 4 significant figures — not a coincidence: both are the same
-geometric minimum of the same (circular, e_out=0) outer orbit, found by two
-independently-written search routines (`run.py::main` in each case
-directory). Treated here as a cross-check between the two cases, not
-asserted in advance.
+geometric minimum of the same (circular, e_out=0) outer orbit, found by an
+`argmin` search over `geometry.impact_parameter_of_time` in each case
+script's `main()` (same underlying function both times, so this is a
+statement about grid resolution -- 2000 samples/period here vs. 3600 in
+Case A -- not an independent confirmation of the geometry itself; a
+previous version of this paragraph overstated it as "independently-written"
+search code, corrected after an independent review). Kept here as an
+internal consistency check between the two cases' scripts.
 
 `caseB_repeated_pulses.png` shows the resulting **periodic amplification
 pulses**, one per 4-day outer period, `|F|²` peaking at **1.385**

@@ -58,8 +58,9 @@ La masa del lente se elige (no es astrof\'isicamente t\'ipica) para que el
 par\'ametro de \'optica de ondas $w=8\pi GM_Lf/c^3$ no sea extremo en la
 frecuencia de ninguna de las dos \'epocas; la jerarqu\'ia
 $a_\mathrm{in}\ll a_\mathrm{out}$ se cumple por 2--6 \'ordenes de magnitud
-en ambas. Justificaci\'on completa: \code{theory/theory.pdf} Cap.~1,
-\S6.1; chequeos de r\'egimen: \code{tests/test\_system.py}.
+en ambas. Justificaci\'on completa: \code{theory/theory.pdf} Cap.~1
+(elecci\'on de la masa del lente) y Cap.~4 (jerarqu\'ia del triple);
+chequeos de r\'egimen: \code{tests/test\_system.py}.
 
 \section{Caso A --- el chirp, lente est\'atico}
 \label{sec:caseA}
@@ -81,14 +82,18 @@ v\'ease \code{README.md}).
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_F_of_f.png}
 \caption{El factor de amplificaci\'on $F(f)$ a trav\'es de toda la banda del
-chirp (arriba) y con zoom a 3 Hz (abajo), donde se resuelven las franjas de
-interferencia individuales de las dos im\'agenes. $w$ va de 62 (inicio de
-banda) a 778 (merger) ac\'a --- muy por encima de donde
-\code{tests/test\_waveoptics.py} valida el evaluador r\'apido de \'optica
-geom\'etrica contra la forma cerrada exacta a $<4\%$, as\'i que esto es
-genuinamente interferencia de ondas, s\'olo demasiado densamente empaquetada
-como para resolverse a la escala de banda completa: la transici\'on
-chequeada hacia \'optica geom\'etrica a medida que se acerca el merger.}
+chirp (arriba), con zoom a 3 Hz donde se resuelven las franjas de
+interferencia individuales de las dos im\'agenes (medio), y su fase en ese
+mismo zoom (abajo). $w$ va de 62 (inicio de banda) a 778 (merger) ac\'a ---
+por encima de \code{w\_geo\_threshold=30}, as\'i que cada valor de $F$ acá
+YA es la f\'ormula de \'optica geom\'etrica de dos im\'agenes
+(\code{theory/theory.pdf} Cap.~3), no la integral de difracci\'on exacta
+--- confirmado reconstruyendo \code{h\_lensado} a partir de nada m\'as que
+dos copias retrasadas y reescaladas de la forma de onda no lensada:
+acuerdo con la salida real de \code{run.py} a $1.1\times10^{-13}$,
+precisi\'on de m\'aquina. Las franjas son la interferencia entre esas dos
+im\'agenes, no un efecto de difracci\'on adicional (ese es el r\'egimen del
+Caso~B, m\'as abajo).}
 \end{figure}
 
 \begin{figure}[h]
@@ -117,56 +122,53 @@ merger/ringdown, exactamente como predice la superposici\'on de im\'agenes
 de \'optica geom\'etrica.}
 \end{figure}
 
-La amplificaci\'on de la muestra pico es $1.091$ (la muestra $|h(t)|$
+La amplificaci\'on de la muestra pico es $1.065$ (la muestra $|h(t)|$
 individual m\'as grande es mayor lensada que no lensada); la amplificaci\'on
 RMS (promediada sobre toda la forma de onda) es $1.056$ --- por el teorema
 de Parseval, esta \'ultima depende s\'olo de $|F(f)|$, nunca de la
-convenci\'on de fase de Fourier usada.
+convenci\'on de referencia de fase usada (la nota sobre causalidad, abajo).
 
-$F(f)$ modula \textbf{fase} adem\'as de amplitud (figura anterior, subpanel
-inferior: $\arg F$ barre un ciclo completo de $2\pi$ aproximadamente una
-vez por franja), as\'i que la forma de onda lensada es una copia
-\emph{desfasada}, no simplemente reescalada, de la no lensada --- una
-afirmaci\'on genuinamente de \'optica de ondas (en el l\'imite de \'optica
-geom\'etrica, el lensing \emph{es} s\'olo una magnificaci\'on real).
+$F(f)$ modula \textbf{fase} adem\'as de amplitud (figura anterior, panel
+inferior), as\'i que la forma de onda lensada es una copia
+\emph{desfasada}, no simplemente reescalada, de la no lensada --- $\arg F$
+oscila en un rango acotado ($\pm0.23$ rad ac\'a), en fase con cada franja
+de $|F|$, no da una vuelta completa de $2\pi$: $F=\sqrt{\mu_+}+i\sqrt{|\mu_-|}
+\,e^{-iw\Delta T}$ traza un c\'irculo de radio $\sqrt{|\mu_-|}$ centrado en
+$\sqrt{\mu_+}$ a medida que $w\Delta T$ barre $2\pi$ por franja, y como
+$|\mu_-|<\mu_+$ ac\'a ese c\'irculo no encierra el origen.
 
-\paragraph{Una nota sobre causalidad, y un eco genuino.}
-El zoom al merger/ringdown de la figura de arriba muestra algo que a
-primera vista puede alarmar: el pico lensado combinado se ubica $0.60$~s
-\emph{antes} que el no lensado (\code{peak\_time\_lensed\_minus\_unlensed\_s
-$=-0.6025$}). Esto \textbf{no} es acausal. La se\~nal lensada del Caso A es
-la suma coherente de dos im\'agenes --- una fuerte (tiempo m\'inimo) y una
-d\'ebil (punto silla) --- separadas por un retraso \textbf{fijo}
+\paragraph{Una nota sobre la fase de referencia, causalidad, y un eco
+genuino.} $F(w,y)$ est\'a referida a la llegada de la imagen fuerte (tiempo
+m\'inimo): lleva fase cero ah\'i por construcci\'on, as\'i que el pico
+lensado combinado cae EXACTAMENTE en el mismo instante que el no lensado
+(\code{peak\_time\_lensed\_minus\_unlensed\_s$=0.0$}). La se\~nal lensada
+del Caso A es la suma coherente de esa imagen fuerte y una d\'ebil (punto
+silla), separadas por un retraso \textbf{fijo}
 $\Delta T(y_A)=3.434$~s (\code{image\_time\_delay\_seconds}); ambas se
-construyen s\'olo a partir del pasado de la fuente. Cerca del merger la
-frecuencia barre lo bastante r\'apido como para que la fase de $F(f)$ var\'ie
-r\'apidamente a trav\'es de la banda, as\'i que la \emph{interferencia}
-entre las dos im\'agenes puede desplazar d\'onde su \emph{suma} alcanza el
-pico, sin que llegue informaci\'on antes de tiempo. La confirmaci\'on
-independiente, inequ\'ivoca, es el panel inferior de la figura de arriba
-(\code{caseA\_detector\_envelope.png}, en \code{cases/case\_A\_chirp/},
-muestra la misma confirmaci\'on en escala logar\'itmica sobre toda la
-observaci\'on): una segunda copia, genuinamente separada, del
-merger/ringdown completo, $\sim$2 \'ordenes de magnitud m\'as d\'ebil,
-aparece en
-\code{echo\_peak\_time\_s} --- la se\~nal no lensada, en ese mismo
-instante, est\'a en su piso de ruido
-(\code{echo\_time\_env\_unlensed}$=1.5\times10^{-22}$), mientras la lensada
+construyen s\'olo a partir del pasado de la fuente --- siempre causal. La
+confirmaci\'on independiente, inequ\'ivoca: una segunda copia, genuinamente
+separada, del merger/ringdown completo, un factor $\sim4$ m\'as d\'ebil
+(\code{echo\_to\_unlensed\_peak\_ratio$=0.242$}, que coincide con la
+magnificaci\'on de la propia imagen d\'ebil,
+$\sqrt{|\mu_-|}=0.240$, al $1.1\%$) aparece en \code{echo\_peak\_time\_s}
+--- exactamente $\Delta T$ despu\'es del merger, a menos de
+\code{echo\_peak\_time\_minus\_prediction\_s$=-4\times10^{-5}$}~s. La
+se\~nal no lensada, en ese mismo instante, est\'a en su piso de ruido
+(\code{echo\_time\_env\_unlensed}$=1.6\times10^{-22}$), mientras la lensada
 est\'a $\sim$60 veces por encima (\code{echo\_peak\_env\_lensed}
-$=9.65\times10^{-21}$): una se\~nal real, separada, que llega despu\'es,
-presente s\'olo por el lente. Predecir ingenuamente su llegada como
-$t_\mathrm{peak,no\ lensado}+\Delta T$ falla por $\sim0.6$~s
-(\code{echo\_peak\_time\_minus\_prediction\_s$=-0.603$}) --- el
-\emph{mismo} desplazamiento de $0.6$~s que el del pico cercano al merger,
-a tres cifras: $\Delta T$ aplica desde la llegada de la imagen fuerte
-\emph{sola} (libre de interferencia), y el pico combinado usado como su
-proxy est\'a desplazado por esa misma interferencia. En vez de asumir una
-u otra referencia, \code{run.py} busca directamente el m\'aximo real de la
-envolvente lensada y registra tanto el tiempo observado como su diferencia
-con la predicci\'on ingenua. Una versi\'on anterior de este an\'alisis
-ten\'ia la convenci\'on de signo de Fourier del proyecto invertida, lo que
-hac\'ia que esto pareciera genuinamente acausal; v\'ease
-\code{wiki/log.md} y \code{wiki/conventions.md}.
+$=9.68\times10^{-21}$): una se\~nal real, separada, que llega despu\'es,
+presente s\'olo por el lente, y cuantitativamente correcta al $1.1\%$.
+Una versi\'on anterior de este an\'alisis no aplicaba la normalizaci\'on de
+referencia de fase de arriba: el pico lensado ca\'ia $0.60$~s ``antes''
+del no lensado, explicado en ese momento como interferencia entre las dos
+im\'agenes --- incorrecto: era exactamente
+$4GM_L\varphi(x_+,y_A)/c^3$, la fase absoluta no sustra\'ida de la imagen
+fuerte, arbitraria por construcci\'on (\code{theory.pdf} Cap.~2), no
+interferencia (confirmado reconstruyendo \code{h\_lensado} a partir de dos
+copias de imagen puras y coincidiendo con la salida real de \code{run.py}
+a $1.1\times10^{-13}$). V\'ease \code{wiki/log.md} para el relato completo,
+incluyendo el error de signo de Fourier a\'un anterior que primero hizo
+parecer esto genuinamente acausal.
 
 \section{Caso B --- cuasi-monocrom\'atico, lente en movimiento}
 \label{sec:caseB}
@@ -185,7 +187,7 @@ difracci\'on.
 al $w_B=0.309$, mucho m\'as chico) con la traza real de la \'orbita externa
 de la fuente, proyectada en el cielo, superpuesta: cian donde la fuente
 est\'a lenteada (detr\'as del lente en la l\'inea de visi\'on), verde
-punteado donde no lo est\'a (delante de \'el --- v\'ease abajo).}
+discontinuo donde no lo est\'a (delante de \'el --- v\'ease abajo).}
 \end{figure}
 
 \begin{figure}[h]

@@ -181,16 +181,21 @@ muchísimo más rápido que la órbita externa (4 días), así que el lente qued
   parecen franjas rectas.</figcaption>
 </figure>
 
-<p>Amplificación de la muestra pico: <b>1.091</b>. Amplificación RMS: <b>1.056</b>. La diferencia
-entre ambas es la señal de que F(f) desfasa, no sólo amplifica.</p>
+<p>Amplificación de la muestra pico: <b>1.065</b>. Amplificación RMS: <b>1.056</b>. F(f)
+modula fase además de amplitud a través de la banda (visible en la figura de arriba como
+franjas de interferencia), así que la forma de onda lensada es una copia desfasada, no
+simplemente reescalada, de la no lensada.</p>
 
-<p>Mirando de cerca el pico lensado arriba, aparece <i>antes</i> que el no lensado por 0.6 s —
-no es una violación de causalidad, sino interferencia entre dos imágenes (fuerte + débil)
-siempre construidas del pasado de la fuente. La prueba independiente de que todo sigue siendo
-causal: una segunda copia, ~100× más débil, de todo el merger reaparece más tarde, exactamente
-donde la imagen débil (retrasada un tiempo fijo respecto de la fuerte) predice — un
-<b>eco genuino</b>, visible en <code>cases/case_A_chirp/caseA_detector_envelope.png</code> (escala
-logarítmica) y explicado en detalle en <code>RESULTS.md</code>.</p>
+<p>El pico lensado arriba llega exactamente al mismo tiempo que el no lensado (F está
+referida a la llegada de la imagen fuerte, sin desfasaje absoluto arbitrario — ver
+<code>wiki/log.md</code> para la normalización). Una segunda copia, ~4× más débil (no
+~2 órdenes de magnitud — la amplitud exacta coincide con la magnificación geométrica
+de la imagen débil, √|μ₋|, a menos del 1%), de todo el merger reaparece más tarde,
+exactamente en el retraso fijo que predice la óptica geométrica entre las dos imágenes
+(fuerte + débil, ambas construidas sólo del pasado de la fuente — la causalidad nunca
+estuvo en duda) — un <b>eco genuino</b>, visible en
+<code>cases/case_A_chirp/caseA_detector_envelope.png</code> (escala logarítmica) y
+explicado en detalle en <code>RESULTS.md</code>.</p>
 
 <h2 id="casoB">Caso B — cuasi-monocromático, lente en movimiento</h2>
 <p>Más temprano en el mismo inspiral: f=0.05 Hz, casi constante durante una observación de 24
@@ -223,7 +228,7 @@ amplificación repetidos.</p>
 
 <p>Exactamente la mitad de la órbita resulta <b>no lenteada</b>: cuando la fuente está delante
 del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
-F=1 por construcción, y se ve arriba como el marcador saliendo del patrón (verde/gris) durante
+F=1 por construcción, y se ve arriba como el marcador saliendo del patrón (cian/gris) durante
 la mitad "de adelante" de cada vuelta. Esto es exactamente el origen de los pulsos periódicos:
 "lensing repetido", el análogo en óptica de ondas de lo que D'Orazio &amp; Loeb (2020)
 encontraron en óptica geométrica.</p>

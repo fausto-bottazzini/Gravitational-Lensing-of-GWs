@@ -5,7 +5,7 @@ claims:
       outer orbital period, so the lens is frozen at a single impact
       parameter for the whole observation.
     evidence:
-      - run.py::build_waveform
+      - run.py::build_waveform_fd
       - tests/test_system.py::check_static_lens_regime
     numbers: [t_end_seconds, duration_seconds]
   - id: y_A_value
@@ -30,43 +30,79 @@ claims:
     numbers: [w_at_f_start, w_at_f_isco]
   - id: dephasing_not_simple_amplification
     statement: >
-      Peak-sample amplification (1.091) and RMS amplification (1.056)
+      Peak-sample amplification (1.065) and RMS amplification (1.056)
       differ from each other and from a naive "average |F|" expectation
       because F(f) modulates phase as well as amplitude across the band;
       the lensed waveform is a dephased copy of the unlensed one, not a
-      rescaled one. RMS amplification is identical to a naive |F|-only
-      calculation (Parseval's theorem: it depends only on |F(f)|, never on
-      Fourier-phase convention), unlike the peak/echo timing claims below.
+      rescaled one. arg F oscillates in a BOUNDED range (not a full 2*pi
+      wind) once per fringe, in phase with |F| -- F traces a circle of
+      radius sqrt(|mu_-|) centered on sqrt(mu_+) as w*DeltaT sweeps 2*pi
+      per fringe, and does not enclose the origin since |mu_-|<mu_+ here.
+      RMS amplification is identical to a naive |F|-only calculation
+      (Parseval's theorem: it depends only on |F(f)|, never on the
+      Fourier-phase reference convention), unlike the peak/echo timing
+      claims below.
     evidence:
       - run.py::main (rms/peak amplification computation)
-      - caseA_F_of_f.png (bottom sub-panel: arg F)
+      - "caseA_F_of_f.png (bottom panel, arg F -- added after an independent review found this panel cited but not actually plotted)"
     numbers: [peak_strain_amplification, rms_strain_amplification]
   - id: causality_and_echo
     statement: >
-      The combined lensed merger peak sits 0.60 s before the unlensed one
-      (peak_time_lensed_minus_unlensed_s) -- an interference effect between
-      two always-causal images (strong + weak, separated by a FIXED delay
-      image_time_delay_seconds=3.434s), not acausality. Independent
-      confirmation: a second, ~2-orders-fainter, genuinely separate copy of
-      the whole merger/ringdown appears later (echo_peak_time_s), with the
-      unlensed envelope at its noise floor at that same instant
-      (echo_time_env_unlensed) while the lensed envelope is ~60x above it
-      (echo_peak_env_lensed). The echo's observed arrival differs from the
-      naive prediction (t_peak_unlensed + ΔT) by exactly the same 0.60 s as
-      the near-merger interference shift (echo_peak_time_minus_prediction_s
-      matches peak_time_lensed_minus_unlensed_s to three digits) -- both
-      trace to the same cause. A prior version of this analysis had the
-      project's Fourier sign convention backwards, making this look
-      genuinely acausal; see wiki/log.md and wiki/conventions.md.
+      F(w,y) is referenced to the strong (minimum-time) image's own
+      arrival (zero phase there by construction, waveoptics.py
+      "REFERENCE-PHASE NORMALIZATION FIX"), so the combined lensed merger
+      peaks at EXACTLY the unlensed merger time
+      (peak_time_lensed_minus_unlensed_s=0.0). Independent confirmation: a
+      second, genuinely separate copy of the whole merger/ringdown, as
+      faint as echo_to_unlensed_peak_ratio=0.242 (matching the weak
+      image's own magnification sqrt_mu_minus_geometric=0.240 to 1.1%),
+      appears at echo_peak_time_s -- exactly image_time_delay_seconds=
+      3.434s after the merger, to within echo_peak_time_minus_prediction_s
+      =-4.0e-5s. The unlensed envelope is at its FFT-array noise floor at
+      that instant (echo_time_env_unlensed) while the lensed envelope is
+      ~60x above it (echo_peak_env_lensed). A prior version of this
+      analysis omitted the reference-phase normalization above, which made
+      the merger peak land 0.60s "early" and the echo miss its naive
+      prediction by the same 0.60s -- explained at the time as an
+      interference effect, which was wrong: it was exactly
+      4*G*M_L*phi_+(y_A)/c^3, the un-subtracted, physically arbitrary
+      absolute phase of the strong image, not interference (confirmed by
+      reconstructing h_lensed from two pure delayed image copies and
+      matching run.py's actual output to 1.1e-13). See wiki/log.md for the
+      full account, including the earlier (also since-fixed) Fourier sign
+      bug that first made this look acausal outright.
     evidence:
       - run.py::main (echo search, after the RMS/peak-amplification block)
       - src/gwlens/waveoptics.py::time_delay_difference
+      - src/gwlens/waveoptics.py (module docstring, both fix notes)
       - tests/test_waveoptics.py::check_causality_of_lensed_pulse
+      - tests/test_waveoptics.py::check_causality_of_lensed_pulse_low_w
       - caseA_strain_time.png (third panel: echo zoom)
       - caseA_detector_envelope.png (log-scale, both peaks visible)
     numbers: [peak_time_lensed_minus_unlensed_s, image_time_delay_seconds,
       echo_peak_time_s, echo_peak_time_minus_prediction_s,
-      echo_peak_env_lensed, echo_time_env_unlensed]
+      echo_peak_env_lensed, echo_time_env_unlensed,
+      echo_to_unlensed_peak_ratio, sqrt_mu_minus_geometric,
+      echo_ratio_vs_sqrt_mu_minus_relerr]
+  - id: caseA_is_pure_geometric_optics
+    statement: >
+      Every in-band F value in Case A comes from F_geometric_optics
+      (w_at_f_start=61.9, w_at_f_isco=777.6, both above
+      w_geo_threshold=30) -- confirmed independently by reconstructing
+      h_lensed from nothing but two delayed, rescaled copies of the
+      unlensed waveform and finding max|h_lensed-h_two_image|/
+      max|h_lensed|=1.1e-13, machine precision. The exact diffraction
+      integral (F_point_lens/F_radial_1d/F_bruteforce_2d) contributes
+      nothing measurable here; Case B (w_B=0.309, uses F_point_lens
+      throughout) is where it does. A prior version of RESULTS.md
+      described Case A's fringes as "genuinely wave optics (interference,
+      not the smooth w->infinity envelope)" in the same breath as noting
+      every F value already came from that envelope -- a direct
+      self-contradiction, caught by an independent review.
+    evidence:
+      - src/gwlens/waveoptics.py::F_hybrid
+      - run.py::main (min_abs_F_in_band/max_abs_F_in_band computation)
+    numbers: [w_at_f_start, w_at_f_isco]
   - id: imr_waveform_and_bugs_fixed
     statement: >
       The unlensed waveform is IMRPhenomD (pycbc/LALSimulation, Khan et al.
@@ -89,8 +125,11 @@ figures:
   - file: caseA_F_of_f.png
     produced_by: run.py::main
     shows: >
-      |F(f)| and arg F(f) across the whole chirp band, plus a 3 Hz zoom
-      where individual interference fringes are resolved.
+      |F(f)| across the whole chirp band (top), |F(f)| zoomed to a 3 Hz
+      window where individual interference fringes are resolved (middle),
+      and arg F(f) over that same zoom (bottom) -- this third panel was
+      added after an independent review found it cited in RESULTS.md and
+      claims.yaml but not actually present in the figure.
     from_scratch: >
       Frequency array from the FFT of the generated chirp; fringe
       identification and the zoom window choice.
@@ -98,7 +137,7 @@ figures:
       numpy.fft for the FFT/frequency grid, matplotlib for rendering.
     choices:
       - "3 Hz zoom width, chosen to show ~10 resolved fringes without over-cropping."
-    supports: [w_regime]
+    supports: [w_regime, dephasing_not_simple_amplification, caseA_is_pure_geometric_optics]
   - file: caseA_strain_time.png
     produced_by: run.py::main
     shows: >
@@ -115,7 +154,7 @@ figures:
     choices:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
-      - "Echo panel centered on the empirically-found peak, not the naive t_peak_unlensed+ΔT prediction, which misses by ~0.6s (see causality_and_echo)."
+      - "Echo panel centered on the empirically-found peak; matches the naive t_peak_unlensed+ΔT prediction to within 4e-5s (see causality_and_echo)."
     supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]
   - file: caseA_diffraction_pattern.png
     produced_by: run.py::main (make_ring_pattern)
@@ -129,6 +168,7 @@ figures:
     choices:
       - "Radial/display grid resolution set from the fringe spacing at each w, after a first version aliased (see wiki/log.md)."
       - "LogNorm color scale -- the central Einstein-ring spike otherwise saturates a linear scale."
+      - "F_point_lens (exact) forced for r<0.5 regardless of w, not F_hybrid: at w=61.9 (left panel) F_hybrid always returns F_geometric_optics, which diverges as y->0 -- an earlier version of this figure plotted that divergence, cut off only by the innermost grid sample (1123 vs. the true finite pi*w=194.45), as if it were the regularized wave-optics value the caption describes; an independent review caught this (the figure demonstrated the opposite of its own caption). See wiki/log.md."
     supports: [y_A_value, w_regime]
   - file: caseA_detector_envelope.png
     produced_by: run.py::main
@@ -140,5 +180,5 @@ figures:
     from_library: scipy.signal.hilbert.
     choices:
       - "No noise, antenna pattern, or PSD -- explicitly an idealized/illustrative detector view, as scoped in wiki/conventions.md."
-      - "Log-scale y-axis: the echo is ~2 orders of magnitude below the merger peak and invisible on a linear scale."
+      - "Log-scale y-axis: the echo is a factor ~4 (echo_to_unlensed_peak_ratio=0.24) below the merger peak, easy to under-sell on a linear scale (a prior version of this text said '~2 orders of magnitude' / the report said '~100x' -- both wrong by a factor of ~25, caught by an independent review; see wiki/log.md)."
     supports: [dephasing_not_simple_amplification, causality_and_echo]

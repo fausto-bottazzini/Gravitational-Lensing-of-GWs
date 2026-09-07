@@ -19,9 +19,14 @@ claims:
   - id: y_min_crosscheck
     statement: >
       The minimum impact parameter reached in Case B (1.589) agrees with
-      Case A's y_A (1.589) to 4 significant figures -- both are the same
-      geometric minimum of the same outer orbit, found by independent
-      search code in each case script.
+      Case A's y_A (1.589) to 4 significant figures -- both are an argmin
+      search over the SAME underlying function
+      (geometry.impact_parameter_of_time), called separately in each case
+      script at different grid resolutions (2000 samples/period in Case B,
+      3600 in Case A). The agreement is a statement about grid resolution,
+      not an independent confirmation of the geometry itself (corrected
+      after an independent review; a previous version of this claim called
+      the search code "independent").
     evidence:
       - run.py::main
       - ../case_A_chirp/run.py::main
@@ -59,7 +64,7 @@ figures:
     from_scratch: The radial F(w_B,r) evaluation, its 2D interpolation, and the orbit projection.
     from_library: scipy.interpolate.interp1d, matplotlib (LogNorm).
     choices:
-      - "y_max = 8 * min_y (not max_y, which is dominated by the near-divergent points at the D_LS=0 crossing and would zoom the whole pattern into invisibility; caught by eye, see wiki/log.md)."
+      - "y_max = 25.0, chosen by eye from min_y (not max_y, which is dominated by the near-divergent points at the D_LS=0 crossing and would zoom the whole pattern into invisibility). No FINITE y_max keeps the marker on-frame for the whole orbit -- |y| formally diverges at each crossing -- so this is a compromise: with y_max=25.0, 51% of the 900 exported orbit frames (caseB_animation_data.json) still have |y1| or |y2| exceeding it and are clamped to the frame edge by report_template.html's clampPct(); down from 78% before this value was picked. See wiki/log.md."
     supports: [y_min_crosscheck, repeated_lensing_pulses]
   - file: caseB_detector_view.png
     produced_by: run.py::main
