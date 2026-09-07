@@ -42,7 +42,7 @@ def check_quasi_monochromatic_regime():
     tau_B = chirp.time_to_merger(system.F_B_HZ, system.MCHIRP_MSUN)
     n_periods_to_merger = tau_B / system.P_OUT_S
     # fractional frequency drift over the ACTUAL Case B observing baseline
-    # (system.T_OBS_B_S = 8 outer periods), not over the full remaining
+    # (system.T_OBS_B_S = 6 outer periods), not over the full remaining
     # time to merger -- an earlier version of this check used tau_B/2 and
     # failed because f formally diverges as t->t_c regardless of how the
     # observing window is chosen (see wiki/log.md).

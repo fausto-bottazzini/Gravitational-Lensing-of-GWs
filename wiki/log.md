@@ -120,3 +120,14 @@ Append-only. What was decided, ingested, corrected, and when.
   a single `F(f)` multiplication on that same grid, replacing the previous
   time-domain-first-then-FFT construction — simpler, and now uses a real
   search-template phase instead of the leading-order-only one.
+- **2026-09-07** — Independent fresh-agent review run (`checks/independent_review/REVIEW.md`):
+  `reproduce.sh` (checks + cases + theory + report) reproduced everything with zero
+  intervention, all 26 checks passed, and all `RESULTS.md`/report/theory numbers traced
+  correctly to `provenance/numbers.json`. Verdict: the project holds up — the physics
+  checked out against the cited literature forms with no errors found, provenance
+  discipline was followed consistently, and scope/limitations are stated honestly; the
+  only issues found were minor stale-comment/docstring inconsistencies
+  (`waveoptics.py::F_hybrid`'s docstring still says `w_geo_threshold=20` though the code
+  default is 30; `test_system.py`'s comment says `T_OBS_B_S = 8 outer periods` though the
+  code and every result say 6) plus two nitpick-level rounding/prose mismatches, none of
+  which affect any reported number or figure.

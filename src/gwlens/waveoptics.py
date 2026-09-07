@@ -214,8 +214,10 @@ def F_hybrid(w, y, w_geo_threshold=30.0):
     which happens exactly in the regime -- large w -- where
     `F_geometric_optics` is independently validated to agree with it to
     <0.1% (`tests/test_waveoptics.py::check_geometric_optics_limit`, errors
-    3e-4 at w=10 falling to 3e-5 at w=1000). `w_geo_threshold=20` sits
-    comfortably inside that validated agreement. First noticed as a stall:
+    3e-4 at w=10 falling to 3e-5 at w=1000). `w_geo_threshold=30` sits
+    comfortably inside that validated agreement (3.1% at w=30 itself, per
+    `check_hybrid_matches_at_threshold`, well under its 4% tolerance and
+    shrinking fast on either side of that point). First noticed as a stall:
     evaluating `F_point_lens` at the actual (w,y) used in Case A took ~150 s
     for one frequency sweep; `F_hybrid` needs no mpmath calls at all there
     (see wiki/log.md).

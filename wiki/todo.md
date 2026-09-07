@@ -1,27 +1,36 @@
 # Todo / open items
 
-- [ ] Pin exact `(m1, m2, M_L, a_out, e_out, i_out)` numbers — done in
-  `cases/*/run.py` directly (single source of truth), not duplicated here.
-- [ ] `theory.tex`: full derivation, Sections 1-6 (see `theory/OUTLINE.md`).
-- [ ] `src/gwlens`: wave optics core, orbits, waveform, detector toy model.
-- [ ] Three independent evaluators of the point-lens `F(w,y)` must agree
+- [x] Pin exact `(m1, m2, M_L, a_out, e_out, i_out)` numbers — `src/gwlens/system.py`.
+- [x] `theory.tex`: full derivation, `theory/theory.pdf` (18 pages).
+- [x] `src/gwlens`: wave optics core, orbits, chirp waveform, TaylorF2, one
+  pinned system. No separate "detector toy model" module ended up needed --
+  the idealized detector view (Hilbert-transform envelope, no noise/antenna
+  pattern) is a few lines in each case script; a whole module for it would
+  have been overkill for what was actually shown.
+- [x] Three independent evaluators of the point-lens `F(w,y)` agree
   (brute-force 2D quadrature, 1D Bessel-reduced radial integral, closed-form
-  confluent hypergeometric via `mpmath`) — this is the main correctness check
-  for the whole project and gates everything downstream.
-- [x] Case A figures: lens-plane diffraction/interference pattern (extended,
-  2D), F(f) vs f across the chirp, lensed vs unlensed strain, simple detector
-  view. Done -- see cases/case_A_chirp/RESULTS.md.
-- [x] Case B figures: F(w_B,y(t)) with orbital modulation (repeated lensing
-  pulses), the fixed pattern with the orbit track overlaid, idealized
-  detector view. Done -- see cases/case_B_monochromatic/RESULTS.md. (A
-  literal "movie" was dropped in favor of the static pattern+track figure,
-  which shows the same information without needing a video file in the
-  repo -- logged as a scope choice, not an oversight.)
-- [ ] `checks/independent_review`: fresh subagent, no prior context, told to
-  reproduce and critique — run near the end, log its verdict here whether it
-  passes or not.
-- [ ] `report/` HTML + PDF assembled from the case RESULTS.md + figures.
-- [ ] `README.md` at repo root with a `reproduce` path a stranger can run.
-- [ ] requirements.txt pinned; test reproduce from a clean venv if time
-  allows.
-- [ ] Final commit; leave push-to-GitHub as the one step for the user.
+  confluent hypergeometric via `mpmath`) — `tests/test_waveoptics.py`.
+- [x] Case A figures — `cases/case_A_chirp/RESULTS.md`.
+- [x] Case B figures — `cases/case_B_monochromatic/RESULTS.md`.
+- [x] `checks/independent_review`: fresh subagent review, run and logged.
+- [x] `report/` HTML + PDF assembled from the case RESULTS.md + figures.
+- [x] `README.md` at repo root with a `reproduce` path a stranger can run.
+- [x] `requirements.txt` pinned; `reproduce.sh` tested from a clean venv
+  (found and fixed one real bug: `pip install --upgrade pip` fails on
+  Windows when pip is running; see `wiki/log.md`).
+
+## What's left, if there's time later (none of this blocks the deliverable)
+
+- [ ] Higher PN order (2.5-3.5PN) for `taylorf2.py`, IF a verified reference
+  implementation becomes available to check the extra coefficients against
+  (deliberately not attempted from memory alone -- see `wiki/log.md`).
+- [ ] A real non-paraxial treatment of the ~60s window per Case B crossing
+  (`theory.tex` Sec. 4.3) -- quantified as not worth the complexity given
+  what it would and wouldn't change, but a genuinely open problem if
+  someone wanted to push further.
+- [ ] `pycbc`/LALSimulation as a cross-check against `taylorf2.py`, if a
+  working Windows install path is ever found (the attempt this session
+  hung indefinitely resolving lalsuite; abandoned, see `wiki/log.md`).
+- [ ] A literal animation/movie of Case B's diffraction pattern (dropped in
+  favor of the static pattern+orbit-track figure, which shows the same
+  information without a video file in the repo).

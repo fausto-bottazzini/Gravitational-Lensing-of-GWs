@@ -8,7 +8,7 @@ inspiral: f=0.05 Hz instead of the chirp's 10-125.6 Hz.
 ## Regime
 
 Over the **6-outer-period (24 d)** observation used here, the GW frequency
-drifts by only **4.0%** (0.0500 -> 0.0521 Hz) while there are **60.2** outer
+drifts by only **4.0%** (0.0500 -> 0.0520 Hz) while there are **60.2** outer
 periods left before merger — quasi-monochromatic, confirmed in
 `tests/test_system.py::check_quasi_monochromatic_regime`. Unlike Case A, the
 lens genuinely **moves**: y(t) sweeps through the diffraction pattern once

@@ -393,7 +393,7 @@ where Eq.~\eqref{eq:Fgeo} is independently validated to agree with it to
 better than $0.4\%$. \code{waveoptics.py::F\_hybrid} therefore uses
 Eq.~\eqref{eq:Fclosed} below $w=30$ and Eq.~\eqref{eq:Fgeo} above it (the
 threshold checked directly, \code{tests/test\_waveoptics.py::
-check\_hybrid\_matches\_at\_threshold}: $3.5\%$ agreement at $w=30$ across
+check\_hybrid\_matches\_at\_threshold}: $3.1\%$ agreement at $w=30$ across
 several $y$). This was not an optimization made in advance: evaluating
 Eq.~\eqref{eq:Fclosed} directly across the frequency sweep actually used in
 Case~A took $\sim150$\,s; \code{F\_hybrid} needs none of that (see
