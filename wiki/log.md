@@ -51,3 +51,28 @@ Append-only. What was decided, ingested, corrected, and when.
   `2^(-6/5)`. Both test bugs fixed by re-deriving the expected numbers by
   hand rather than guessing; `src/gwlens/chirp.py` itself needed no further
   changes. All 4 checks in `tests/test_chirp.py` now pass.
+- **2026-09-07** — `src/gwlens/system.py`: pinned the one triple used
+  everywhere. m1=20, m2=15 Msun (Mchirp=15.05, f_isco=125.6 Hz); lens
+  M_L=5e4 Msun ("massive IMBH", between the classic IMBH and SMBH ranges --
+  needed to keep w=O(1) at the Case B frequency while staying a physically
+  legitimate point-mass lens; logged here rather than silently drifting past
+  the "10^2-10^4" range floated when the user picked the IMBH option) at
+  D_L=5000 pc; outer orbit a_out=1.82 AU from Kepler's third law at
+  P_out=4 d, i_out=87 deg (near edge-on, needed for the front/back "repeated
+  lensing" split in `geometry.impact_parameter_of_time` to actually bite),
+  e_out=0. Case A starts the chirp at f=10 Hz (merger takes 15 s, 4.4e-5 of
+  P_out -- static lens, confirmed). Case B observes at fixed f=0.05 Hz for 6
+  outer periods (24 d) out of 240 d to merger (4% frequency drift -- quasi
+  -monochromatic, confirmed). w_B=0.31 (clear diffraction regime); w at
+  Case A's start is 62, rising to 778 at f_isco -- NOT O(1) as originally
+  hoped when the IMBH-mass option was picked, but not a problem: at those w
+  the exact F(f) still shows real, resolved interference fringes in
+  frequency (consistent with the validated geometric-optics limit), just
+  past the point where they average into a smooth envelope -- reframed Case
+  A's story from "diffraction pattern" to "dense interference fringes
+  approaching the geometric-optics limit as merger approaches," arguably the
+  more interesting story for a chirp anyway. All 4 checks in
+  `tests/test_system.py` pass (one iteration: `quasi_monochromatic_regime`
+  first failed testing frequency drift over `tau_B/2`, close to formal
+  coalescence where f always diverges regardless of parameters; fixed to
+  test drift over the actual 6-period Case B observing window instead).

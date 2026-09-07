@@ -1,0 +1,18 @@
+{
+  "hierarchy": {
+    "passed": true,
+    "message": "a_in/a_out at Case A start = 6.16e-06, at Case B = 2.11e-04 (require < 1e-3)"
+  },
+  "static_lens_regime": {
+    "passed": true,
+    "message": "merger duration / outer period = 4.40e-05 (require < 1e-3)"
+  },
+  "quasi_monochromatic_regime": {
+    "passed": true,
+    "message": "60.2 outer periods before merger (observing 6 of them); fractional freq drift over the observing baseline = 4.02e-02 (require merger>>observing window, drift<5%)"
+  },
+  "wave_optics_regime_nontrivial": {
+    "passed": true,
+    "message": "w_B=0.309, w_A_start=61.896"
+  }
+}
