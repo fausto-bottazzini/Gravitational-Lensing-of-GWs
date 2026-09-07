@@ -8,12 +8,15 @@
   (brute-force 2D quadrature, 1D Bessel-reduced radial integral, closed-form
   confluent hypergeometric via `mpmath`) — this is the main correctness check
   for the whole project and gates everything downstream.
-- [ ] Case A figures: lens-plane diffraction/interference pattern (extended,
+- [x] Case A figures: lens-plane diffraction/interference pattern (extended,
   2D), F(f) vs f across the chirp, lensed vs unlensed strain, simple detector
-  view.
-- [ ] Case B figures: same but F(f,t) with orbital modulation, a
-  time-sequence/movie of the moving diffraction pattern, spectrogram showing
-  sidebands at the outer orbital frequency.
+  view. Done -- see cases/case_A_chirp/RESULTS.md.
+- [x] Case B figures: F(w_B,y(t)) with orbital modulation (repeated lensing
+  pulses), the fixed pattern with the orbit track overlaid, idealized
+  detector view. Done -- see cases/case_B_monochromatic/RESULTS.md. (A
+  literal "movie" was dropped in favor of the static pattern+track figure,
+  which shows the same information without needing a video file in the
+  repo -- logged as a scope choice, not an oversight.)
 - [ ] `checks/independent_review`: fresh subagent, no prior context, told to
   reproduce and critique — run near the end, log its verdict here whether it
   passes or not.
