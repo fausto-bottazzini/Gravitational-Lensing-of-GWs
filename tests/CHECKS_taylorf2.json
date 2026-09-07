@@ -1,0 +1,18 @@
+{
+  "leading_order_group_delay": {
+    "passed": true,
+    "message": "max relative error, leading-order group delay vs -(t_c-tau(f)) = 6.84e-04 (tol 2e-3)"
+  },
+  "ifft_reconstructs_chirp_at_tc": {
+    "passed": true,
+    "message": "peak times at pad_mult=[2,4,8]: [15.17110500274658, 15.17110500274658, 15.17110500274658] (t_c=15.199); spread=0.0000s"
+  },
+  "amplitude_consistency_with_chirp_module": {
+    "passed": true,
+    "message": "max relative error taylorf2.spa_amplitude vs chirp.restricted_pn_amplitude_fd = 0.00e+00"
+  },
+  "pn_terms_are_small_corrections": {
+    "passed": true,
+    "message": "v=0.2213; PN correction terms at f=20Hz: [0.3138327864378355, -0.544461647978746, 0.1099153005504013] (all should be < 1 in magnitude)"
+  }
+}

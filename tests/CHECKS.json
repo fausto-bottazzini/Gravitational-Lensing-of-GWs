@@ -1,0 +1,30 @@
+{
+  "paczynski_magnification": {
+    "passed": true,
+    "message": "max relative error vs Paczynski(1986) = 2.13e-15 (tol 1e-10)"
+  },
+  "low_w_limit": {
+    "passed": true,
+    "message": "max |F(w=1e-4,y)-1| = 4.73e-04 (tol 2e-3)"
+  },
+  "geometric_optics_limit": {
+    "passed": true,
+    "message": "relative errors at w=[10, 50, 200, 1000] -> ['3.3e-04', '1.4e-03', '2.7e-05', '2.6e-05'], all<5e-3: True, err(w=1000)<err(w=10): True"
+  },
+  "radial_1d_converges_to_closed_form": {
+    "passed": true,
+    "message": "eta=[0.02, 0.01, 0.005] -> relerr=['2.57e-02', '1.29e-02', '6.49e-03'], error ratios=['1.98', '1.99'] (expect ~2, O(eta))"
+  },
+  "bruteforce_2d_agrees": {
+    "passed": true,
+    "message": "2D brute-force relative error = 1.14e-02 (tol 3e-2, x_max=25,n=1200,eta=0.005)"
+  },
+  "einstein_ring_regularization": {
+    "passed": true,
+    "message": "geometric mu(y->0) = 5.00e+05 (diverges, as expected); |F(w,0)| for w=1,5,20 -> ['1.812', '3.963', '7.927'] (stays finite)"
+  },
+  "hybrid_matches_at_threshold": {
+    "passed": true,
+    "message": "max relative error |F_point_lens-F_geometric_optics| at w=30, over y in [0.3,1,1.6,2.5] = 3.10e-02 (tol 4e-2)"
+  }
+}

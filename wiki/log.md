@@ -76,3 +76,47 @@ Append-only. What was decided, ingested, corrected, and when.
   first failed testing frequency drift over `tau_B/2`, close to formal
   coalescence where f always diverges regardless of parameters; fixed to
   test drift over the actual 6-period Case B observing window instead).
+- **2026-09-07** — User asked (mid-session) to use a waveform from an actual
+  search-template family rather than the hand-built leading-order chirp.
+  Tried `pip install pycbc` first (the course's own tool for days 2/5); it
+  hung for a very long time resolving/building the lalsuite dependency
+  chain with no output, consistent with lalsuite's historically poor native
+  -Windows support, and was killed rather than waited out indefinitely.
+  Implemented `src/gwlens/taylorf2.py` instead: the standard frequency
+  -domain, stationary-phase-approximation (SPA) PN inspiral waveform, the
+  actual functional form LIGO/Virgo low-mass CBC template banks use for the
+  inspiral part (LALSimulation/PyCBC's "TaylorF2" approximant), truncated
+  at 2PN (the phase coefficients below that order are ones I am confident
+  reproducing correctly from memory without a verified reference to check
+  numbers against; 2.5-3.5PN would add several more intricate rational/log
+  terms and real risk of a silent error, so left out and stated as a scope
+  choice, not hidden).
+  **A real, serious bug, caught and fixed**: the first version used the
+  literature's usual sign for the SPA phase, which assumes the OPPOSITE
+  Fourier convention from this project's own (`wiki/conventions.md`).
+  Feeding it straight to `numpy.fft.irfft` reconstructed a "chirp" whose
+  peak drifted with the amount of zero-padding (17s at 2x padding, 245s at
+  16x padding) instead of sitting still at `t_c` — the unmistakable
+  signature of a sign error aliasing power to the wrong end of the
+  (periodic) IFFT window. Re-derived the correct sign directly from the
+  stationary-phase condition applied to THIS project's inverse-transform
+  convention (`h(t)=int h(f) e^{+2pi i f t} df`, same sign as `numpy.
+  ifft`), confirmed empirically by flipping the overall sign of `Psi(f)`
+  and checking the reconstructed peak lands at `t_c` (now to <0.2%) and,
+  critically, STOPS moving as padding increases (checked at 2x, 4x, 8x
+  padding: peak time now identical to machine precision across all three —
+  `tests/test_taylorf2.py::check_ifft_reconstructs_chirp_at_tc`). Also
+  caught by this: the earlier `leading_order_group_delay` check (matching
+  the LEADING-order term's derivative against `chirp.time_to_merger`) had
+  passed throughout, on BOTH sign conventions after appropriately negating
+  the comparison target -- it only tests internal algebraic self
+  -consistency of one formula, not which overall sign the physical IFFT
+  needs, so it could not have caught this on its own. Recorded here so the
+  next reader trusts `check_ifft_reconstructs_chirp_at_tc`, not just the
+  group-delay check, as the test that actually validates the sign.
+  `cases/case_A_chirp/run.py` rewritten to build the waveform natively in
+  the frequency domain with `taylorf2.htilde` (banded to
+  `[F_A_START_HZ, f_isco]`, half-cosine-tapered edges) and apply lensing as
+  a single `F(f)` multiplication on that same grid, replacing the previous
+  time-domain-first-then-FFT construction — simpler, and now uses a real
+  search-template phase instead of the leading-order-only one.

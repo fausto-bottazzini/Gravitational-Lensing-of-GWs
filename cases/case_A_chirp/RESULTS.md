@@ -6,6 +6,19 @@ that same run, not hand-typed. System parameters: `src/gwlens/system.py`
 (m1=20, m2=15 Msun; lens M_L=5e4 Msun at D_L=5000 pc; outer orbit a_out=1.82
 AU, P_out=4 d, i_out=87 deg).
 
+The unlensed waveform is `src/gwlens/taylorf2.py`: the restricted TaylorF2
+frequency-domain post-Newtonian inspiral (2PN phase) -- the standard
+functional form used for the inspiral portion of real LIGO/Virgo
+matched-filter search templates -- built natively on the same frequency grid
+lensing is applied on (`h_lensed(f) = F(f,y_A) h_unlensed(f)`, then one
+`irfft` each for the time-domain figures). A first version of this had a
+Fourier-sign bug (the literature's usual SPA-phase sign assumes the opposite
+FT convention from `wiki/conventions.md`) that put the reconstructed chirp's
+peak at a time that *moved with the amount of zero-padding* instead of
+sitting at `t_c` -- caught by exactly that symptom, fixed, and now guarded by
+`tests/test_taylorf2.py::check_ifft_reconstructs_chirp_at_tc` (peak time now
+identical at 2x/4x/8x padding). See `wiki/log.md` for the full account.
+
 ## Regime
 
 The inner binary inspirals from f=10 Hz to f_isco=125.6 Hz in
@@ -47,14 +60,12 @@ individual samples of that oscillation, not its envelope).
 
 ## What lensing does to the waveform
 
-- **Peak-sample amplification: 0.487** (the single largest |h(t)| sample is
-  *smaller* lensed than unlensed).
-- **RMS amplification: 0.960** (power averaged over the whole chirp is
-  close to, and slightly below, unlensed).
+- **Peak-sample amplification: 1.038** (the single largest |h(t)| sample).
+- **RMS amplification: 1.056** (power averaged over the whole chirp).
 
-These two numbers looking different from each other, and both being close to
-or below 1 despite |F|>1 through much of the band, is the point, not an
-error: F(f) modulates **phase** as well as amplitude (`caseA_F_of_f.png`,
+These two numbers being close to each other but not identical, despite |F|
+oscillating between 0.79 and 1.27 through the band (not a constant), is the
+point, not an error: F(f) modulates **phase** as well as amplitude (`caseA_F_of_f.png`,
 bottom sub-panel: arg F sweeps through a full 2*pi cycle roughly once per
 fringe). The lensed waveform is a dephased, not simply rescaled, copy of the
 unlensed one, so a single peak sample is not a robust amplification

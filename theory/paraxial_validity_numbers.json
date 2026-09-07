@@ -1,0 +1,8 @@
+{
+  "R_Sch_AU": 0.0009870628715107786,
+  "D_LS_at_ymin_AU": 1.8146940583980995,
+  "D_LS_over_2Rsch_at_ymin": 919.2393467401753,
+  "xi0_over_DLS_at_ymin": 0.03298266147242999,
+  "marginal_window_seconds": 59.83637289636819,
+  "marginal_window_fraction_of_Pout": 0.00017313765305662093
+}

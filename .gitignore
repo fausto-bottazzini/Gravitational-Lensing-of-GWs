@@ -1,7 +1,6 @@
 __pycache__/
 *.pyc
 .venv/
-tests/CHECKS.json
 *.aux
 *.log
 *.out

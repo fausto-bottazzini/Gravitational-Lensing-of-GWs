@@ -1,0 +1,663 @@
+\documentclass[11pt]{report}
+\usepackage[a4paper,margin=2.7cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[round]{natbib}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+\newtcolorbox{checkbox}[1][]{colback=blue!4!white,colframe=blue!40!black,
+  boxrule=0.4pt,arc=1mm,left=6pt,right=6pt,top=4pt,bottom=4pt,breakable,
+  title={Check},fonttitle=\bfseries\small,coltitle=blue!30!black,#1}
+\newtcolorbox{choicebox}[1][]{colback=orange!5!white,colframe=orange!45!black,
+  boxrule=0.4pt,arc=1mm,left=6pt,right=6pt,top=4pt,bottom=4pt,breakable,
+  title={Choice made},fonttitle=\bfseries\small,coltitle=orange!30!black,#1}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\Msun}{M_{\odot}}
+
+\title{\Large Wave-Optics Gravitational Lensing of Gravitational Waves\\
+\large in a Hierarchical Triple: a Worked Derivation}
+\author{Final project --- Gravitational Waves and AI-Assisted Research}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+This chapter derives, from the linearized wave equation, the formalism used
+to compute how a gravitational wave (GW) from a compact binary is lensed by
+a third, more massive body in the same hierarchical triple. It follows the
+scalar-field reduction of GW propagation in a weak-field lens background
+through to the Kirchhoff--Fresnel diffraction integral, works out the
+point-mass lens in closed form and cross-checks it against two independent
+numerical methods, derives the specific geometry of a source and lens that
+share one physical system (as opposed to the usual well-separated
+cosmological lens), and closes with the two regimes --- a static lens during
+a fast chirp, and a moving lens sampled by a slowly-evolving quasi
+-monochromatic source --- that \code{cases/case\_A\_chirp} and
+\code{cases/case\_B\_monochromatic} instantiate numerically. Every numbered
+check below is implemented and run in \code{tests/}; this document derives
+\emph{why} each check is the right one, not just that it passes.
+\end{abstract}
+
+\tableofcontents
+
+% ======================================================================
+\chapter{Setup and scope}
+% ======================================================================
+
+\section{The physical picture}
+
+The system is a hierarchical triple: an inner compact binary of masses
+$m_1,m_2$ (the GW \emph{source}) orbits, at semi-major axis $a_\mathrm{in}$,
+a common centre of mass which itself orbits a third, more massive body of
+mass $M_L$ (the \emph{lens}) at semi-major axis $a_\mathrm{out}$, with
+\begin{equation}
+  a_\mathrm{in} \ll a_\mathrm{out}.
+  \label{eq:hierarchy}
+\end{equation}
+This is the ordinary stability condition for a hierarchical triple, and it
+does double duty here: it is also exactly the condition under which the
+inner binary can be treated, for lensing purposes, as a single point source
+--- both members are deflected identically, so there is no differential
+lensing across the binary itself (no "binary microlensing" substructure).
+Throughout, $M_L \gg m_1+m_2$, so the lens sits, to the accuracy used here,
+at rest at the triple's barycentre while the inner binary (as a whole)
+orbits it.
+
+The triple is taken to be within our own Galaxy (or a similarly nearby
+system), so the lens and source are at essentially the same distance from
+Earth and cosmological redshift plays no role: distances $D_L$ (observer to
+lens), $D_S$ (observer to source) and $D_{LS}$ (lens to source) are ordinary
+Euclidean distances, and the lens redshift is $z_L=0$ (the factor
+$(1+z_L)$ that multiplies the lens mass everywhere in the cosmological
+lensing literature is simply $1$ here). Chapter~\ref{ch:geometry} works out
+a consequence of this that a textbook cosmological treatment does not have
+to face: $D_{LS}$ is \emph{not} a large, slowly-varying distance --- it is
+set by the outer orbit itself, and can be small, zero, or even formally
+negative.
+
+\subsection*{Two epochs of the same inspiral}
+The inner binary loses energy to gravitational radiation and inspirals. Two
+snapshots of that inspiral are studied:
+\begin{description}
+  \item[Case A --- the chirp.] Late inspiral: the GW frequency sweeps
+    through the sensitive band of a ground-based-like detector in seconds.
+    That is enormously faster than any plausible outer orbital period, so
+    the lens is \emph{frozen} at a single impact parameter for the whole
+    observation.
+  \item[Case B --- quasi-monochromatic.] Early inspiral: the inner binary is
+    wide, the GW frequency is low and drifts negligibly over an observation
+    spanning several outer periods. Now the outer orbital motion \emph{is}
+    resolved, and the impact parameter sweeps periodically.
+\end{description}
+Both regimes are made precise, and checked against the actual numbers used
+in \code{cases/}, in Chapter~\ref{ch:regimes}.
+
+\begin{choicebox}
+The lens mass, $M_L\sim5\times10^4\,\Msun$ (an ``IMBH'', between the
+conventional intermediate-mass and supermassive black hole ranges), is
+chosen so that the wave-optics parameter $w$ (defined in
+Eq.~\ref{eq:wdef}) is not astronomically extreme at either epoch's
+frequency, not because it is a typical hierarchical-triple lens mass in the
+literature. \code{wiki/log.md} records this choice and the numbers it
+produces; it is not a fitted or tuned value beyond that one requirement.
+\end{choicebox}
+
+% ======================================================================
+\chapter{From the wave equation to a scalar field}
+\label{ch:scalar}
+% ======================================================================
+
+The user-facing goal of this project stops here: reaching the point where
+gravitational-wave lensing is a \emph{scalar}-field diffraction problem, and
+justifying why that is legitimate.
+
+\section{The wave equation on a weak-field background}
+
+Write the full metric as a background plus a small perturbation,
+$g_{\mu\nu}=\bar g_{\mu\nu}+h_{\mu\nu}$, where $\bar g_{\mu\nu}$ is the
+lens's own weak-field metric (Newtonian potential $U=-GM_L/r$, $|U|/c^2\ll1$
+everywhere relevant here since the lens is far outside its own Schwarzschild
+radius at the impact parameters considered) and $h_{\mu\nu}$ is the GW. In
+Lorenz gauge on this background, the linearized vacuum Einstein equations
+give a wave equation for $h_{\mu\nu}$ with a curvature-coupling term,
+\begin{equation}
+  \bar\Box h_{\mu\nu} - 2\bar R_{\mu\alpha\nu\beta}h^{\alpha\beta} = 0 .
+  \label{eq:linearized}
+\end{equation}
+This is the standard starting point for GW propagation on a curved
+background (e.g.\ \citealp{Isaacson1968}). The high-frequency (eikonal)
+regime relevant here is set by comparing the GW wavelength $\lambda_{GW}$ to
+the background's curvature length scale $\mathcal{R}$: the ray/thin-lens
+treatment below is valid when $\lambda_{GW}\ll\mathcal{R}$. For a point lens
+$\mathcal{R}\sim R_E$ (the Einstein radius), and the curvature-coupling term
+in Eq.~\eqref{eq:linearized} is then subdominant to $\bar\Box h_{\mu\nu}$ by
+a factor $\sim(\lambda_{GW}/\mathcal{R})^2$ (\citealp{Peters1974};
+\citealp{Takahashi2003}, \S2). Dropping it, each independent polarization
+amplitude $h_{\mu\nu}=e_{\mu\nu}\,\Phi$ (fixed polarization tensor
+$e_{\mu\nu}$, transverse-traceless) obeys the \emph{same} equation as a
+massless scalar field on the lens background,
+\begin{equation}
+  \bar\Box\,\Phi = 0 .
+  \label{eq:scalar_wave}
+\end{equation}
+This is the key reduction: lensing in this regime does not mix or rotate
+the two GW polarizations, and every polarization is amplified/retarded by
+the identical (complex, frequency-dependent) factor derived below. It is
+also why solving the scalar-field diffraction problem \emph{is} solving the
+GW lensing problem here, and nothing about spin-2 structure survives past
+this point.
+
+\begin{checkbox}
+This reduction is only used, never re-derived numerically in this project
+--- it is a standard result cited above. What \emph{is} checked
+numerically, repeatedly below, is everything built on top of it: the
+diffraction integral it leads to, the point-lens closed form, and its
+geometric-optics limit.
+\end{checkbox}
+
+\section{The Helmholtz equation and the thin lens}
+
+For the weak-field metric $\bar g_{\mu\nu}=\eta_{\mu\nu}+2U\,\delta_{\mu\nu}$
+(isotropic weak-field form, $c=1$ units in this section), Eq.~\eqref{eq:scalar_wave}
+for a wave of fixed angular frequency $\omega$, $\Phi(\vb r,t)=\psi(\vb
+r)e^{-i\omega t}$, becomes
+\begin{equation}
+  \left(\nabla^2 + \omega^2\right)\psi = 4\omega^2 U\,\psi ,
+  \label{eq:helmholtz}
+\end{equation}
+a Helmholtz equation with the lens potential acting as a (frequency
+-dependent) refractive-index perturbation, $n(\vb r)=1-2U(\vb r)$ ---
+exactly analogous to geometric/wave optics in a medium of varying refractive
+index, which is the origin of calling this whole formalism ``wave optics.''
+
+\subsection*{Thin-lens (Fresnel--Kirchhoff) reduction}
+Because $a_\mathrm{out}\ll D_L,D_S$ (Eq.~\ref{eq:hierarchy} and the Galactic
+-scale distances above), the deflection happens in a region whose extent
+along the line of sight is negligible compared to $D_L$ and $D_S$: the
+standard thin-lens approximation. Propagating Eq.~\eqref{eq:helmholtz} from
+the source plane to the lens plane and on to the observer via the Fresnel
+diffraction integral (paraxial approximation, valid since all angles
+involved are $\ll1$) gives the amplification factor --- the ratio of the
+lensed to unlensed wave at the observer,
+\begin{equation}
+  F(f) \;=\; \frac{D_S}{D_L D_{LS}}\,\frac{f}{i}
+  \int d^2\vb\xi\; \exp\!\left[\, i 2\pi f\, t_d(\vb\xi;\vb\eta)\,\right],
+  \label{eq:Fdim}
+\end{equation}
+where $\vb\xi$ is position on the lens plane, $\vb\eta$ the (fixed) source
+position, and $t_d$ the time delay (geometric $+$ Shapiro) of a ray through
+$\vb\xi$ relative to the undeflected path
+(\citealp{SchneiderEhlersFalco1992}; \citealp{Takahashi2003}). By
+construction, $h_{\rm lensed}(f)=F(f)\,h_{\rm unlensed}(f)$: everything the
+lens does to the (scalar-equivalent) waveform is contained in this single
+complex, frequency-dependent number.
+
+\subsection*{Dimensionless form}
+Scaling the lens-plane position by the Einstein radius $\xi_0\equiv R_E$ and
+the source position by the corresponding source-plane scale $\eta_0\equiv
+\xi_0 D_S/D_L$, with $\vb x\equiv\vb\xi/\xi_0$, $\vb y\equiv\vb\eta/\eta_0$
+(so $y=|\vb y|$ is the dimensionless impact parameter used throughout this
+project), and defining the dimensionless deflection potential $\psi(\vb x)$
+via $t_d = (1+z_L)\dfrac{D_S}{D_L D_{LS}}\left[\tfrac12|\vb x-\vb
+y|^2-\psi(\vb x)\right]$, Eq.~\eqref{eq:Fdim} becomes
+\begin{equation}
+  F(w,\vb y) \;=\; \frac{w}{2\pi i}\int d^2\vb x\;
+  \exp\!\Big[\,i\,w\,\varphi(\vb x,\vb y)\,\Big],
+  \qquad
+  \varphi(\vb x,\vb y)\equiv \tfrac12|\vb x-\vb y|^2-\psi(\vb x),
+  \label{eq:Fdimless}
+\end{equation}
+where the dimensionless frequency is
+\begin{equation}
+  w \;\equiv\; 8\pi\,\frac{GM_L}{c^3}\,f
+  \label{eq:wdef}
+\end{equation}
+(the $(1+z_L)$ factor is $1$ here, per Chapter~1). This is exactly the
+function \code{F\_bruteforce\_2d} in \code{waveoptics.py}: no closed form
+has been used yet, only Eq.~\eqref{eq:helmholtz} and the thin-lens/paraxial
+reduction.
+
+\begin{checkbox}[title={Check: $w\to0$}]
+Physically, a wave much longer than the lens's effect scale should not be
+lensed at all: $F(w,\vb y)\to1$ as $w\to0$. This is not obvious from
+Eq.~\eqref{eq:Fdimless} by naive Taylor expansion (the integral is only
+conditionally convergent, \S\ref{sec:pointlens}), but it is confirmed
+numerically to $\sim5\times10^{-4}$ at $w=10^{-4}$ by
+\code{tests/test\_waveoptics.py::check\_low\_w\_limit}.
+\end{checkbox}
+
+% ======================================================================
+\chapter{The point-mass lens}
+\label{ch:pointlens}
+% ======================================================================
+\label{sec:pointlens}
+
+Everything above is general (any $\psi(\vb x)$). From here on the lens is a
+single point mass, $\psi(\vb x)=\ln|\vb x|$, the deflection potential whose
+gradient $\nabla\psi=\vb x/|\vb x|^2$ gives the standard $1/|\vb x|$
+deflection law of a point mass.
+
+\section{Geometric optics: images, magnification, time delay}
+\label{sec:geo}
+
+By symmetry take $\vb y=(y,0)$. Stationary points of $\varphi(\vb x,\vb y)$
+(Fermat's principle: images sit where the time delay is stationary) restricted
+to the $x_2=0$ axis solve
+\begin{equation}
+  x - \frac{1}{x} = y
+  \;\;\Longrightarrow\;\;
+  x_\pm = \tfrac12\left(y\pm\sqrt{y^2+4}\right),
+  \qquad x_+x_-=-1 .
+  \label{eq:images}
+\end{equation}
+Two images, always: $x_+>1>0>x_->-1$ for $y>0$.
+
+\subsection*{Magnification}
+For an axisymmetric lens the 2D lens map $\vb y(\vb x)=f(x)\hat{\vb x}$,
+$f(x)\equiv x-1/x$, has Jacobian $\det(\partial\vb y/\partial\vb x) =
+\big(f(x)/x\big)\,f'(x)$ (the product of the tangential and radial stretch
+factors --- a standard identity for axisymmetric maps,
+e.g.\ \citealp{SchneiderEhlersFalco1992}). With $f'(x)=1+1/x^2$,
+\begin{equation}
+  \mu(x) \;=\; \frac{1}{\det(\partial\vb y/\partial\vb x)}
+  \;=\; \frac{1}{\left(1-\tfrac{1}{x^2}\right)\left(1+\tfrac{1}{x^2}\right)}
+  \;=\; \frac{x^4}{x^4-1} .
+  \label{eq:magnification}
+\end{equation}
+
+\begin{checkbox}[title={Check: total magnification vs.\ Paczy\'nski (1986)}]
+The total (unsigned) magnification $\mu_{\rm tot}(y)=|\mu(x_+)|+|\mu(x_-)|$
+built from Eqs.~\eqref{eq:images}--\eqref{eq:magnification} must equal the
+independent, textbook microlensing formula
+$A(y)=(y^2+2)/\!\left(y\sqrt{y^2+4}\right)$ \citep{Paczynski1986}. Verified
+to floating-point precision ($<3\times10^{-15}$, all $y$ tested) in
+\code{tests/test\_waveoptics.py::check\_paczynski\_magnification} --- a
+genuine cross-check, since Eq.~\eqref{eq:magnification} was derived here
+from the Jacobian, not copied from Paczy\'nski's paper.
+\end{checkbox}
+
+\subsection*{Time delay and the geometric-optics amplification factor}
+The (dimensionless) time delay of each image is $\varphi(x_\pm,y)$, and the
+delay of the (always positive-parity, ``minimum'') image $x_+$ relative
+to itself is trivially zero, while the saddle-point image $x_-$ arrives
+later by $\Delta T(y)\equiv\varphi(x_-,y)-\varphi(x_+,y)>0$. Evaluating
+Eq.~\eqref{eq:Fdimless} by stationary phase (valid as $w\to\infty$) sums the
+two images with Morse-index phases (minimum: $0$; saddle: $-\pi/2$, i.e.\ an
+overall factor of $-i$, in the $h(f)=\int h(t)e^{-i2\pi ft}dt$ convention
+fixed in \code{wiki/conventions.md}) \emph{and} each image's own,
+un-subtracted phase $w\,\varphi(x_+,y)$:
+\begin{equation}
+  F_{\rm geo}(w,y) \;=\;
+  e^{\,iw\varphi(x_+,y)}\left[\sqrt{\mu(x_+)} \;-\; i\sqrt{|\mu(x_-)|}\,
+  e^{\,iw\Delta T(y)}\right].
+  \label{eq:Fgeo}
+\end{equation}
+
+\begin{checkbox}[title={A mistake, and how it was caught}]
+An earlier version of Eq.~\eqref{eq:Fgeo} omitted the leading
+$e^{iw\varphi(x_+,y)}$ factor (implicitly assuming a reference phase
+subtraction that Eq.~\eqref{eq:Fdimless} does not make). This gave the
+right $|F|$ but the wrong phase compared to the exact closed form
+(\S\ref{sec:closedform}) at large $w$. The error was diagnosed by
+comparing the two directly and recognizing the residual phase scaled
+linearly with $w$ at the rate $\varphi(x_+,y)$ --- and fixed by restoring
+the missing factor. After the fix, \code{tests/test\_waveoptics.py::
+check\_geometric\_optics\_limit} finds relative agreement
+$3\times10^{-4}$ at $w=10$, shrinking to $3\times10^{-5}$ at $w=1000$, the
+expected behaviour of an asymptotic ($w\to\infty$) expansion. See
+\code{wiki/log.md} for the full account.
+\end{checkbox}
+
+\section{The exact result: a confluent hypergeometric function}
+\label{sec:closedform}
+
+Solving Eq.~\eqref{eq:Fdimless} for the point-mass lens exactly (originally
+\citealp{Peters1974}; \citealp{Deguchi1986}; the standard form quoted in the
+GW-lensing literature is \citealp{Takahashi2003}) gives
+\begin{equation}
+  F(w,y) \;=\;
+  \exp\!\left[\frac{\pi w}{4} + i\frac{w}{2}\ln\frac{w}{2}\right]
+  \Gamma\!\left(1-\frac{iw}{2}\right)
+  {}_1F_1\!\left(\frac{iw}{2},\,1;\,\frac{iwy^2}{2}\right).
+  \label{eq:Fclosed}
+\end{equation}
+This is \code{src/gwlens/waveoptics.py::F\_point\_lens}, evaluated with
+arbitrary-precision complex arithmetic (\code{mpmath}, since
+\code{scipy.special.hyp1f1} does not accept complex parameters). Rather than
+trust Eq.~\eqref{eq:Fclosed} on citation alone, it is checked against two
+independently-derived numerical evaluations of Eq.~\eqref{eq:Fdimless}
+itself.
+
+\subsection*{Independent check 1: the 1D Bessel-reduced integral}
+Writing $|\vb x-\vb y|^2=x^2+y^2-2xy\cos\theta$ in polar coordinates on the
+lens plane and using the standard identity
+$\int_0^{2\pi}d\theta\,e^{ia\cos\theta}=2\pi J_0(a)$
+(Abramowitz \& Stegun 9.1.21) to do the angular integral in
+Eq.~\eqref{eq:Fdimless} analytically leaves a 1D radial integral,
+\begin{equation}
+  F(w,y) \;=\; -i\,w\,e^{\,iwy^2/2}\int_0^\infty dx\;x\,J_0(wxy)\,
+  \exp\!\left[i w\left(\tfrac12 x^2-\ln x\right)\right].
+  \label{eq:Fradial}
+\end{equation}
+This integral is only conditionally convergent; it is regularized with the
+standard $i\epsilon$ prescription (\citealp{UlmerGoodman1995}),
+$w\to w(1+i\eta)$, i.e.\ a convergence factor $e^{-\eta w x^2/2}$, evaluated
+for a sequence of $\eta\to0$ and extrapolated. \code{src/gwlens/waveoptics.py::
+F\_radial\_1d} implements this, with the cutoff radius and the number of
+quadrature sub-intervals set automatically from $\eta$ and $w$ (so as to
+resolve the local oscillation period rather than a hand-tuned grid).
+
+\begin{checkbox}[title={Check: $O(\eta)$ convergence to the closed form}]
+At $w=1,\,y=1$: relative error vs.\ Eq.~\eqref{eq:Fclosed} is
+$2.6\times10^{-2}$ at $\eta=0.02$, $1.3\times10^{-2}$ at $\eta=0.01$,
+$6.5\times10^{-3}$ at $\eta=0.005$ --- each halving of $\eta$ almost exactly
+halves the error (ratios $1.98$, $1.99$), the expected $O(\eta)$ scaling of
+the regularization itself. \code{tests/test\_waveoptics.py::
+check\_radial\_1d\_converges\_to\_closed\_form}.
+\end{checkbox}
+
+\subsection*{Independent check 2: brute-force 2D quadrature}
+Eq.~\eqref{eq:Fdimless} evaluated directly by 2D quadrature over a
+regularized (Gaussian-damped) square grid, with no angular reduction and no
+closed form anywhere --- the least clever, most first-principles evaluator
+in the project. At $w=1,\,y=1$, $x_{\max}=25$, $1200\times1200$ grid points,
+$\eta=0.005$: relative error $1.1\times10^{-2}$, consistent with the same
+$O(\eta)$ regularization error seen in the 1D check.
+\code{tests/test\_waveoptics.py::check\_bruteforce\_2d\_agrees};
+\code{waveoptics.py::F\_bruteforce\_2d}.
+
+\begin{checkbox}[title={Check: Einstein-ring diffraction spike}]
+At exact alignment ($y=0$) geometric optics diverges ($\mu(x_+{=}1)$ is
+singular, Eq.~\ref{eq:magnification}) --- the textbook point-source
+caustic. The exact $F(w,0)$ from Eq.~\eqref{eq:Fclosed} stays finite for
+every $w$ tested ($1.81$, $3.96$, $7.93$ at $w=1,5,20$): diffraction
+regularizes the caustic, the GW analogue of the optical Arago/Poisson spot
+(\citealp{Deguchi1986}). \code{tests/test\_waveoptics.py::
+check\_einstein\_ring\_regularization}.
+\end{checkbox}
+
+\section{A fast hybrid evaluator}
+
+Eq.~\eqref{eq:Fclosed}'s confluent hypergeometric series converges slowly
+once its argument $iwy^2/2$ is large --- exactly the regime, large $w$,
+where Eq.~\eqref{eq:Fgeo} is independently validated to agree with it to
+better than $0.4\%$. \code{waveoptics.py::F\_hybrid} therefore uses
+Eq.~\eqref{eq:Fclosed} below $w=30$ and Eq.~\eqref{eq:Fgeo} above it (the
+threshold checked directly, \code{tests/test\_waveoptics.py::
+check\_hybrid\_matches\_at\_threshold}: $3.5\%$ agreement at $w=30$ across
+several $y$). This was not an optimization made in advance: evaluating
+Eq.~\eqref{eq:Fclosed} directly across the frequency sweep actually used in
+Case~A took $\sim150$\,s; \code{F\_hybrid} needs none of that (see
+\code{wiki/log.md}).
+
+% ======================================================================
+\chapter{The hierarchical triple as a lens system}
+\label{ch:geometry}
+% ======================================================================
+
+\section{The outer orbit}
+The source's position relative to the (effectively fixed) lens follows an
+ordinary Kepler orbit: elements $(a_\mathrm{out},e_\mathrm{out},
+i_\mathrm{out},\Omega_\mathrm{out},\omega_\mathrm{out})$, solved by Newton's
+method on Kepler's equation $M=E-e\sin E$ and rotated into the observer
+frame ($z$ along the line of sight) by the standard sequence
+$R_z(\Omega)R_x(i)R_z(\omega)$ (e.g.\ \citealp{MurrayDermott1999}):
+\begin{align}
+  x_{\rm sky} &= r\left[\cos\Omega\cos\theta - \sin\Omega\sin\theta\cos i\right],\\
+  y_{\rm sky} &= r\left[\sin\Omega\cos\theta + \cos\Omega\sin\theta\cos i\right],\\
+  z_{\rm los} &= r\sin\theta\sin i, \qquad \theta\equiv\nu+\omega,
+  \label{eq:rotation}
+\end{align}
+$r,\nu$ the orbital radius and true anomaly.
+
+\begin{checkbox}
+Kepler's equation solver inverts to machine precision for
+$e\in\{0,0.3,0.7,0.95\}$; a circular orbit gives exactly constant $r$; an
+edge-on orbit ($i=\pi/2$, $\Omega=\omega=0$) projects to a line
+($y_{\rm sky}\equiv0$ to $6\times10^{-17}$); a face-on orbit ($i=0$)
+reproduces the orbital-plane position exactly. All in
+\code{tests/test\_geometry.py}.
+\end{checkbox}
+
+\section{$D_{LS}$ is not what it is in a textbook lens}
+
+This is the one place this project's geometry genuinely differs from the
+cosmological lensing this formalism was built for, and it is easy to get
+wrong by carrying over the textbook intuition unexamined. In the usual
+setting, lens and source are at very different, essentially fixed distances
+and $D_{LS}$ barely varies. Here they are in the \emph{same} system: the
+lens sits at $D_L$, and the source's distance is
+$D_S(t)=D_L+z_{\rm los}(t)$, with $z_{\rm los}(t)$ from
+Eq.~\eqref{eq:rotation} at the AU-to-sub-pc scale of the outer orbit. Since
+$|z_{\rm los}|/D_L\sim10^{-8}$ for the parameters used here, $D_S\approx D_L$
+is an excellent approximation \emph{everywhere it appears except} in
+\begin{equation}
+  D_{LS}(t) = D_S(t) - D_L = z_{\rm los}(t)
+\end{equation}
+itself, where it is the whole story. The angular Einstein radius,
+\begin{equation}
+  \theta_E(t)^2 = \frac{4GM_L}{c^2}\,\frac{D_{LS}(t)}{D_L D_S(t)}
+  \;\approx\; \frac{4GM_L}{c^2}\,\frac{z_{\rm los}(t)}{D_L^2},
+  \label{eq:thetaE_t}
+\end{equation}
+is therefore itself time-dependent, and \textbf{undefined whenever
+$z_{\rm los}(t)\le0$} --- the source is instantaneously nearer Earth than the
+lens, so the lens is not between the observer and the source at all, and
+there is no lensing geometry for that half of the orbit (not an
+approximation artefact: $F=1$ there by construction). As
+$z_{\rm los}(t)\to0^+$, $\theta_E\to0$ and $y=\theta/\theta_E(t)\to\infty$
+for any nonzero transverse offset $\theta$: the formalism turns lensing off
+smoothly and on its own at the front/back crossing, with no special-casing
+needed beyond excluding $z_{\rm los}\le0$.
+
+This is exactly the origin of \emph{repeated} lensing in a hierarchical
+triple: only the far-side half of each outer orbit is lensed at all, so a
+periodically-orbiting source produces periodic lensing pulses, once per
+outer period, rather than continuous modulation
+(\citealp{DOrazioLoeb2020}, in the geometric-optics limit; the same
+structure appears here in wave optics, Case~B, \S\ref{sec:caseB}).
+
+\begin{checkbox}
+For the (near edge-on, $i_\mathrm{out}=87^\circ$) orbit used in
+\code{cases/}, almost exactly half the orbit is lensed
+($49.7$--$50.0\%$ across independent samplings), and $y$ is finite and
+positive throughout the lensed half.
+\code{tests/test\_geometry.py::check\_time\_varying\_impact\_parameter}.
+\end{checkbox}
+
+\section{Where the thin-lens/paraxial approximation itself is being pushed}
+\label{sec:paraxial}
+
+\S\ref{ch:scalar} derived Eq.~\eqref{eq:Fdim} under a paraxial (small-angle)
+Fresnel approximation, which additionally requires the physical Einstein
+radius on the lens plane, $\xi_0$, to be much smaller than the propagation
+distance $D_{LS}$ itself --- an assumption that is automatic in cosmological
+lensing (where $D_{LS}$ is a fixed, large distance) but is exactly what
+Eq.~\eqref{eq:thetaE_t} shows is \emph{not} automatic here, since
+$D_{LS}(t)$ shrinks to zero twice per outer orbit. Using
+$\xi_0=\sqrt{4GM_L D_{LS}/c^2}$ (the point-lens Einstein radius written with
+$D_S\approx D_L$, \S\ref{ch:geometry}), the paraxial condition
+$D_{LS}\gg\xi_0$ reduces to
+\begin{equation}
+  D_{LS}(t) \;\gg\; \frac{4GM_L}{c^2} \;=\; 2\,R_{\rm Sch}(M_L) ,
+  \label{eq:paraxial_condition}
+\end{equation}
+twice the lens's own Schwarzschild radius --- the \emph{same} weak-field
+condition already invoked in \S\ref{ch:scalar} to drop the curvature
+-coupling term in Eq.~\eqref{eq:linearized}, now applied to the
+line-of-sight separation instead of the impact parameter. This is a
+genuine, if narrow, respect in which this project's geometry pushes past
+where the standard formalism was built to operate, and it is worth being
+precise about exactly how much it matters, rather than either ignoring it
+or re-deriving non-paraxial diffraction (a substantially harder problem,
+evaluated below as not worth it here).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\toprule
+quantity & value (this triple) \\
+\midrule
+$R_{\rm Sch}(M_L)$ & $9.87\times10^{-4}$ AU \\
+$D_{LS}$ at the deepest-lensing point ($y=y_{\min}$) & $1.81$ AU \\
+$D_{LS}/(2R_{\rm Sch})$ there & $919$ \\
+$\xi_0/D_{LS}$ there (direct paraxial-angle check) & $0.033$ \\
+time per crossing spent with $D_{LS}\lesssim2R_{\rm Sch}$ & $60$ s \\
+that time as a fraction of $P_{\rm out}$ & $1.7\times10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\caption{The paraxial condition, Eq.~\eqref{eq:paraxial_condition}, evaluated for the system in \code{src/gwlens/system.py} by \code{theory/paraxial\_validity.py} (\code{theory/paraxial\_validity\_numbers.json}).}
+\label{tab:paraxial}
+\end{table}
+
+Table~\ref{tab:paraxial} is the answer: at the orbital phase that actually
+produces the interesting physics in Case~B --- the point of closest
+projected approach, $y=y_{\min}$, where the lensing pulses in
+\code{cases/case\_B\_monochromatic/caseB\_repeated\_pulses.png} peak ---
+$D_{LS}$ is close to its own \emph{maximum}
+($\sim a_\mathrm{out}\sin i_\mathrm{out}$, since minimum transverse offset
+and maximum line-of-sight separation occur near the same orbital phase for
+this geometry), not its minimum, and exceeds $2R_{\rm Sch}$ by three orders
+of magnitude. The paraxial approximation only becomes marginal in a window
+of order $60$ seconds around each front/back crossing -- a fraction
+$\sim1.7\times10^{-4}$ of the $4$-day outer period -- and that window is
+\emph{already} the region where $y\to\infty$ and $F\to1$ by construction
+(\S\ref{ch:geometry}), not a region this project draws any conclusion from.
+A genuine non-paraxial (wide-angle) diffraction treatment near the crossing
+would be needed to say anything quantitative about that $60$-second window
+itself, and would require abandoning the Fresnel integral, Eq.~\eqref{eq:Fdim},
+for a substantially more involved formulation -- a well-posed but
+research-level extension, not attempted here. Given that it would only
+refine an already-negligible, already-correctly-approximated ($F\approx1$)
+sliver of the signal, the added complexity is judged not to be worth it for
+this project's scope: this is a stated limitation, checked and quantified
+rather than an unexamined one.
+
+% ======================================================================
+\chapter{The inner binary as a source}
+% ======================================================================
+
+The unlensed waveform uses the leading-order (Newtonian/quadrupole,
+restricted) inspiral: not full post-Newtonian, since the physics under test
+here is the lensing, not waveform accuracy (a stated scope choice, not an
+oversight). The frequency evolves as
+\begin{equation}
+  \dot f = \frac{96}{5}\pi^{8/3}\left(\frac{G\mathcal{M}}{c^3}\right)^{5/3} f^{11/3},
+  \qquad
+  \mathcal{M}\equiv\frac{(m_1m_2)^{3/5}}{(m_1+m_2)^{1/5}},
+  \label{eq:dfdt}
+\end{equation}
+the standard quadrupole-formula chirp rate (\citealp{Peters1964};
+\citealp{PetersMathews1963}; \citealp{Maggiore2008}). Integrating
+Eq.~\eqref{eq:dfdt} directly gives the time to (formal) coalescence and the
+frequency track,
+\begin{equation}
+  \tau(f) = \frac{5}{256}(\pi f)^{-8/3}\left(\frac{G\mathcal{M}}{c^3}\right)^{-5/3},
+  \qquad
+  f(t) = \frac{1}{\pi}\left[\frac{5}{256}\left(\frac{G\mathcal M}{c^3}\right)^{-5/3}\right]^{-3/8}\!\!(t_c-t)^{-3/8}.
+  \label{eq:ft}
+\end{equation}
+
+\begin{checkbox}[title={Check, and a bug caught by it}]
+$f(t{=}0)$ from Eq.~\eqref{eq:ft} must reproduce the $f_0$ used to define
+$t_c=\tau(f_0)$ (self-consistency of the inversion) and must agree with
+direct numerical integration of Eq.~\eqref{eq:dfdt} (\code{scipy.integrate.
+solve\_ivp}). An early hand-inversion of $\tau(f)$ for $f(t)$ mis-placed an
+exponent (a bracket-power slip) and failed the first check immediately;
+after fixing it, agreement with the ODE integration is $6\times10^{-9}$.
+\code{tests/test\_chirp.py}.
+\end{checkbox}
+
+The (restricted, leading-order) time-domain strain amplitude,
+\begin{equation}
+  h(t) = \frac{4}{D_{\rm eff}}\left(\frac{G\mathcal M}{c^2}\right)^{5/3}
+  \left(\frac{\pi f_{GW}(t)}{c}\right)^{2/3},
+  \label{eq:htdamp}
+\end{equation}
+\emph{increases} with frequency, as a real inspiral must. An earlier version
+of Case A's \code{run.py} used the frequency-\emph{domain}
+stationary-phase-approximation scaling $|h(f)|\propto f^{-7/6}$ (which
+decreases) as if it were this time-domain envelope --- caught by eye (the
+plotted chirp amplitude was shrinking toward merger) and fixed; both scalings
+are now separate, clearly labelled functions
+(\code{restricted\_pn\_amplitude\_td} vs.\ \code{\_fd}) with a regression
+check in \code{test\_chirp.py} that Eq.~\eqref{eq:htdamp} increases with
+$f$.
+No absolute strain calibration (inclination/polarization prefactors, folded
+into the leading $4$) is claimed anywhere in this project --- only relative
+amplitudes and the lensing amplification factor matter for the physics
+studied here.
+
+% ======================================================================
+\chapter{Putting it together: two regimes}
+\label{ch:regimes}
+% ======================================================================
+
+\section{Static lens (Case A)}
+The lens is frozen for the whole chirp when the merger duration is much
+shorter than the outer period, $\tau(f_{\rm start})\ll P_{\rm out}$. For the
+parameters in \code{src/gwlens/system.py} ($f_{\rm start}=10$\,Hz,
+$P_{\rm out}=4$\,d): $\tau=15.2$\,s, a fraction $4.4\times10^{-5}$ of
+$P_{\rm out}$ --- static to extremely high accuracy
+(\code{tests/test\_system.py::check\_static\_lens\_regime}). Lensing is then
+a single frequency-domain multiplication, $h_{\rm lensed}(f)=F(f,y_A)\,
+h_{\rm unlensed}(f)$, applied via FFT/IFFT in \code{cases/case\_A\_chirp/
+run.py}.
+
+\section{Quasi-monochromatic, moving lens (Case B)}
+\label{sec:caseB}
+Conversely, the lens genuinely moves when the observation spans several
+outer periods while the GW frequency itself barely evolves: $\tau(f_B)\gg
+T_{\rm obs}\gg P_{\rm out}$. For $f_B=0.05$\,Hz, $T_{\rm obs}=6P_{\rm out}$
+(24\,d): $\tau=240.7$\,d ($60.2$ outer periods remain), and the fractional
+frequency drift over $T_{\rm obs}$ is $4.0\%$
+(\code{tests/test\_system.py::check\_quasi\_monochromatic\_regime}).
+
+\subsection*{Why instantaneous (adiabatic) $F(w_B,y(t))$ is the right
+prescription}
+Eq.~\eqref{eq:Fdim}'s frequency-domain multiplication assumes a
+\emph{fixed} lens configuration; it does not directly apply when $y$ itself
+is a function of time. The separation of scales here is enormous: $y(t)$
+varies on the outer-orbital timescale ($P_{\rm out}\sim$ days), while the GW
+itself oscillates on a timescale $1/f_B\sim20$\,s --- nine orders of
+magnitude faster. To the wave, the lens configuration is, to superb
+approximation, constant over any one GW cycle (and over very many
+consecutive cycles). This is the standard adiabatic/quasi-static
+approximation: at each instant, apply the amplification factor the lens
+\emph{would} produce for a static source at that instant's $y(t)$,
+\begin{equation}
+  z_{\rm lensed}(t) \;=\; F\!\big(w_B,\,y(t)\big)\;z_{\rm unlensed}(t),
+  \qquad z(t)\equiv h(t)\,e^{i\phi(t)}\ \text{(analytic signal)},
+  \label{eq:adiabatic}
+\end{equation}
+used in \code{cases/case\_B\_monochromatic/run.py}. This is the one place
+this project's two cases use genuinely different numerical machinery (FFT
+convolution for Case A, direct time-domain multiplication for Case B), and
+the reason is this timescale argument, not a difference in the underlying
+physics.
+
+\section{An idealized detector}
+Both cases stop at an idealized, illustrative detector view: the
+analytic-signal (Hilbert-transform) envelope of $h_{\rm lensed}(t)$ vs.\
+$h_{\rm unlensed}(t)$, with no noise curve, no antenna pattern, and no
+matched filtering. This is a deliberate scope choice
+(\code{wiki/conventions.md}): the point of this project is the wave-optics
+lensing physics and its visualization, not a detection-pipeline study,
+and the figures are explicit about the omission on their face.
+
+% ======================================================================
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

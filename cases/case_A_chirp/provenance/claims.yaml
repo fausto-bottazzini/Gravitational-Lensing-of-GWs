@@ -30,15 +30,31 @@ claims:
     numbers: [w_at_f_start, w_at_f_isco]
   - id: dephasing_not_simple_amplification
     statement: >
-      Peak-sample amplification (0.487) and RMS amplification (0.960)
-      disagree because F(f) modulates phase as well as amplitude across the
-      band; the lensed waveform is a dephased copy of the unlensed one, not
-      a rescaled one.
+      Peak-sample amplification (1.038) and RMS amplification (1.056)
+      differ from each other and from a naive "average |F|" expectation
+      because F(f) modulates phase as well as amplitude across the band;
+      the lensed waveform is a dephased copy of the unlensed one, not a
+      rescaled one.
     evidence:
       - run.py::main (rms/peak amplification computation)
       - caseA_strain_time.png
       - caseA_F_of_f.png (bottom sub-panel: arg F)
     numbers: [peak_strain_amplification, rms_strain_amplification]
+  - id: taylorf2_waveform_and_sign_fix
+    statement: >
+      The unlensed waveform is the restricted TaylorF2 (2PN) frequency
+      -domain PN inspiral, the functional form used in real matched-filter
+      search templates, not a hand-built leading-order chirp. An earlier
+      version had the SPA phase's overall sign backwards relative to this
+      project's Fourier convention (diagnosed because the IFFT-reconstructed
+      merger time moved with the amount of zero-padding); fixed, and now
+      guarded by a regression check that the peak time is independent of
+      padding.
+    evidence:
+      - src/gwlens/taylorf2.py::spa_phase
+      - tests/test_taylorf2.py::check_ifft_reconstructs_chirp_at_tc
+      - wiki/log.md
+    numbers: [peak_time_unlensed_s, t_c_seconds]
 figures:
   - file: caseA_F_of_f.png
     produced_by: run.py::main

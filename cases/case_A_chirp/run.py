@@ -27,7 +27,7 @@ from scipy.interpolate import interp1d
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
-from gwlens import system, chirp, waveoptics as wo, geometry as geo, units
+from gwlens import system, chirp, taylorf2, waveoptics as wo, geometry as geo, units
 
 OUT = HERE
 NUMBERS = {}
@@ -38,10 +38,30 @@ def log(name, value):
     return value
 
 
-def build_waveform():
-    """Time-domain restricted-quadrupole chirp from f=F_A_START_HZ to
-    f_isco, sampled fast enough to Nyquist-resolve f_isco, windowed with a
-    Tukey taper to control FFT edge artefacts."""
+def _band_taper(freqs, f_lo, f_hi, taper_frac=0.03):
+    """Half-cosine taper at both edges of [f_lo,f_hi], zero outside --
+    applied to |h(f)| to control the time-domain Gibbs ringing a hard
+    band edge would otherwise cause after the inverse FFT."""
+    w = np.zeros_like(freqs)
+    inband = (freqs >= f_lo) & (freqs <= f_hi)
+    w[inband] = 1.0
+    band_width = f_hi - f_lo
+    taper_hz = taper_frac * band_width
+    lo_ramp = (freqs >= f_lo) & (freqs < f_lo + taper_hz)
+    hi_ramp = (freqs > f_hi - taper_hz) & (freqs <= f_hi)
+    w[lo_ramp] = 0.5 * (1 - np.cos(np.pi * (freqs[lo_ramp] - f_lo) / taper_hz))
+    w[hi_ramp] = 0.5 * (1 - np.cos(np.pi * (f_hi - freqs[hi_ramp]) / taper_hz))
+    return w
+
+
+def build_waveform_fd():
+    """Frequency-domain TaylorF2 (src/gwlens/taylorf2.py, 2PN restricted
+    SPA -- the standard search-template functional form, not the
+    leading-order-only time-domain chirp this project started with; see
+    wiki/log.md), banded to [F_A_START_HZ, f_isco] with a half-cosine edge
+    taper. Lensing is a single complex multiplication by F(f) on this same
+    grid -- the natural representation for it, since F(f) IS a
+    frequency-domain object (Eq. Fdimless, theory.tex)."""
     f0 = system.F_A_START_HZ
     Mc = system.MCHIRP_MSUN
     t_c = chirp.time_to_merger(f0, Mc)
@@ -53,49 +73,33 @@ def build_waveform():
 
     fs = 4.0 * system.F_ISCO_HZ  # >2x Nyquist margin
     n = int(np.ceil(t_end * fs))
-    n = 1 << (n - 1).bit_length()  # next power of 2, for fft speed
-    t = np.arange(n) / fs
-    t = t[t < t_end]
-
-    f_t = chirp.freq_of_time(t, t_c, Mc)
-    _, phase = chirp.phase_of_time(t, lambda tt: chirp.freq_of_time(tt, t_c, Mc), 0.0, t[-1])
-    # phase_of_time returns its own (finer) time grid; interpolate onto t
-    tt_fine, _ = chirp.phase_of_time(t, lambda tt: chirp.freq_of_time(tt, t_c, Mc), 0.0, t[-1])
-    phase_interp = interp1d(tt_fine, phase, kind="cubic")(t)
+    n = 1 << (n - 1).bit_length()
+    n_pad = 1 << (2 * n - 1).bit_length()  # extra padding: frequency resolution for the fringes
+    freqs = np.fft.rfftfreq(n_pad, d=1.0 / fs)
+    log("sample_rate_Hz", fs)
+    log("n_samples", n_pad)
+    log("frequency_resolution_Hz", float(freqs[1] - freqs[0]))
 
     D_eff_mpc = system.D_L_PC / 1.0e6  # same physical distance as the lens (~5 kpc)
-    amp = chirp.restricted_pn_amplitude_td(f_t, Mc, D_eff_mpc)
+    taper = _band_taper(freqs, system.F_A_START_HZ, system.F_ISCO_HZ)
+    H_unlensed = np.zeros_like(freqs, dtype=complex)
+    inband = taper > 0
+    H_unlensed[inband] = taper[inband] * taylorf2.htilde(
+        freqs[inband], system.M1_MSUN, system.M2_MSUN, t_c, D_eff_mpc)
 
-    window = np.ones_like(t)
-    taper_n = int(0.05 * len(t))
-    if taper_n > 1:
-        ramp = 0.5 * (1 - np.cos(np.linspace(0, np.pi, taper_n)))
-        window[:taper_n] = ramp
-    h_t = amp * window * np.cos(phase_interp)
-    return t, f_t, h_t, fs, D_eff_mpc
+    return freqs, H_unlensed, fs, D_eff_mpc, n_pad
 
 
-def apply_lensing(t, h_t, fs, y_A):
-    n = len(h_t)
-    n_pad = 1 << (2 * n - 1).bit_length()  # zero-pad to reduce circular-conv wraparound
-    h_padded = np.zeros(n_pad)
-    h_padded[:n] = h_t
-    H = np.fft.rfft(h_padded)
-    freqs = np.fft.rfftfreq(n_pad, d=1.0 / fs)
-
+def apply_lensing(freqs, H_unlensed, y_A):
     w_arr = wo.w_of_frequency(np.abs(freqs), system.M_LENS_MSUN)
-    # F at f=0 is ill-defined (w=0 handled by low-w limit -> 1); skip it
-    F = np.ones_like(H, dtype=complex)
+    F = np.ones_like(freqs, dtype=complex)
     positive = freqs > 0
     t0 = time.time()
     F_vals = np.array([wo.F_hybrid(w, y_A) for w in w_arr[positive]])
     log("F_evaluation_seconds", time.time() - t0)
     F[positive] = F_vals
-
-    H_lensed = H * F
-    h_lensed_padded = np.fft.irfft(H_lensed, n=n_pad)
-    h_lensed = h_lensed_padded[:n]
-    return h_lensed, freqs, F, H
+    H_lensed = H_unlensed * F
+    return H_lensed, F
 
 
 def make_ring_pattern(w, y_max=3.0, n_grid=481, n_radial=4000,
@@ -156,12 +160,14 @@ def main():
     log("y_A_outer_orbit_phase_fraction", float(t_scan[idx_min] / system.P_OUT_S))
     log("lensed_at_merger_phase", bool(lensed_scan[idx_min]))
 
-    t, f_t, h_unlensed, fs, D_eff_mpc = build_waveform()
+    freqs, H_unlensed, fs, D_eff_mpc, n_pad = build_waveform_fd()
     log("D_eff_Mpc", D_eff_mpc)
-    log("sample_rate_Hz", fs)
-    log("n_samples", len(t))
+    H_lensed, F = apply_lensing(freqs, H_unlensed, y_A)
 
-    h_lensed, freqs, F, H = apply_lensing(t, h_unlensed, fs, y_A)
+    t = np.arange(n_pad) / fs
+    h_unlensed = np.fft.irfft(H_unlensed, n=n_pad)
+    h_lensed = np.fft.irfft(H_lensed, n=n_pad)
+    log("peak_time_unlensed_s", float(t[np.argmax(np.abs(h_unlensed))]))
 
     w_start = wo.w_of_frequency(system.F_A_START_HZ, system.M_LENS_MSUN)
     w_isco = wo.w_of_frequency(system.F_ISCO_HZ, system.M_LENS_MSUN)
@@ -218,6 +224,7 @@ def main():
     ax.plot(t, h_lensed, lw=0.6, color="#2b6cb0", label="lensed", alpha=0.85)
     ax.set_xlabel(f"t [s] (merger at t={NUMBERS['t_end_seconds']:.2f} s)")
     ax.set_ylabel("h(t) [arb. units]")
+    ax.set_xlim(-0.5, 1.3 * NUMBERS["t_end_seconds"])
     ax.set_title("Case A: lensed vs. unlensed chirp")
     ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
@@ -263,6 +270,7 @@ def main():
     ax.plot(t, env_l, color="#2b6cb0", lw=1.0, label="lensed envelope")
     ax.set_xlabel("t [s]")
     ax.set_ylabel("strain envelope [arb. units]")
+    ax.set_xlim(-0.5, 1.3 * NUMBERS["t_end_seconds"])
     ax.set_title("Case A: idealized detector view (strain envelope, no noise/antenna pattern)")
     ax.legend(fontsize=8)
     fig.tight_layout()
