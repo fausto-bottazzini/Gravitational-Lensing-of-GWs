@@ -55,30 +55,29 @@ sign as `numpy.fft.rfft`/`irfft`, which is why the case scripts can multiply
 by `F(f)` and inverse-FFT directly with no extra bookkeeping.
 
 **A later-arriving image gets a `-i*2*pi*f*Delta_t` phase in THIS
-convention** (the standard Fourier delay theorem: `h(t-Delta_t)` has
-transform `e^{-2*pi*i*f*Delta_t} H(f)` when the forward transform carries
-`e^{-2*pi*i*f*t}`) — **not** `+i*2*pi*f*Delta_t` as an earlier version of
-this page claimed. That claim was wrong and, because everything in
-`waveoptics.py` was derived (or cited from the literature) consistently
-under it, every evaluator of `F(w,y)` had the identical sign error for
-most of this project's development: `theory.tex` Eq. 2.5's own integral,
-as literally written, and the closed form quoted from Takahashi & Nakamura
-(2003) both carry the *opposite* convention from this one. Caught by an
-independent review's causality test (a weak/saddle-point image came out
-*before* the strong one when a test pulse was lensed and inverse-FFT'd),
-confirmed independently, and fixed by having every public function in
-`waveoptics.py` return the complex conjugate of the integral as originally
-written — see that file's module docstring and `wiki/log.md` for the full
-account. `|F(w,y)|` is unaffected (conjugation-invariant), so this bug
-never showed up in any magnitude-only check or figure; only the
-phase-sensitive time-domain reconstruction in Case A was wrong.
+convention** (standard delay theorem: `h(t-Delta_t)` transforms to
+`e^{-2*pi*i*f*Delta_t} H(f)` when the forward transform carries
+`e^{-2*pi*i*f*t}`). Most of the cited lensing literature (Takahashi &
+Nakamura 2003 included) uses the *opposite* sign convention: a formula
+copied from a paper needs its overall `i` flipped (conjugated) before it
+lands in this repo, checked with an actual time-domain causality test
+(`tests/test_waveoptics.py::check_causality_of_lensed_pulse`) — agreement
+between two evaluators is not enough to catch a flip, since `|F(w,y)|` is
+conjugation-invariant and would look identical either way. `wiki/log.md`
+has the full account of the two times this repo got it wrong regardless.
 
-Any formula copied from a paper must have its overall phase checked against
-THIS convention (delay -> `-i`), not assumed — a literature formula derived
-under the opposite convention needs its `i` sign flipped before it lands in
-this repo, and that check needs to be an actual causality/reconstruction
-test (see `tests/test_waveoptics.py::check_causality_of_lensed_pulse`), not
-just agreement between two evaluators of the same (possibly wrong) sign.
+## Reference-phase convention
+
+`F(w,y)` as computed here is referenced to the strong (minimum-time)
+image's own arrival: it carries zero phase there by construction, so only
+the physical, convention-independent delay `Delta_T(y)` between images
+shows up. This matters because `psi(x)=ln|x|` (below) fixes the deflection
+potential only up to an arbitrary additive constant, which otherwise
+leaks into `F`'s ABSOLUTE phase — never into `|F|` or `Delta_T`, but very
+much into any absolute lensed-vs-unlensed timing read off a time-domain
+reconstruction (Case A's merger peak, its echo) if this reference isn't
+applied. `wiki/log.md` has the account of the one time this repo got that
+wrong and mistook the resulting rigid time-shift for interference.
 
 ## Lensing / wave-optics notation
 
@@ -88,12 +87,11 @@ just agreement between two evaluators of the same (possibly wrong) sign.
 | `xi_0` | length scale on the lens plane (fixed to the Einstein radius `R_E`) |
 | `eta_0 = xi_0 D_S/D_L` | corresponding scale on the source plane |
 | `x = xi/xi_0` | dimensionless lens-plane position (2-vector) |
-| `y = eta/eta_0` | dimensionless source position / impact parameter (2-vector, `y=|y|` for a point lens by symmetry) |
-| `psi(x)` | (dimensionless) deflection potential, `psi(x) = ln|x|` for a point lens |
+| `y = eta/eta_0 = beta/theta_E` | dimensionless source position / impact parameter (2-vector; `y=|y|` for a point lens by symmetry). Two equivalent forms of the same quantity: `eta` is the physical source-plane offset, `eta_0` its scale above; `beta` is the same offset as a true angular position on the sky and `theta_E` the angular Einstein radius (`theta_E = xi_0/D_L`) -- substituting `eta=beta*D_S`, `eta_0=xi_0*D_S/D_L` shows these are identical, not two different `y`s. |
+| `psi(x)` | (dimensionless) deflection potential, `psi(x) = ln|x|` for a point lens -- defined only up to an arbitrary additive constant (any solution of the underlying Poisson equation is; see "Reference-phase convention" above for where that constant matters and where it cancels) |
 | `t_d(x,y)` | time delay (geometric + Shapiro) of the ray through `x`, relative to no lens |
 | `F(f,y)` | (dimensionless, complex) amplification factor: `h_lensed(f) = F(f,y) * h_unlensed(f)` |
 | `w` | dimensionless frequency, `w = 8*pi*G*M_L*f/c^3` (i.e. `w = 4 G M_L omega /c^3`, `omega=2*pi*f`) |
-| `y` (scalar) | dimensionless impact parameter magnitude, `y = beta/theta_E` where `beta` is the true angular source offset and `theta_E` the angular Einstein radius |
 
 `F` depends on the lens only through `w` and `y` for a point lens (no explicit
 `M_L`, `D_L`, `D_S`, `D_LS` separately) — this collapse is itself one of the

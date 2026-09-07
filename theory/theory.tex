@@ -4,12 +4,13 @@
 \usepackage{booktabs}
 \usepackage{physics}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage[round]{natbib}
-\usepackage{siunitx}
 \usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{siunitx}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,
+  urlcolor=blue!45!black,filecolor=blue!45!black]{hyperref}
 
 \newtcolorbox{checkbox}[1][]{colback=blue!4!white,colframe=blue!40!black,
   boxrule=0.4pt,arc=1mm,left=6pt,right=6pt,top=4pt,bottom=4pt,breakable,
@@ -56,6 +57,7 @@ es el correcto, no s\'olo que pasa.
 
 % ======================================================================
 \chapter{Planteo y alcance}
+\label{ch:scope}
 % ======================================================================
 
 \section{El cuadro f\'isico}
@@ -246,13 +248,11 @@ $\vb x\equiv\vb\xi/\xi_0$, $\vb y\equiv\vb\eta/\eta_0$ (as\'i $y=|\vb y|$ es
 el par\'ametro de impacto adimensional usado en todo este proyecto), y
 definiendo el potencial de deflexi\'on adimensional $\psi(\vb x)$ v\'ia
 $t_d = (1+z_L)\,\xi_0^2\dfrac{D_S}{D_L D_{LS}}\left[\tfrac12|\vb x-\vb
-y|^2-\psi(\vb x)\right]$ (el factor $\xi_0^2$, ausente en una versi\'on
-anterior de esta ecuaci\'on -- encontrado por una revisi\'on independiente,
-un an\'alisis dimensional simple lo confirma: sin \'el, el lado derecho
-tiene unidades de $1/{\rm longitud}$, no de tiempo, ya que $\vb x,\vb y$
-son adimensionales por construcci\'on -- es lo que convierte el corchete
-adimensional de vuelta a un \'area f\'isica antes de dividir por las
-distancias), la Ec.~\eqref{eq:Fdim} se convierte en
+y|^2-\psi(\vb x)\right]$ (el factor $\xi_0^2$ es necesario por an\'alisis
+dimensional: $\vb x,\vb y$ son adimensionales por construcci\'on, as\'i que
+es lo que convierte el corchete de vuelta a un \'area f\'isica antes de
+dividir por las distancias, dando unidades de tiempo), la Ec.~\eqref{eq:Fdim}
+se convierte en
 \begin{equation}
   F_{\rm raw}(w,\vb y) \;=\; \overline{\frac{w}{2\pi i}\int d^2\vb x\;
   \exp\!\Big[\,i\,w\,\varphi(\vb x,\vb y)\,\Big]},
@@ -265,7 +265,7 @@ donde la frecuencia adimensional es
   w \;\equiv\; 8\pi\,\frac{GM_L}{c^3}\,f
   \label{eq:wdef}
 \end{equation}
-(el factor $(1+z_L)$ es $1$ ac\'a, seg\'un el Cap\'itulo~1), y la barra
+(el factor $(1+z_L)$ es $1$ ac\'a, seg\'un el Cap\'itulo~\ref{ch:scope}), y la barra
 superior denota conjugaci\'on compleja. $F_{\rm raw}$ es exactamente lo que
 calcula \code{F\_bruteforce\_2d} en \code{waveoptics.py} (la integral sin la
 barra, conjugada como \'ultimo paso): todav\'ia no se us\'o ninguna forma
@@ -292,67 +292,42 @@ s\'olo el retraso $\Delta T(y)$ entre im\'agenes --- la cantidad f\'isica
 (Ecs.~\ref{eq:Fgeo}, \ref{eq:Fclosed}, \ref{eq:Fradial}) ya incluyen este
 factor.
 
-\begin{checkbox}[title={La conjugaci\'on, y el error de signo que revel\'o}]
+\begin{checkbox}[title={Por qu\'e la barra de conjugaci\'on}]
 La integral de Fresnel-Kirchhoff, tal cual se deriva de la
-Ec.~\eqref{eq:helmholtz} (sin la barra de conjugaci\'on), es la forma que
-aparece en la literatura de lensing citada ac\'a (\citealp{Takahashi2003} y
-las referencias que la preceden) --- pero esa literatura, casi siempre, usa
-la convenci\'on de Fourier \emph{opuesta} a la de este proyecto
+Ec.~\eqref{eq:helmholtz} (sin conjugar), es la forma que aparece en la
+literatura de lensing citada ac\'a (\citealp{Takahashi2003} y las
+referencias que la preceden) --- pero esa literatura, casi siempre, usa la
+convenci\'on de Fourier \emph{opuesta} a la de este proyecto
 (\code{wiki/conventions.md}: $h(f)=\int h(t)e^{-2\pi ift}dt$, la misma que
-\code{numpy.fft.rfft}). Una versi\'on anterior de este cap\'itulo, y de
-\code{waveoptics.py} completo (\code{F\_bruteforce\_2d}, \code{F\_radial\_1d},
-\code{F\_point\_lens}, \code{F\_geometric\_optics}), usaba la integral SIN
-conjugar, consistentemente en todos lados --- por eso los cuatro evaluadores
-segu\'ian de acuerdo entre s\'i (todos los chequeos de este cap\'itulo, que
-s\'olo comparan evaluadores entre ellos, segu\'ian pasando) mientras el
-signo global estaba mal. El error se detect\'o con una revisi\'on
-independiente: lenteando un pulso de prueba corto v\'ia FFT/IFFT (igual que
-\code{cases/case\_A\_chirp/run.py}) y notando que la imagen d\'ebil (punto
-silla) aparec\'ia \emph{antes} que la imagen fuerte en vez de despu\'es ---
-inv\'irtiendo la causalidad, ya que $\Delta T>0$ en la
-Ec.~\eqref{eq:images} de m\'as abajo significa, por definici\'on, que esa
-imagen llega \emph{m\'as tarde}. Confirmado de forma independiente
-(\code{tests/test\_waveoptics.py::check\_causality\_of\_lensed\_pulse}) y
-corregido conjugando el resultado final de las cuatro funciones. Como
-$|F(w,\vb y)|$ no cambia al conjugar, \textbf{ning\'un} chequeo o figura de
-s\'olo magnitud de este proyecto se vio afectado (todos los patrones de
-difracci\'on, las franjas de $|F(f)|$, todos los resultados del Caso~B);
-s\'olo la reconstrucci\'on de la forma de onda lensada en el tiempo, en el
-Caso~A, dependía del signo, y camb\'io. V\'ease \code{wiki/log.md} para el
-relato completo, incluyendo el n\'umero exacto que cambi\'o
-(\code{peak\_strain\_amplification} pas\'o de $0.962$ a $1.091$).
+\code{numpy.fft.rfft}). Por el teorema de retraso de Fourier est\'andar en
+esa convenci\'on, una imagen que llega despu\'es (retraso $\Delta t>0$)
+lleva fase $e^{-i2\pi f\Delta t}$, no $e^{+i2\pi f\Delta t}$: el signo
+opuesto al que da la integral sin conjugar. Conjugar el resultado final de
+cada evaluador de $F$ es lo que corrige ese signo global y hace que la
+imagen d\'ebil (punto silla) llegue \emph{despu\'es} de la fuerte, como
+exige $\Delta T>0$ en la Ec.~\eqref{eq:images} de m\'as abajo --- verificado
+directamente lenteando un pulso de prueba corto v\'ia FFT/IFFT (igual que
+\code{cases/case\_A\_chirp/run.py}) y comprobando el orden de llegada de las
+dos im\'agenes, \code{tests/test\_waveoptics.py::
+check\_causality\_of\_lensed\_pulse}. Como $|F(w,\vb y)|$ no cambia al
+conjugar, esto es invisible a cualquier chequeo o figura de s\'olo
+magnitud (todos los patrones de difracci\'on, las franjas de $|F(f)|$,
+todos los resultados del Caso~B); s\'olo la reconstrucci\'on de la forma de
+onda lensada en el tiempo, en el Caso~A, depende de este signo.
 \end{checkbox}
 
-\begin{checkbox}[title={La normalizaci\'on de referencia de fase, y un
-``eco'' que result\'o ser un artefacto}]
-Un TERCER error, encontrado por una revisi\'on independiente posterior
-(despu\'es de que la conjugaci\'on de arriba ya estaba corregida y
-verificada): $F_{\rm raw}$ (Ec.~\eqref{eq:Fdimless}) se estaba usando
-DIRECTAMENTE como $F(w,y)$, sin la Ec.~\eqref{eq:Fnorm} --- v\'alido en
-el sentido de que segu\'ia siendo un $F$ auto-consistente (los cuatro
-evaluadores segu\'ian de acuerdo entre s\'i, ya que ninguno restaba nada),
-pero llevaba una fase absoluta arbitraria, $w\varphi(x_+,y)$, que ninguna
-observable f\'isica deber\'ia depender de ella. La consecuencia pr\'actica:
-el merger lensado del Caso~A aparec\'ia $0.60$\,s \emph{antes} que el no
-lensado. Una versi\'on anterior de \code{RESULTS.md} explic\'o esto como
-interferencia entre las dos im\'agenes --- una explicaci\'on plausible
-\emph{a priori}, pero incorrecta: el n\'umero coincide, a menos de media
-muestra ($1.9\times10^{-4}$\,s), con $4GM_L\varphi(x_+,y_A)/c^3$
-exactamente, es decir, es \emph{s\'olo} la fase de referencia no restada,
-no un efecto de interferencia. Confirmado re-derivando el Caso~A completo
-con la Ec.~\eqref{eq:Fnorm} restaurada: el corrimiento de $0.60$\,s se
-vuelve exactamente $0$, y el eco de segunda imagen (\code{report.pdf},
-secci\'on del Caso~A) aparece exactamente en $t_{\rm merger}+\Delta T(y_A)$,
-sin ning\'un corrimiento que explicar. La lecci\'on general: la fase
-\emph{absoluta} de $F$ no es, por s\'i sola, algo que uno pueda darle una
-interpretaci\'on f\'isica sin fijar primero una convenci\'on de
-normalizaci\'on --- s\'olo $\Delta T$ (la fase \emph{relativa} entre
-im\'agenes) lo es. Con esta correcci\'on,
-\code{peak\_strain\_amplification} pasa de $1.091$ (el valor tras s\'olo la
-correcci\'on de signo, checkbox anterior) a $1.065$; el n\'umero de
-$1.091$ era en s\'i mismo dependiente de la normalizaci\'on de referencia,
-no s\'olo de una convenci\'on de signo. V\'ease \code{wiki/log.md} para el
-relato completo.
+\begin{checkbox}[title={Por qu\'e $F$ se refiere a la imagen fuerte}]
+$\psi(x)=\ln|x|$ resuelve la ecuaci\'on de Poisson de deflexi\'on s\'olo a
+menos de una constante aditiva arbitraria, as\'i que $F_{\rm raw}$
+(Ec.~\eqref{eq:Fdimless}) por s\'i sola lleva una fase absoluta,
+$w\varphi(x_+,y)$, que ninguna observable f\'isica deber\'ia depender de
+ella: s\'olo la fase \emph{relativa} entre im\'agenes, $\Delta T$, es
+f\'isica. La Ec.~\eqref{eq:Fnorm} fija esa constante restando la fase
+propia de la imagen fuerte, de modo que el merger lensado del Caso~A cae
+exactamente en el mismo instante que el no lensado
+(\code{peak\_strain\_amplification$=1.065$}, \code{report.pdf} \S2), y el
+eco de segunda imagen aparece exactamente en $t_{\rm merger}+\Delta T(y_A)$,
+sin ning\'un corrimiento adicional que explicar.
 \end{checkbox}
 
 \begin{checkbox}[title={Chequeo: $w\to0$}]
@@ -442,39 +417,13 @@ $F_{\rm raw}$ por completo):
 Como se anticip\'o, la imagen fuerte no lleva fase alguna; s\'olo aparece
 $\Delta T(y)$, la cantidad f\'isica.
 
-\begin{checkbox}[title={Dos errores de signo, uno menor y uno serio}]
-\textbf{El menor}, encontrado primero: una versi\'on anterior de la
-Ec.~\eqref{eq:Fgeo} omit\'ia el factor de fase propia del t\'ermino
-inicial (asumiendo impl\'icitamente una sustracci\'on de fase de
-referencia que la Ec.~\eqref{eq:Fdimless} no hace). Esto daba el $|F|$
-correcto pero la fase equivocada comparada con la forma cerrada exacta
-(\S\ref{sec:closedform}) a $w$ grande; diagnosticado comparando ambas
-directamente y reconociendo que la fase residual escalaba linealmente con
-$w$ a la tasa $\varphi(x_+,y)$, y corregido restaurando el factor (en ese
-momento, directamente en la Ec.~\eqref{eq:Fgeo} misma, ya que la
-Ec.~\eqref{eq:Fnorm} todav\'ia no exist\'ia como paso separado; hoy ese
-mismo factor se resta al normalizar, as\'i que no aparece expl\'icitamente
-en la Ec.~\eqref{eq:Fgeo} de arriba -- v\'ease el checkbox de
-normalizaci\'on de referencia de fase, m\'as arriba).
-
-\textbf{El serio}, encontrado despu\'es, por una revisi\'on independiente:
-la Ec.~\eqref{eq:Fgeo} completa (junto con la Ec.~\eqref{eq:Fdimless} y
-todo lo derivado de ella) ten\'ia el signo global equivocado, heredado de
-una afirmaci\'on incorrecta en una versi\'on anterior de
-\code{wiki/conventions.md} sobre qu\'e signo le corresponde a una imagen
-retrasada en esta convenci\'on de Fourier. Ambos errores son invisibles a
-$|F|$ (el primero cambia s\'olo la fase relativa entre t\'erminos, el
-segundo conjuga todo por igual), as\'i que ninguno de los chequeos de
-magnitud de este cap\'itulo los detect\'o nunca --- s\'olo una
-reconstrucci\'on de forma de onda en el tiempo, sensible a la fase, pod\'ia
-hacerlo (\code{tests/test\_waveoptics.py::
-check\_causality\_of\_lensed\_pulse}, agregado reci\'en cuando se
-encontr\'o el segundo error). V\'ease el chequeo de conjugaci\'on m\'as
-arriba y \code{wiki/log.md} para el relato completo. Despu\'es de ambas
-correcciones, \code{tests/test\_waveoptics.py::
-check\_geometric\_optics\_limit} encuentra un acuerdo relativo de
-$3\times10^{-4}$ en $w=10$, que baja a $3\times10^{-5}$ en $w=1000$, el
-comportamiento esperado de una expansi\'on asint\'otica ($w\to\infty$).
+\begin{checkbox}[title={Chequeo: l\'imite de \'optica geom\'etrica}]
+La Ec.~\eqref{eq:Fgeo} debe coincidir con la forma cerrada exacta
+(\S\ref{sec:closedform}) a $w$ grande, y el acuerdo debe \emph{mejorar} al
+crecer $w$ (es una expansi\'on asint\'otica). Verificado en
+\code{tests/test\_waveoptics.py::check\_geometric\_optics\_limit}: acuerdo
+relativo de $3\times10^{-4}$ en $w=10$, que baja a $3\times10^{-5}$ en
+$w=1000$.
 \end{checkbox}
 
 \section{El resultado exacto: una funci\'on hipergeom\'etrica confluente}
@@ -816,10 +765,7 @@ esferoidales con peso de esp\'in).
   potencial de la Ec.~\eqref{eq:reggewheeler} s\'olo importa para
   par\'ametros de impacto de pocos $R_{\rm Sch}$ (la esfera de fotones est\'a
   en $1.5\,R_{\rm Sch}$), un poco m\'as de un orden de magnitud por debajo
-  de eso --- mucho menos margen que los ``casi tres \'ordenes'' que una
-  versi\'on anterior de este p\'arrafo afirmaba comparando la cantidad
-  equivocada (encontrado por una revisi\'on independiente). M\'as riguroso
-  a\'un: la fracci\'on de \'angulo s\'olido en s\'i, no la raz\'on de
+  de eso. M\'as riguroso a\'un: la fracci\'on de \'angulo s\'olido en s\'i, no la raz\'on de
   longitudes, es $\sim(b_c/D_{LS})^2/4\approx5\times10^{-7}$ ($b_c\sim
   3\sqrt3\,GM_L/c^2$ el par\'ametro de impacto cr\'itico de la esfera de
   fotones) --- much\'isimo m\'as peque\~na, y la que efectivamente acota lo
@@ -834,7 +780,7 @@ esferoidales con peso de esp\'in).
   exacta (una idealizaci\'on de vac\'io puro).
   \item \textbf{``Repique'' (ringing) de modos cuasinormales del propio
   lente} cuando un paquete de ondas pasa cerca de \'el --- distinto del
-  ringdown del remanente de la propia binaria fuente (Cap\'itulo~5). El
+  ringdown del remanente de la propia binaria fuente (Cap\'itulo~\ref{ch:waveform}). El
   formalismo de lente delgado usado en este proyecto no tiene ning\'un
   mecanismo para producir un ``eco'' retrasado del lente, ni siquiera en
   principio.
@@ -862,6 +808,7 @@ mantiene expl\'icitamente afuera.
 
 % ======================================================================
 \chapter{La binaria interna como fuente}
+\label{ch:waveform}
 % ======================================================================
 
 La forma de onda no lenteada, en el Caso~A (Cap\'itulo~\ref{ch:regimes}),
@@ -982,7 +929,7 @@ est\'atico a una precisi\'on extremadamente alta (funci\'on
 es entonces una \'unica multiplicaci\'on en el dominio de la frecuencia,
 $h_{\rm lensado}(f)=F(f,y_A)\,h_{\rm no\ lensado}(f)$, aplicada v\'ia
 FFT/IFFT en Case~A (funci\'on \code{apply\_lensing} en su \code{run.py}),
-con $h_{\rm no\ lensado}(f)$ del Cap\'itulo~5.
+con $h_{\rm no\ lensado}(f)$ del Cap\'itulo~\ref{ch:waveform}.
 
 \section{Cuasi-monocrom\'atico, lente en movimiento (Caso B)}
 \label{sec:caseB}
@@ -1043,9 +990,9 @@ pipeline de detecci\'on, y las figuras son expl\'icitas sobre esta omisi\'on
 en su propia cara.
 
 % ======================================================================
-\chapter*{Referencias}
-\addcontentsline{toc}{chapter}{Referencias}
-\bibliographystyle{plainnat}
+\renewcommand{\bibname}{Referencias}
+\bibliographystyle{unsrtnat}
 \bibliography{refs}
+\addcontentsline{toc}{chapter}{Referencias}
 
 \end{document}

@@ -15,8 +15,43 @@ genuinely moving)?
 to be read start to finish. For the full derivation (wave equation to scalar
 field, the point-lens closed form and its checks, the triple's geometry),
 read [`theory/theory.pdf`](theory/theory.pdf), written as a self-contained
-textbook chapter. Everything below this line is about *reproducing* those
-two documents, not about the physics itself.
+textbook chapter. Everything below this line is either a map of the repo or
+about *reproducing* those two documents, not about the physics itself.
+
+## Repository map
+
+| | |
+|---|---|
+| `report/` | the results: `report.html` (interactive, presentation-style) and `report.pdf` (full detail), the two documents this project is presented from. `report_template.html` + `build_report.py` generate `report.html` by inlining `cases/*/caseX_animation_data.json` |
+| `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
+| `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
+| `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |
+| `cases/case_B_monochromatic/` | the moving-lens case: script, figures, `RESULTS.md`, `provenance/` |
+| `tests/` | every correctness check referenced from `theory.tex` and the case `RESULTS.md` files |
+| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (append-only decision log, including every bug caught and how), `todo.md` |
+
+## What each case actually shows
+
+Both cases are the *same* hierarchical triple (`src/gwlens/system.py`: a
+20+15 M<sub>&#8857;</sub> inner binary, a 5&times;10<sup>4</sup> M<sub>&#8857;</sub>
+lens, a 4-day, near-edge-on outer orbit), at two epochs of its inspiral:
+
+- **Case A** (`cases/case_A_chirp/`): late inspiral, the chirp sweeps 10 Hz
+  to merger in 15 s — far too fast for the outer orbit to move, so the lens
+  is frozen at one impact parameter for the whole signal. Shows the
+  frequency-domain interference fringes across the band, the extended
+  amplification pattern on the source plane (and how finely it's resolved
+  changes with frequency), and the lensed vs. unlensed chirp.
+- **Case B** (`cases/case_B_monochromatic/`): earlier, wider inspiral,
+  f=0.05 Hz and nearly constant over a 24-day (6 outer period) observation.
+  The outer orbital motion *is* resolved: the impact parameter sweeps
+  through the same diffraction pattern once per period, producing periodic
+  "repeated lensing" amplification pulses — and exactly half of each orbit
+  turns out to be unlensed entirely (the source is in front of the lens,
+  not behind it).
+
+Each `RESULTS.md` states every number with a pointer to the function that
+produced it and the check behind it; nothing there is asserted without both.
 
 ## Reproduce everything
 
@@ -93,45 +128,11 @@ Case A numbers and figures (including the ~3.4 s second-image echo), do it
 from the WSL venv above, and do it last, right before comparing against what
 is committed.
 
-## Repository map
-
-| | |
-|---|---|
-| `report/` | the results: `report.html` (interactive, presentation-style) and `report.pdf` (full detail), the two documents this project is presented from. `report_template.html` + `build_report.py` generate `report.html` by inlining `cases/*/caseX_animation_data.json` |
-| `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
-| `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
-| `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |
-| `cases/case_B_monochromatic/` | the moving-lens case: script, figures, `RESULTS.md`, `provenance/` |
-| `tests/` | every correctness check referenced from `theory.tex` and the case `RESULTS.md` files |
-| `checks/independent_review/` | a fresh agent's independent check of this repository, run with no prior context |
-| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (append-only decision log, including every bug caught and how), `todo.md` |
-
-## What each case actually shows
-
-Both cases are the *same* hierarchical triple (`src/gwlens/system.py`: a
-20+15 M<sub>&#8857;</sub> inner binary, a 5&times;10<sup>4</sup> M<sub>&#8857;</sub>
-lens, a 4-day, near-edge-on outer orbit), at two epochs of its inspiral:
-
-- **Case A** (`cases/case_A_chirp/`): late inspiral, the chirp sweeps 10 Hz
-  to merger in 15 s — far too fast for the outer orbit to move, so the lens
-  is frozen at one impact parameter for the whole signal. Shows the
-  frequency-domain interference fringes across the band, the extended
-  amplification pattern on the source plane (and how finely it's resolved
-  changes with frequency), and the lensed vs. unlensed chirp.
-- **Case B** (`cases/case_B_monochromatic/`): earlier, wider inspiral,
-  f=0.05 Hz and nearly constant over a 24-day (6 outer period) observation.
-  The outer orbital motion *is* resolved: the impact parameter sweeps
-  through the same diffraction pattern once per period, producing periodic
-  "repeated lensing" amplification pulses — and exactly half of each orbit
-  turns out to be unlensed entirely (the source is in front of the lens,
-  not behind it).
-
-Each `RESULTS.md` states every number with a pointer to the function that
-produced it and the check behind it; nothing there is asserted without both.
-
 ## Reproducibility test this repo was held to
 
 Per the assignment (`GW-AI-course/final-project.html`): *hand it to a fresh
 agent that knows nothing, ask it to reproduce a result, and see how far it
-gets.* `checks/independent_review/` is exactly that, run once already; the
-same test can be repeated by anyone with a copy of this repo and an agent.
+gets.* This repo was checked that way three times over (independent
+fresh-agent passes with no prior context, each fixing what the last one
+found); the same test can be repeated by anyone with a copy of this repo and
+an agent.

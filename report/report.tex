@@ -2,11 +2,13 @@
 \usepackage[a4paper,margin=2.4cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage[round]{natbib}
+\usepackage{float}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{caption}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,
+  urlcolor=blue!45!black,filecolor=blue!45!black]{hyperref}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\Msun}{M_{\odot}}
 \renewcommand{\abstractname}{Resumen}
@@ -78,25 +80,25 @@ b\'usqueda de LIGO/Virgo, no una aproximaci\'on de inspiral solamente
 2PN, sin ringdown, si \code{pycbc} no est\'a disponible en el entorno ---
 v\'ease \code{README.md}).
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_F_of_f.png}
 \caption{El factor de amplificaci\'on $F(f)$ a trav\'es de toda la banda del
-chirp (arriba), con zoom a 3 Hz donde se resuelven las franjas de
+chirp (arriba: envolvente exacta, sombreada, ya que $F$ acá es la f\'ormula
+de \'optica geom\'etrica de dos im\'agenes en toda la banda ---
+\code{theory/theory.pdf} Cap.~3, confirmado reconstruyendo \code{h\_lensado}
+a partir de nada m\'as que dos copias retrasadas y reescaladas de la forma
+de onda no lensada, acuerdo con la salida real de \code{run.py} a
+$1.1\times10^{-13}$), con zoom a 3 Hz donde se resuelven las franjas de
 interferencia individuales de las dos im\'agenes (medio), y su fase en ese
-mismo zoom (abajo). $w$ va de 62 (inicio de banda) a 778 (merger) ac\'a ---
-por encima de \code{w\_geo\_threshold=30}, as\'i que cada valor de $F$ acá
-YA es la f\'ormula de \'optica geom\'etrica de dos im\'agenes
-(\code{theory/theory.pdf} Cap.~3), no la integral de difracci\'on exacta
---- confirmado reconstruyendo \code{h\_lensado} a partir de nada m\'as que
-dos copias retrasadas y reescaladas de la forma de onda no lensada:
-acuerdo con la salida real de \code{run.py} a $1.1\times10^{-13}$,
-precisi\'on de m\'aquina. Las franjas son la interferencia entre esas dos
-im\'agenes, no un efecto de difracci\'on adicional (ese es el r\'egimen del
-Caso~B, m\'as abajo).}
+mismo zoom (abajo). El per\'iodo de esas franjas en frecuencia es exactamente
+constante en toda la banda ($1/\Delta T=0.29$~Hz, ya que $\Delta T$ es fijo
+y la fase $2\pi f\Delta T$ es lineal en $f$), as\'i que el zoom, aunque
+dibujado al inicio de la banda por concretitud, es representativo de
+cualquier ventana del mismo ancho en cualquier otro punto de ella.}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_diffraction_pattern.png}
 \caption{El patr\'on de amplificaci\'on extendido en el plano de la fuente:
@@ -109,7 +111,7 @@ cerca del merger ($w=777.6$) --- los mismos anillos, ahora tan cercanamente
 espaciados que parecen franjas casi rectas a este zoom.}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.9\linewidth]{../cases/case_A_chirp/caseA_strain_time.png}
 \caption{Strain lensado vs.\ no lensado en el dominio del tiempo (unidades
@@ -180,7 +182,7 @@ cuasi-monocrom\'atico. $w_B=0.309$ en todo momento (fijo; s\'olo var\'ia el
 par\'ametro de impacto $y(t)$): de lleno en el r\'egimen dominado por
 difracci\'on.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_B_monochromatic/caseB_pattern_with_orbit.png}
 \caption{El mismo tipo de patr\'on de difracci\'on fijo que el Caso A (ac\'a
@@ -190,7 +192,7 @@ est\'a lenteada (detr\'as del lente en la l\'inea de visi\'on), verde
 discontinuo donde no lo est\'a (delante de \'el --- v\'ease abajo).}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_B_monochromatic/caseB_repeated_pulses.png}
 \caption{$|F(w_B,y(t))|^2$ sobre toda la observaci\'on de 24 d\'ias: seis
@@ -216,7 +218,7 @@ preocupaci\'on para nada de lo mostrado ac\'a; el Cap.~5 de la teor\'ia
 discute qu\'e formalismo har\'ia falta para tratar esa ventana de manera
 exacta, y por qu\'e no vale la pena ac\'a).
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.9\linewidth]{../cases/case_B_monochromatic/caseB_detector_view.png}
 \caption{Vista de detector idealizada. Arriba: envolvente de strain sobre
@@ -269,7 +271,9 @@ registrada en \code{wiki/log.md} en el momento en que se decidi\'o):
     (\S\ref{sec:caseB}); se muestra que no afecta nada de lo reportado.
 \end{itemize}
 
-\bibliographystyle{plainnat}
+\renewcommand{\refname}{Referencias}
+\bibliographystyle{unsrtnat}
 \bibliography{../theory/refs}
+\addcontentsline{toc}{section}{Referencias}
 
 \end{document}

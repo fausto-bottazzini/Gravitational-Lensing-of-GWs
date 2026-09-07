@@ -27,5 +27,4 @@ lens) and a quasi-monochromatic wide binary (moving lens). See
 | Case A (chirp, static lens) | `cases/case_A_chirp/` |
 | Case B (monochromatic, moving lens) | `cases/case_B_monochromatic/` |
 | final presentation | `report/report.html`, `report/report.pdf` |
-| independent fresh-agent review | `checks/independent_review/REVIEW.md`, `REVIEW_v2.md` |
 | how to reproduce all of it | `README.md`, `reproduce.sh` |

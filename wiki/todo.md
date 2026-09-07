@@ -12,12 +12,24 @@
   confluent hypergeometric via `mpmath`) — `tests/test_waveoptics.py`.
 - [x] Case A figures — `cases/case_A_chirp/RESULTS.md`.
 - [x] Case B figures — `cases/case_B_monochromatic/RESULTS.md`.
-- [x] `checks/independent_review`: fresh subagent review, run and logged.
+- [x] Three fresh-agent independent reviews, run with no prior context each
+  time, findings fixed and logged in `wiki/log.md`. The review reports
+  themselves (`checks/independent_review/`) were working documents for
+  this development process, not part of the deliverable, and are kept
+  locally rather than in the repo.
 - [x] `report/` HTML + PDF assembled from the case RESULTS.md + figures.
 - [x] `README.md` at repo root with a `reproduce` path a stranger can run.
-- [x] `requirements.txt` pinned; `reproduce.sh` tested from a clean venv
-  (found and fixed one real bug: `pip install --upgrade pip` fails on
-  Windows when pip is running; see `wiki/log.md`).
+- [x] `requirements.txt` pinned; `reproduce.sh` tested from a clean venv --
+  found and fixed two real bugs this way: `pip install --upgrade pip` fails
+  on Windows when pip is running, and (more serious, caught by an
+  independent review) a bare `python3` call after `source
+  .venv/Scripts/activate` on Windows silently ran the SYSTEM Python instead
+  of the venv's (Windows venvs only ever create `python.exe`, never
+  `python3.exe`/`python3`), so every `pip install`/script invocation was
+  installing into and running from outside the venv the script had just
+  created, defeating the isolation `reproduce.sh` claimed to give. Fixed by
+  locating the venv's own interpreter explicitly instead of relying on
+  `PATH` after activation; see `wiki/log.md`.
 
 ## What's left, if there's time later (none of this blocks the deliverable)
 
