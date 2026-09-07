@@ -245,36 +245,61 @@ def main():
     log("echo_to_unlensed_peak_ratio", echo_to_unlensed_peak_ratio)
     x_plus_A, x_minus_A = wo.image_positions(y_A)
     sqrt_mu_minus = float(np.sqrt(np.abs(wo.magnification(x_minus_A))))
+    sqrt_mu_plus = float(np.sqrt(wo.magnification(x_plus_A)))
     log("sqrt_mu_minus_geometric", sqrt_mu_minus)
     log("echo_ratio_vs_sqrt_mu_minus_relerr",
         float(abs(echo_to_unlensed_peak_ratio - sqrt_mu_minus) / sqrt_mu_minus))
 
     # ---- Figure 1: F(f) across the chirp (interference fringes) ---------
     # The fringes are far too fine to resolve over the full 10-125 Hz band
-    # at print resolution (w up to 778 means thousands of oscillations); a
-    # first version of this figure just looked like a filled band. Fixed
-    # with a zoomed inset showing a few Hz where the fringes are resolved.
+    # at print resolution (w up to 778 means thousands of oscillations) --
+    # plotting the raw |F(f)| curve there just renders as an unresolved,
+    # visually noisy blob with no information content beyond its envelope
+    # (an earlier version of this figure did exactly that). The envelope
+    # itself, though, is EXACTLY two constant lines here, not something
+    # that needs a plot to discover: F is in the geometric-optics regime
+    # throughout the band (min/max_abs_F_in_band above), so
+    # |F(f)| = |sqrt(mu_+) + i*sqrt(|mu_-|)*exp(-2*pi*i*f*DeltaT_seconds)|
+    # oscillates strictly between sqrt(mu_+)-sqrt(|mu_-|) and
+    # sqrt(mu_+)+sqrt(|mu_-|) for every f -- so the top panel shows that
+    # constant band directly (shaded), which is the actually-informative
+    # summary of the whole-band behavior. The oscillation ITSELF has a
+    # period in frequency of exactly 1/Delta_T_seconds
+    # (image_time_delay_seconds), independent of f (Delta_T is fixed for a
+    # static lens, and phase = 2*pi*f*Delta_T is linear in f) -- so the
+    # zoomed inset below, though drawn at the start of the band for
+    # concreteness, is representative of any equal-width window anywhere
+    # in it, not particular to that location.
     mask = (freqs >= system.F_A_START_HZ) & (freqs <= system.F_ISCO_HZ)
     f_zoom_lo, f_zoom_hi = system.F_A_START_HZ, system.F_A_START_HZ + 3.0
     zmask = (freqs >= f_zoom_lo) & (freqs <= f_zoom_hi)
+    fringe_period_hz = 1.0 / NUMBERS["image_time_delay_seconds"]
+    log("fringe_period_hz", float(fringe_period_hz))
 
-    # Three panels: |F(f)| over the whole band, |F(f)| zoomed (fringes
+    # Three panels: constant-envelope overview, |F(f)| zoomed (fringes
     # resolved), and arg F(f) over that same zoom -- an earlier version of
     # this figure had only the two |F| panels while RESULTS.md/claims.yaml
     # already described an "arg F" sub-panel that did not exist; an
     # independent review caught the mismatch, see wiki/log.md.
     fig, axes = plt.subplots(3, 1, figsize=(7, 9.2))
-    axes[0].plot(freqs[mask], np.abs(F[mask]), lw=0.4, color="#2b6cb0")
+    axes[0].axhspan(sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus,
+                     color="#2b6cb0", alpha=0.25,
+                     label=r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$ (exact envelope)")
+    axes[0].axhline(sqrt_mu_plus, color="#2b6cb0", lw=1.0, ls="--",
+                     label=r"$\sqrt{\mu_+}$ (strong-image-only value)")
     axes[0].axvspan(f_zoom_lo, f_zoom_hi, color="gold", alpha=0.3)
     axes[0].set_ylabel(r"$|F(f)|$")
     axes[0].set_xlabel("f [Hz]")
+    axes[0].set_xlim(system.F_A_START_HZ, system.F_ISCO_HZ)
+    axes[0].legend(fontsize=7, loc="lower right")
     axes[0].set_title("Case A: amplification factor across the whole chirp\n"
-                       f"(static lens, $y={y_A:.3f}$; shaded = zoom below)")
+                       f"(static lens, $y={y_A:.3f}$; band is exactly this width at every f; zoom below)",
+                       fontsize=10)
     axes[1].plot(freqs[zmask], np.abs(F[zmask]), lw=1.0, color="#2b6cb0")
     axes[1].set_ylabel(r"$|F(f)|$")
     axes[1].set_xlabel("f [Hz]")
-    axes[1].set_title(f"Zoom: {f_zoom_lo:.0f}-{f_zoom_hi:.0f} Hz -- individual "
-                       "interference fringes resolved")
+    axes[1].set_title(f"Zoom: {f_zoom_lo:.0f}-{f_zoom_hi:.0f} Hz (fringe period "
+                       f"{fringe_period_hz:.2f} Hz, the same anywhere in the band)")
     axes[2].plot(freqs[zmask], np.angle(F[zmask]), lw=1.0, color="#c05621")
     axes[2].set_ylabel(r"$\arg F(f)$ [rad]")
     axes[2].set_xlabel("f [Hz]")
@@ -341,20 +366,33 @@ def main():
 
     # ---- Figure 3: extended diffraction/interference pattern in y-plane -
     from matplotlib.colors import LogNorm
+    import matplotlib.ticker as mticker
+
+    def _log_tick(value, _pos):
+        # "1" instead of matplotlib's default "10^0" for the unit-value
+        # tick -- correct either way, but "10^0" reads as unnecessary
+        # decoration for a tick that just means 1.
+        if abs(value - 1.0) < 1e-9:
+            return "1"
+        exp = round(np.log10(value))
+        return fr"$10^{{{exp}}}$"
+
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.4))
 
     axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=3.0, n_grid=481)
     im0 = axes[0].pcolormesh(axis0, axis0y, mag2_0, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_0.min(), 1e-3), vmax=mag2_0.max()))
     axes[0].set_title(f"start of band, f={system.F_A_START_HZ} Hz, w={w_start:.1f}", fontsize=9)
-    fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    cb0 = fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    cb0.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
     axis1, axis1y, mag2_1 = make_ring_pattern(
         w_isco, n_grid=500, center=(y_A, 0.0), half_width=0.15, n_radial=6000)
     im1 = axes[1].pcolormesh(axis1, axis1y, mag2_1, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_1.min(), 1e-3), vmax=mag2_1.max()))
     axes[1].set_title(f"near merger, f=f_isco, w={w_isco:.1f}\n(zoomed to |Δy|<0.15 near the source)", fontsize=9)
-    fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    cb1 = fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    cb1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
     for ax in axes:
         ax.set_aspect("equal")

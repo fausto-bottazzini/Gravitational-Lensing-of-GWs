@@ -14,7 +14,7 @@ claims:
       crossing.
     evidence:
       - src/gwlens/geometry.py::impact_parameter_of_time
-      - caseB_y_of_t.png
+      - caseB_pattern_with_orbit.png
     numbers: [fraction_of_time_lensed]
   - id: y_min_crosscheck
     statement: >
@@ -46,12 +46,6 @@ claims:
         gravitational waves in hierarchical black hole triples"
     numbers: [max_abs_F, mean_abs_F2_over_observation, rms_amplification_over_observation]
 figures:
-  - file: caseB_y_of_t.png
-    produced_by: run.py::main
-    shows: Impact parameter over 1.5 outer periods, cropped near the minimum.
-    from_scratch: The lensed/unlensed shading and the y-axis crop (from min_y, not max_y -- an earlier version autoscaled to the divergent max and hid the interesting dip; see wiki/log.md).
-    from_library: matplotlib.
-    supports: [half_orbit_unlensed, y_min_crosscheck]
   - file: caseB_repeated_pulses.png
     produced_by: run.py::main
     shows: "|F(w_B,y(t))|^2 over the full 6-period observation."
@@ -65,10 +59,15 @@ figures:
     from_library: scipy.interpolate.interp1d, matplotlib (LogNorm).
     choices:
       - "y_max = 25.0, chosen by eye from min_y (not max_y, which is dominated by the near-divergent points at the D_LS=0 crossing and would zoom the whole pattern into invisibility). No FINITE y_max keeps the marker on-frame for the whole orbit -- |y| formally diverges at each crossing -- so this is a compromise: with y_max=25.0, 51% of the 900 exported orbit frames (caseB_animation_data.json) still have |y1| or |y2| exceeding it and are clamped to the frame edge by report_template.html's clampPct(); down from 78% before this value was picked. See wiki/log.md."
-    supports: [y_min_crosscheck, repeated_lensing_pulses]
+    supports: [half_orbit_unlensed, y_min_crosscheck, repeated_lensing_pulses]
   - file: caseB_detector_view.png
     produced_by: run.py::main
-    shows: Idealized detector strain envelope over the full observation, and a fine-time-grid zoom on one pulse's raw waveform.
+    shows: >
+      Idealized detector strain envelope over the full observation, and a
+      fine-time-grid zoom on carrier cycles at one pulse's peak instant
+      (dephasing between lensed/unlensed, NOT the pulse's own sinc-like
+      ringing shape, which lives on a much longer ~day timescale and is
+      shown in caseB_repeated_pulses.png instead).
     from_scratch: The dedicated fine time grid (dt=0.1s) for the zoom panel, built separately from the coarse envelope grid after the first version aliased using the coarse grid directly (see wiki/log.md).
     from_library: numpy, matplotlib.
     supports: [repeated_lensing_pulses]

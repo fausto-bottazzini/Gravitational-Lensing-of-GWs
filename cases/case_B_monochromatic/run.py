@@ -95,26 +95,14 @@ def main():
     log("rms_amplification_over_observation", float(rms_amp))
 
     # ================= Figures ============================================
+    # (A y(t)-over-time panel was tried here first -- the divergence at each
+    # D_LS=0 crossing dominates the plot and left little room to actually
+    # see anything else, so it added no real information beyond what
+    # fraction_of_time_lensed and caseB_pattern_with_orbit.png already show;
+    # dropped rather than kept for its own sake.)
+    one_p = t <= 1.5 * system.P_OUT_S  # used below for the orbit-track figure
 
-    # Fig 1: y(t) over ~1.5 outer periods, lensed/unlensed shading
-    fig, ax = plt.subplots(figsize=(8, 3.2))
-    one_p = t <= 1.5 * system.P_OUT_S
-    days = t[one_p] / 86400.0
-    y_show = np.where(lensed_mask[one_p], y_t[one_p], np.nan)
-    ax.plot(days, y_show, color="#2b6cb0", lw=1.2, label="y(t), lensed half")
-    ax.fill_between(days, 0, 1, where=~lensed_mask[one_p], transform=ax.get_xaxis_transform(),
-                     color="grey", alpha=0.15, label="unlensed half (source in front)")
-    ax.set_xlabel("t [days]")
-    ax.set_ylabel("impact parameter y(t)")
-    ax.set_ylim(0, 10 * NUMBERS["min_y_during_observation"])  # y->inf as D_LS->0+; crop to the interesting dip
-    ax.set_title("Case B: impact parameter over 1.5 outer periods\n"
-                 "(y formally diverges at the D_LS=0 crossing, cropped here)")
-    ax.legend(fontsize=8, loc="upper right")
-    fig.tight_layout()
-    fig.savefig(OUT / "caseB_y_of_t.png", dpi=170)
-    plt.close(fig)
-
-    # Fig 2: |F(t)|^2 over the whole observation -- repeated lensing pulses,
+    # Fig 1 (was Fig 2): |F(t)|^2 over the whole observation -- repeated lensing pulses,
     # plus a one-period zoom: the diffraction ringing flanking each pulse is
     # genuine (not aliasing -- re-checked on a 40x finer grid, agrees
     # point-for-point) but is compressed into a few pixels at the full
@@ -224,7 +212,14 @@ def main():
     axes[0].set_xlabel("t [days]")
     axes[0].set_ylabel("strain envelope [arb. units]")
     axes[0].set_title("Case B: idealized detector view over the full observation")
-    axes[0].legend(fontsize=8)
+    # Headroom above the data so the legend box has empty space to sit in,
+    # rather than covering the pulses/carrier ripple beneath it (it did, at
+    # a fixed 'upper right'/'best' location, in an earlier version of this
+    # figure -- caught by eye, not by any check, since nothing here tests
+    # figure legibility; see wiki/log.md).
+    y0, y1 = axes[0].get_ylim()
+    axes[0].set_ylim(y0, y0 + 1.28 * (y1 - y0))
+    axes[0].legend(fontsize=8, loc="upper right")
 
     # The coarse t-grid above (3600 samples over 24 d, ~576 s spacing) is
     # fine for the slowly-varying envelope but wildly undersamples the
@@ -250,7 +245,22 @@ def main():
     axes[1].plot(t_fine - t_pulse, z_l_fine.real, color="#2b6cb0", lw=0.7, alpha=0.85, label="lensed")
     axes[1].set_xlabel(f"t - {t_pulse/86400:.3f} d  [s]")
     axes[1].set_ylabel("h(t) [arb. units]")
-    axes[1].set_title("Zoom: raw waveform through the peak of one lensing pulse (fine time grid)")
+    # NOT a zoom on the pulse's own shape -- that shape (the sinc-like
+    # diffraction ringing envelope) lives on a ~day timescale and is shown
+    # in caseB_repeated_pulses.png instead. This +-200s window is far
+    # narrower than that, chosen only to resolve individual 20s-period
+    # carrier cycles at the instant of peak amplification, so the
+    # lensed/unlensed dephasing is visible cycle-by-cycle (an earlier
+    # version of this title implied it showed the pulse shape itself,
+    # which it cannot at this timescale -- caught by eye).
+    axes[1].set_title("Zoom: carrier cycles at the pulse's peak instant\n"
+                       "(dephasing between lensed and unlensed, not the pulse's own shape)",
+                       fontsize=10)
+    # Same headroom fix as the panel above -- this one is a dense sinusoid
+    # filling the whole frame, so ANY fixed corner covers real peaks
+    # without it.
+    y0, y1 = axes[1].get_ylim()
+    axes[1].set_ylim(y0, y0 + 1.35 * (y1 - y0))
     axes[1].legend(fontsize=8, loc="upper right")
     fig.tight_layout()
     fig.savefig(OUT / "caseB_detector_view.png", dpi=170)
@@ -298,7 +308,7 @@ def main():
     with open(OUT / "provenance" / "numbers.json", "w") as fh:
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))
-    print("\nFigures written: caseB_y_of_t.png, caseB_repeated_pulses.png, "
+    print("\nFigures written: caseB_repeated_pulses.png, "
           "caseB_pattern_with_orbit.png, caseB_pattern_only.png, "
           "caseB_detector_view.png, caseB_animation_data.json")
 

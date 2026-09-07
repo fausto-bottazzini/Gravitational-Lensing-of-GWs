@@ -125,18 +125,21 @@ figures:
   - file: caseA_F_of_f.png
     produced_by: run.py::main
     shows: >
-      |F(f)| across the whole chirp band (top), |F(f)| zoomed to a 3 Hz
-      window where individual interference fringes are resolved (middle),
-      and arg F(f) over that same zoom (bottom) -- this third panel was
-      added after an independent review found it cited in RESULTS.md and
-      claims.yaml but not actually present in the figure.
+      The exact, constant envelope of |F(f)| across the whole chirp band
+      (top, shaded sqrt(mu_+)+-sqrt(|mu_-|) with the strong-image-only
+      value marked), |F(f)| zoomed to a 3 Hz window where individual
+      interference fringes are resolved (middle), and arg F(f) over that
+      same zoom (bottom).
     from_scratch: >
-      Frequency array from the FFT of the generated chirp; fringe
-      identification and the zoom window choice.
+      Frequency array from the FFT of the generated chirp; the envelope
+      bounds from image_positions/magnification at y_A; fringe
+      identification, the zoom window choice, and the exact fringe period
+      (1/image_time_delay_seconds, logged as fringe_period_hz).
     from_library: >
       numpy.fft for the FFT/frequency grid, matplotlib for rendering.
     choices:
       - "3 Hz zoom width, chosen to show ~10 resolved fringes without over-cropping."
+      - "Top panel shows the constant envelope band, not the raw oscillating |F(f)| curve directly: at full-band print resolution the raw curve is visually an unresolved, uninformative blob (an earlier version of this figure plotted it that way), while the envelope IS the actual content of a full-band view here (F is in the geometric-optics regime throughout, so the envelope is exactly two constant lines, not merely a visual summary of something more complicated)."
     supports: [w_regime, dephasing_not_simple_amplification, caseA_is_pure_geometric_optics]
   - file: caseA_strain_time.png
     produced_by: run.py::main

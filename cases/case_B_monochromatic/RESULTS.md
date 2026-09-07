@@ -23,9 +23,10 @@ closed form here; `w_geo_threshold=30`).
 Exactly **half** the orbit is lensed at all (`fraction_of_time_lensed
 =0.4997`): the source spends the other half in front of the lens
 (`D_LS<0`, `geometry.impact_parameter_of_time`) where there is no lensing
-geometry and F=1 by construction, not approximation. `caseB_y_of_t.png`
-shows this directly; the impact parameter formally diverges (`y->infinity`)
-exactly at each front/back crossing, where `D_LS->0`.
+geometry and F=1 by construction, not approximation; the impact parameter
+formally diverges (`y->infinity`) exactly at each front/back crossing,
+where `D_LS->0`. `caseB_pattern_with_orbit.png` (below) shows the lensed
+and unlensed halves of the orbit directly, distinguished by color.
 
 The minimum impact parameter reached, **y=1.589**, coincides with Case A's
 y_A to 4 significant figures — not a coincidence: both are the same

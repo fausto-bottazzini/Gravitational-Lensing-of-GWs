@@ -64,10 +64,16 @@ here comes from `F_geometric_optics` (`F_hybrid` never drops below
 waveform and finding `max|h_lensed - h_two_image|/max|h_lensed| = 1.1e-13`,
 machine precision). What's shown is the two-image **interference** term
 `exp(i*w*DeltaT)` oscillating very rapidly in frequency, NOT the exact
-diffraction integral contributing anything measurable beyond that limit --
-`caseA_F_of_f.png` looks like a filled band over the full 10-125 Hz sweep
-and only resolves into distinct fringes when zoomed to a ~3 Hz window
-(middle panel of that figure). Case B, at `w_B=0.309`, is where the exact
+diffraction integral contributing anything measurable beyond that limit.
+Because y_A (and so mu_+, mu_-) is fixed for the whole chirp, the *envelope*
+of `|F(f)|` is exactly constant across the entire band --
+`sqrt(mu_+)-sqrt(|mu_-|)` to `sqrt(mu_+)+sqrt(|mu_-|)`, shown as a shaded
+band in `caseA_F_of_f.png`'s top panel -- and the fringes inside that band
+have a fixed period in frequency, `1/image_time_delay_seconds=0.29 Hz`,
+the same at every f (Delta_T is fixed; the oscillation phase 2*pi*f*Delta_T
+is exactly linear in f). The middle panel zooms a 3 Hz window at the start
+of the band purely for concreteness -- an equal-width window anywhere else
+in the band looks the same. Case B, at `w_B=0.309`, is where the exact
 diffraction integral actually matters (`F_hybrid` uses `F_point_lens`
 throughout there).
 
