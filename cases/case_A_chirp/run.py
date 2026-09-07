@@ -273,6 +273,44 @@ def main():
     fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170)
     plt.close(fig)
 
+    # ---- Animation data for report/report.html (JSON, reduced resolution) -
+    win = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_peak + 0.3)
+    idx = np.where(win)[0]
+    stride = max(1, len(idx) // 1400)
+    idx = idx[::stride]
+    f_isco = system.F_ISCO_HZ
+    # (instantaneous frequency during inspiral, leading-order estimate, for
+    # syncing the animation marker only -- not a physics claim; simpler to
+    # recompute directly than thread through build_waveform_fd's internals)
+    tau_isco = chirp.time_to_merger(system.F_ISCO_HZ, system.MCHIRP_MSUN)
+    t_c_local = t_peak + tau_isco
+    with np.errstate(invalid="ignore"):
+        f_inspiral = chirp.freq_of_time(t[idx], t_c_local, system.MCHIRP_MSUN)
+    f_of_t = np.where(t[idx] < t_peak, np.minimum(f_inspiral, f_isco), f_isco)
+
+    zmask_idx = np.where(zmask)[0]
+    anim = {
+        "t_peak": float(t_peak),
+        "t_end": float(NUMBERS["t_end_seconds"]),
+        "f_isco": float(f_isco),
+        "f_zoom_lo": float(f_zoom_lo),
+        "f_zoom_hi": float(f_zoom_hi),
+        "waveform": {
+            "t": t[idx].tolist(),
+            "h_unlensed": h_unlensed[idx].tolist(),
+            "h_lensed": h_lensed[idx].tolist(),
+            "env_unlensed": env_u[idx].tolist(),
+            "env_lensed": env_l[idx].tolist(),
+            "f_of_t": f_of_t.tolist(),
+        },
+        "fringes": {
+            "freqs": freqs[zmask_idx].tolist(),
+            "F_abs": np.abs(F[zmask_idx]).tolist(),
+        },
+    }
+    with open(OUT / "caseA_animation_data.json", "w") as fh:
+        json.dump(anim, fh)
+
     with open(OUT / "provenance" / "numbers.json", "w") as fh:
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))

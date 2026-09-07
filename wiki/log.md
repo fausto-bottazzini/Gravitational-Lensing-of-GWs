@@ -160,3 +160,32 @@ Append-only. What was decided, ingested, corrected, and when.
   narrowband inspiral only sampled a slowly-varying few. Not derived in detail, reported
   as an observed, physically-plausible consequence of the already-validated F(f), not an
   independently re-derived result on its own.
+- **2026-09-07** — User asked for `report.html` to be a lighter, visual "presentation" (not
+  dense), with interactive visualizations: the outer orbit's motion, the extended
+  interference/diffraction pattern in space, and an idealized detector view, synced -- mainly
+  for Case B, something similar for Case A. Built this as: `cases/case_B_monochromatic/run.py`
+  now also exports `caseB_animation_data.json` (orbit track y1(t)/y2(t)/lensed over ~1.5
+  periods, |F(t)|^2 and envelope over the full 6) and a clean track-free
+  `caseB_pattern_only.png`; `case_A_chirp/run.py` exports `caseA_animation_data.json`
+  (windowed waveform + instantaneous-frequency mapping, zoomed F(f) fringes). `report/
+  report_template.html` + `report/build_report.py` assemble the final `report.html` by
+  INLINING both JSON payloads as `<script>` data rather than `fetch()`-ing them: a page opened
+  directly as a `file://` URL (the expected way to view this) cannot `fetch()` a local JSON
+  file (CORS blocks it), so inlining is required for the page to work with no local web server
+  -- added `run_report` in `reproduce.sh` runs `build_report.py` alongside the LaTeX build.
+  Vanilla-JS canvas plots + a CSS-positioned marker over the pattern PNG, no chart library
+  (stays inside the project's own dependency footprint).
+  **Could not visually test in an actual browser** (`claude-in-chrome` reported no extension
+  connected in this environment) -- verified what could be verified without one instead:
+  `node --check` on the extracted script (syntax), and running the actual page script under
+  Node with a minimal DOM/canvas-context mock (`document.getElementById`, `classList.toggle`,
+  a no-op 2D context) driving every control's event handler across the full scrub range
+  (0-1000 in steps of 5) with no exceptions thrown. That pass caught one real bug: `y` (and so
+  the marker's plotted position) formally diverges at each `D_LS=0` crossing (the same
+  divergence documented in `theory.tex` Sec. 4.2), which sent the marker's CSS `left`/`top` to
+  values like `191.93%` -- clipped invisibly by the stage's `overflow:hidden` rather than
+  crashing, but a marker silently vanishing reads as a bug to a viewer. Fixed by clamping the
+  marker's position to the visible stage edge (`[1.5%, 98.5%]`) instead, re-verified the clamp
+  holds across the full scrub range. This DOM-mock pass is a real but partial substitute for
+  actually looking at the rendered page (no verification of layout, CSS, or that things look
+  right) -- flagged here rather than implied to be equivalent to visual QA.

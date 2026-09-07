@@ -207,11 +207,51 @@ def main():
     fig.savefig(OUT / "caseB_detector_view.png", dpi=170)
     plt.close(fig)
 
+    # Fig 5: pattern only (no track), fixed square canvas -- background for
+    # the animated visualization in report/report.html. A clean render (no
+    # overlaid line) so the JS animation draws its own marker on top without
+    # duplicating a static track underneath it.
+    fig, ax = plt.subplots(figsize=(6, 6))
+    im = ax.pcolormesh(axis, axis, pattern, shading="auto", cmap="inferno",
+                        norm=LogNorm(vmin=max(pattern.min(), 1e-2), vmax=pattern.max()))
+    ax.set_aspect("equal")
+    ax.set_xlim(-y_max, y_max)
+    ax.set_ylim(-y_max, y_max)
+    ax.axis("off")
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    fig.savefig(OUT / "caseB_pattern_only.png", dpi=200)
+    plt.close(fig)
+
+    # ---- Animation data for report/report.html (JSON, reduced resolution) -
+    P_days = system.P_OUT_S / 86400.0
+    anim = {
+        "y_max": float(y_max),
+        "P_days": float(P_days),
+        "w_B": float(w_B),
+        "orbit": {
+            "t_days": (t[one_p] / 86400.0).tolist(),
+            "y1": y1_traj.tolist(),
+            "y2": y2_traj.tolist(),
+            "lensed": lensed_traj.tolist(),
+        },
+    }
+    # envelope + pulses: subsample the full 6-period arrays to ~900 points
+    stride = max(1, n_samples // 900)
+    anim["envelope"] = {
+        "t_days": (t[::stride] / 86400.0).tolist(),
+        "unlensed": np.abs(z_unlensed[::stride]).tolist(),
+        "lensed": np.abs(z_lensed[::stride]).tolist(),
+        "F2": (np.abs(F_t[::stride]) ** 2).tolist(),
+    }
+    with open(OUT / "caseB_animation_data.json", "w") as fh:
+        json.dump(anim, fh)
+
     with open(OUT / "provenance" / "numbers.json", "w") as fh:
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))
     print("\nFigures written: caseB_y_of_t.png, caseB_repeated_pulses.png, "
-          "caseB_pattern_with_orbit.png, caseB_detector_view.png")
+          "caseB_pattern_with_orbit.png, caseB_pattern_only.png, "
+          "caseB_detector_view.png, caseB_animation_data.json")
 
 
 if __name__ == "__main__":

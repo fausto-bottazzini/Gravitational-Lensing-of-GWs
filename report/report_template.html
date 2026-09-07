@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lente Gravitacional de GWs en un Triple Jerárquico — Resultados</title>
+<style>
+  :root {
+    --ink: #1a1a1a; --sub: #555; --rule: #ddd; --accent: #b5651d;
+    --bg: #fefdfb; --panel: #f7f5f1; --code-bg: #f0eee9;
+    --lensed: #17b4d4; --unlensed: #9a9a9a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.6 Georgia, "Times New Roman", serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  header.title { text-align: center; margin-bottom: 2.5rem; }
+  header.title h1 { font-size: 1.7rem; line-height: 1.3; margin: 0 0 0.3rem; }
+  header.title .subtitle { font-size: 1.15rem; color: var(--sub); margin-bottom: 1rem; }
+  header.title .byline { font-size: 0.95rem; color: var(--sub); font-family: -apple-system, sans-serif; }
+  .abstract {
+    background: var(--panel); border-left: 3px solid var(--accent);
+    padding: 1.1rem 1.4rem; margin: 2rem 0; font-size: 0.97rem;
+  }
+  .abstract .label { font-weight: 700; font-family: -apple-system, sans-serif;
+    text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem; color: var(--accent); }
+  nav.toc {
+    font-family: -apple-system, sans-serif; font-size: 0.92rem; margin: 2rem 0;
+    border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.4rem;
+  }
+  nav.toc .label { font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    font-size: 0.75rem; color: var(--sub); margin-bottom: .5rem; display: block; }
+  nav.toc ol { margin: 0; padding-left: 1.2rem; columns: 2; }
+  nav.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--sub); }
+  h2 { font-size: 1.35rem; margin-top: 3rem; border-bottom: 2px solid var(--accent); padding-bottom: .3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.6rem; font-family: -apple-system, sans-serif; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--rule); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--panel); font-family: -apple-system, sans-serif; font-size: 0.82rem;
+       text-transform: uppercase; letter-spacing: .04em; color: var(--sub); }
+  code { background: var(--code-bg); padding: .1em .35em; border-radius: 3px;
+         font-family: "SF Mono", Consolas, monospace; font-size: 0.86em; }
+  figure { margin: 1.6rem 0; text-align: center; }
+  figure img { max-width: 100%; border: 1px solid var(--rule); border-radius: 4px; }
+  figcaption { font-size: 0.85rem; color: var(--sub); text-align: left; margin-top: .5rem;
+               font-family: -apple-system, sans-serif; line-height: 1.5; }
+  .callout {
+    background: #fff8ec; border: 1px solid #f0d9a8; border-radius: 6px;
+    padding: 1rem 1.3rem; margin: 1.5rem 0; font-size: 0.95rem;
+  }
+  ul { padding-left: 1.4rem; }
+  li { margin: 0.4rem 0; }
+  .metric { font-weight: 700; }
+  a { color: #2b6cb0; }
+  .refs { font-size: 0.92rem; }
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
+           font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--sub); }
+
+  /* ---- interactive panels ---- */
+  .viz {
+    font-family: -apple-system, sans-serif;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 1.2rem; margin: 1.6rem 0;
+  }
+  .viz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+  @media (max-width: 720px) { .viz-grid { grid-template-columns: 1fr; } }
+  .viz-panel { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .7rem; }
+  .viz-panel h4 { margin: 0 0 .5rem; font-size: .85rem; color: var(--sub); font-weight: 600; }
+  .pattern-stage { position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 6px; overflow: hidden; }
+  .pattern-stage img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .marker {
+    position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+    border-radius: 50%; background: var(--lensed); box-shadow: 0 0 8px 2px rgba(23,180,212,.8);
+    transition: background .15s, box-shadow .15s;
+  }
+  .marker.off { background: var(--unlensed); box-shadow: 0 0 4px 1px rgba(154,154,154,.6); }
+  canvas { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .viz-controls { display: flex; align-items: center; gap: .7rem; margin-top: .9rem; font-size: .85rem; }
+  .viz-controls button {
+    font: inherit; border: 1px solid var(--rule); background: #fff; border-radius: 6px;
+    padding: .35rem .8rem; cursor: pointer;
+  }
+  .viz-controls button:hover { background: var(--panel); }
+  .viz-controls input[type=range] { flex: 1; }
+  .viz-readout {
+    font-family: "SF Mono", Consolas, monospace; font-size: .82rem; color: var(--ink);
+    background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem;
+    margin-top: .7rem; white-space: pre-wrap; line-height: 1.5;
+  }
+  .badge { display: inline-block; padding: .1em .55em; border-radius: 999px; font-size: .78em; font-weight: 700; }
+  .badge.on { background: rgba(23,180,212,.18); color: #0a7387; }
+  .badge.off { background: rgba(154,154,154,.22); color: #555; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e8e6e1; --sub: #a8a49c; --rule: #3a3733; --accent: #e0a458;
+            --bg: #171614; --panel: #201f1c; --code-bg: #241f18; }
+    figure img { filter: brightness(0.92) contrast(1.05); }
+    .callout { background: #241d10; border-color: #4a3a1a; }
+    .viz-panel { background: #14130f; }
+    .viz-readout { background: #14130f; color: var(--ink); }
+    .viz-controls button { background: #201f1c; color: var(--ink); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>Lente Gravitacional en Óptica de Ondas de Ondas Gravitacionales<br>en un Sistema Triple Jerárquico</h1>
+  <div class="subtitle">Resultados — versión interactiva</div>
+  <div class="byline">Trabajo final — Gravitational Waves and AI-Assisted Research · Septiembre 2026</div>
+</header>
+
+<div class="abstract">
+  <span class="label">Resumen</span>
+  <p>Calculamos cómo una onda gravitacional (GW) de una binaria compacta es lenteada, en óptica
+  de ondas, por un tercer cuerpo del mismo sistema triple jerárquico — el mismo triple en dos
+  épocas de su inspiral: un chirp tardío (lente congelado) y una fase temprana
+  cuasi-monocromática (el lente se mueve, y produce pulsos de lensing repetidos). Esta página es
+  la presentación visual; <a href="report.pdf"><code>report.pdf</code></a> tiene el mismo
+  contenido con más detalle en texto, y <a href="../theory/theory.pdf"><code>theory/theory.pdf</code></a>
+  la derivación completa. Todo viene de <a href="../cases/"><code>cases/</code></a>, verificado en
+  <a href="../tests/"><code>tests/</code></a> — nada acá está sin chequear.</p>
+</div>
+
+<nav class="toc">
+  <span class="label">Contenidos</span>
+  <ol>
+    <li><a href="#sistema">El sistema</a></li>
+    <li><a href="#casoA">Caso A — el chirp</a></li>
+    <li><a href="#casoB">Caso B — cuasi-monocromático</a></li>
+    <li><a href="#junto">Lo que muestran juntos</a></li>
+    <li><a href="#alcance">Alcance y limitaciones</a></li>
+  </ol>
+</nav>
+
+<h2 id="sistema">El sistema</h2>
+<p>Un triple jerárquico: una binaria interna (la fuente de GWs) orbita un tercer cuerpo mucho
+más masivo (el lente), lo bastante lejos como para que la marea sea despreciable. Seguimos el
+mismo sistema en dos momentos de la vida de la binaria interna:</p>
+<table>
+  <tr><th>Binaria interna (fuente)</th><td>m₁=20 M<sub>☉</sub>, m₂=15 M<sub>☉</sub> (masa de chirp 15.05 M<sub>☉</sub>)</td></tr>
+  <tr><th>Lente</th><td>M<sub>L</sub>=5×10⁴ M<sub>☉</sub>, a D<sub>L</sub>=5 kpc</td></tr>
+  <tr><th>Órbita externa</th><td>a<sub>out</sub>=1.82 UA, P<sub>out</sub>=4 d, i<sub>out</sub>=87°, circular</td></tr>
+</table>
+
+<h2 id="casoA">Caso A — el chirp, lente estático</h2>
+<p>La binaria interna hace inspiral de 10 Hz a 125.6 Hz en <span class="metric">15.2 s</span> —
+muchísimo más rápido que la órbita externa (4 días), así que el lente queda congelado en un
+único parámetro de impacto (y<sub>A</sub>=1.589) durante toda la señal. La forma de onda es
+<b>IMRPhenomD</b> real (inspiral+merger+ringdown), no una aproximación truncada.</p>
+
+<div class="viz" id="vizA">
+  <div class="viz-grid">
+    <div class="viz-panel">
+      <h4>Forma de onda — lensada vs. no lensada</h4>
+      <canvas id="canvasA-wave" width="640" height="280"></canvas>
+    </div>
+    <div class="viz-panel">
+      <h4>F(f), zoom de 3 Hz — el marcador sigue la frecuencia instantánea</h4>
+      <canvas id="canvasA-fringe" width="640" height="280"></canvas>
+    </div>
+  </div>
+  <div class="viz-controls">
+    <button id="playA">▶ reproducir</button>
+    <input type="range" id="scrubA" min="0" max="1000" value="0">
+    <span id="speedA" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
+    <button id="speedBtnA">velocidad</button>
+  </div>
+  <div class="viz-readout" id="readoutA">cargando…</div>
+</div>
+
+<figure>
+  <img src="../cases/case_A_chirp/caseA_diffraction_pattern.png" alt="Patrón de difracción extendido">
+  <figcaption><b>El patrón de difracción extendido</b> en el plano de la fuente: anillos
+  concéntricos alrededor del lente, con un pico brillante central (el anillo de Einstein,
+  regularizado por difracción — donde la óptica geométrica diverge). Izquierda: al inicio de la
+  banda (w=61.9). Derecha: cerca del merger (w=777.6), con zoom — mismos anillos, tan juntos que
+  parecen franjas rectas.</figcaption>
+</figure>
+
+<p>Amplificación de la muestra pico: <b>0.962</b> (más chica lensada que no lensada).
+Amplificación RMS: <b>1.056</b>. La diferencia entre ambas es la señal de que F(f) desfasa, no
+sólo amplifica — visible directamente arriba: el merger lensado sale más ancho y más bajo que el
+no lensado, en vez de simplemente más alto.</p>
+
+<h2 id="casoB">Caso B — cuasi-monocromático, lente en movimiento</h2>
+<p>Más temprano en el mismo inspiral: f=0.05 Hz, casi constante durante una observación de 24
+días (6 períodos externos). Acá el lente <i>sí</i> se mueve — el parámetro de impacto barre el
+mismo tipo de patrón de difracción una vez por período orbital externo, y produce pulsos de
+amplificación repetidos.</p>
+
+<div class="viz" id="vizB">
+  <div class="viz-grid">
+    <div class="viz-panel">
+      <h4>Órbita sobre el patrón de difracción (w<sub>B</sub>=0.31)</h4>
+      <div class="pattern-stage">
+        <img src="../cases/case_B_monochromatic/caseB_pattern_only.png" alt="Patrón de difracción">
+        <div class="marker" id="markerB"></div>
+      </div>
+    </div>
+    <div class="viz-panel">
+      <h4>|F(t)|² — pulsos de lensing repetido</h4>
+      <canvas id="canvasB-pulses" width="640" height="280"></canvas>
+    </div>
+  </div>
+  <div class="viz-controls">
+    <button id="playB">▶ reproducir</button>
+    <input type="range" id="scrubB" min="0" max="1000" value="0">
+    <span id="speedB" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
+    <button id="speedBtnB">velocidad</button>
+  </div>
+  <div class="viz-readout" id="readoutB">cargando…</div>
+</div>
+
+<p>Exactamente la mitad de la órbita resulta <b>no lenteada</b>: cuando la fuente está delante
+del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
+F=1 por construcción, y se ve arriba como el marcador saliendo del patrón (verde/gris) durante
+la mitad "de adelante" de cada vuelta. Esto es exactamente el origen de los pulsos periódicos:
+"lensing repetido", el análogo en óptica de ondas de lo que D'Orazio &amp; Loeb (2020)
+encontraron en óptica geométrica.</p>
+
+<h2 id="junto">Lo que los dos casos muestran juntos</h2>
+<ul>
+  <li><b>Caso A:</b> un patrón de difracción congelado, barrido en <i>frecuencia</i> por el
+  propio chirp — franjas de interferencia densas, acercándose al límite de óptica geométrica.</li>
+  <li><b>Caso B:</b> el mismo tipo de patrón, a frecuencia fija, barrido en <i>tiempo</i> por el
+  movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lenteada.</li>
+  <li><b>Ambos:</b> el lensing no es sólo "más brillante" — F es complejo, y su fase deja una
+  marca real y verificable en la forma de onda.</li>
+</ul>
+
+<h2 id="alcance">Alcance y limitaciones</h2>
+<div class="callout">
+<ul>
+  <li>Sólo lente de masa puntual, sin distribución extendida.</li>
+  <li>IMRPhenomD es un modelo calibrado (no re-derivado acá); el generador de respaldo TaylorF2
+  (si <code>pycbc</code> no está disponible) no tiene merger ni ringdown.</li>
+  <li>Sin calibración absoluta de strain — sólo amplitudes relativas y el factor de
+  amplificación son afirmaciones físicas acá.</li>
+  <li>Detector idealizado: sin ruido, patrón de antena, ni filtrado adaptado.</li>
+  <li>La aproximación de lente delgado/paraxial se empuja cerca de cada cruce del Caso B —
+  cuantificado (ventana de ~60 s de 4 días) y mostrado que no afecta nada reportado.</li>
+</ul>
+</div>
+
+<footer>
+  Derivación completa: <a href="../theory/theory.pdf">theory/theory.pdf</a>. Versión en PDF de
+  este resultado: <a href="report.pdf">report.pdf</a>. Reproducir todo:
+  <a href="../README.md">README.md</a> → <code>./reproduce.sh</code>.
+</footer>
+
+</div>
+
+<script>
+window.__CASE_A__ = /*__CASE_A_DATA__*/;
+</script>
+<script>
+window.__CASE_B__ = /*__CASE_B_DATA__*/;
+</script>
+<script>
+(() => {
+  "use strict";
+  const CASE_A = window.__CASE_A__;
+  const CASE_B = window.__CASE_B__;
+
+  // ---------- tiny canvas line-plot helper ----------
+  function drawAxes(ctx, w, h, pad) {
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b);
+    ctx.stroke();
+  }
+
+  function makePlot(canvas, xs, seriesList, opts) {
+    // seriesList: [{data, color, label}], opts: {xlabel, ylabel, xrange, yrange}
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    const pad = { l: 46, r: 12, t: 10, b: 30 };
+    const xr = opts.xrange || [Math.min(...xs), Math.max(...xs)];
+    let ymin = Infinity, ymax = -Infinity;
+    for (const s of seriesList) for (const v of s.data) { if (v < ymin) ymin = v; if (v > ymax) ymax = v; }
+    if (opts.yrange) { ymin = opts.yrange[0]; ymax = opts.yrange[1]; }
+    const yr = [ymin, ymax];
+    const X = (x) => pad.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - pad.l - pad.r);
+    const Y = (y) => (h - pad.b) - (y - yr[0]) / (yr[1] - yr[0] || 1) * (h - pad.b - pad.t);
+
+    return {
+      ctx, w, h, pad, X, Y, xr, yr,
+      redraw(cursorX) {
+        drawAxes(ctx, w, h, pad);
+        for (const s of seriesList) {
+          ctx.strokeStyle = s.color; ctx.lineWidth = s.lw || 1.3;
+          ctx.beginPath();
+          for (let i = 0; i < xs.length; i++) {
+            const px = X(xs[i]), py = Y(s.data[i]);
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+        if (cursorX !== undefined) {
+          const cx = X(cursorX);
+          ctx.strokeStyle = "#c0392b"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(cx, pad.t); ctx.lineTo(cx, h - pad.b); ctx.stroke();
+        }
+        ctx.fillStyle = "#777"; ctx.font = "10px -apple-system,sans-serif";
+        ctx.fillText(opts.xlabel || "", w - pad.r - 40, h - 6);
+        ctx.save(); ctx.translate(12, pad.t + 8); ctx.fillText(opts.ylabel || "", 0, 0); ctx.restore();
+      }
+    };
+  }
+
+  function player(scrubEl, playBtn, speedBtn, speedLabel, durationMs, onFrame) {
+    let playing = false, t0 = null, elapsed = 0, speed = 1;
+    const speeds = [0.25, 0.5, 1, 2, 4];
+    let si = 2;
+    function setFrac(frac) {
+      frac = Math.max(0, Math.min(1, frac));
+      scrubEl.value = String(Math.round(frac * 1000));
+      onFrame(frac);
+    }
+    function tick(ts) {
+      if (!playing) return;
+      if (t0 === null) t0 = ts;
+      const frac = ((elapsed + (ts - t0) * speed) % durationMs) / durationMs;
+      setFrac(frac);
+      requestAnimationFrame(tick);
+    }
+    playBtn.addEventListener("click", () => {
+      playing = !playing;
+      playBtn.textContent = playing ? "⏸ pausar" : "▶ reproducir";
+      if (playing) { t0 = null; elapsed = (parseInt(scrubEl.value, 10) / 1000) * durationMs; requestAnimationFrame(tick); }
+    });
+    scrubEl.addEventListener("input", () => {
+      playing = false; playBtn.textContent = "▶ reproducir";
+      setFrac(parseInt(scrubEl.value, 10) / 1000);
+    });
+    speedBtn.addEventListener("click", () => {
+      si = (si + 1) % speeds.length; speed = speeds[si];
+      speedLabel.textContent = speed + "×";
+    });
+    setFrac(0);
+    return { setFrac };
+  }
+
+  // ================= Case A =================
+  if (CASE_A) {
+    const wf = CASE_A.waveform, fr = CASE_A.fringes;
+    const tArr = wf.t;
+    const t0 = tArr[0], t1 = tArr[tArr.length - 1];
+
+    const waveCanvas = document.getElementById("canvasA-wave");
+    const fringeCanvas = document.getElementById("canvasA-fringe");
+    const readout = document.getElementById("readoutA");
+
+    const wavePlot = makePlot(waveCanvas, tArr,
+      [{ data: wf.h_unlensed, color: "#9a9a9a", lw: 1 },
+       { data: wf.h_lensed, color: "#17b4d4", lw: 1.1 }],
+      { xlabel: "t [s]", ylabel: "h(t)", xrange: [t0, t1] });
+
+    const fringeXs = fr.freqs;
+    const fringePlot = makePlot(fringeCanvas, fringeXs,
+      [{ data: fr.F_abs, color: "#2b6cb0", lw: 1.4 }],
+      { xlabel: "f [Hz]", ylabel: "|F(f)|", xrange: [fringeXs[0], fringeXs[fringeXs.length - 1]] });
+
+    function frameA(frac) {
+      const tCur = t0 + frac * (t1 - t0);
+      // reveal waveform up to tCur only
+      let n = 1;
+      while (n < tArr.length && tArr[n] < tCur) n++;
+      const revealed = { h_unlensed: wf.h_unlensed.slice(0, n), h_lensed: wf.h_lensed.slice(0, n) };
+      drawAxes(wavePlot.ctx, wavePlot.w, wavePlot.h, wavePlot.pad);
+      const X = wavePlot.X, Y = wavePlot.Y;
+      wavePlot.ctx.strokeStyle = "#9a9a9a"; wavePlot.ctx.lineWidth = 1;
+      wavePlot.ctx.beginPath();
+      for (let i = 0; i < n; i++) { const px = X(tArr[i]), py = Y(revealed.h_unlensed[i]); i === 0 ? wavePlot.ctx.moveTo(px, py) : wavePlot.ctx.lineTo(px, py); }
+      wavePlot.ctx.stroke();
+      wavePlot.ctx.strokeStyle = "#17b4d4"; wavePlot.ctx.lineWidth = 1.1;
+      wavePlot.ctx.beginPath();
+      for (let i = 0; i < n; i++) { const px = X(tArr[i]), py = Y(revealed.h_lensed[i]); i === 0 ? wavePlot.ctx.moveTo(px, py) : wavePlot.ctx.lineTo(px, py); }
+      wavePlot.ctx.stroke();
+
+      // find nearest f_of_t
+      let fi = 0; for (let i = 0; i < wf.f_of_t.length; i++) if (tArr[i] <= tCur) fi = i;
+      const fNow = wf.f_of_t[fi];
+      const fClamped = Math.max(fringeXs[0], Math.min(fringeXs[fringeXs.length - 1], fNow));
+      fringePlot.redraw(fClamped);
+
+      const merged = tCur >= CASE_A.t_peak - 0.001;
+      readout.innerHTML = `t = ${tCur.toFixed(2)} s` + (tCur < CASE_A.t_peak ? `   f ≈ ${fNow.toFixed(1)} Hz` : "") +
+        (merged ? `   <span class="badge on">MERGER / RINGDOWN</span>` : "");
+    }
+
+    player(document.getElementById("scrubA"), document.getElementById("playA"),
+      document.getElementById("speedBtnA"), document.getElementById("speedA"),
+      14000, frameA);
+  }
+
+  // ================= Case B =================
+  if (CASE_B) {
+    const orb = CASE_B.orbit, env = CASE_B.envelope, yMax = CASE_B.y_max;
+    const marker = document.getElementById("markerB");
+    const readout = document.getElementById("readoutB");
+    const pulsesCanvas = document.getElementById("canvasB-pulses");
+
+    const tEnvMax = env.t_days[env.t_days.length - 1];
+    const pulsesPlot = makePlot(pulsesCanvas, env.t_days,
+      [{ data: env.F2, color: "#c0392b", lw: 1.1 }],
+      { xlabel: "t [días]", ylabel: "|F|²", xrange: [0, tEnvMax] });
+
+    function nearestIdx(arr, v) {
+      let lo = 0, hi = arr.length - 1;
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (arr[mid] < v) lo = mid; else hi = mid; }
+      return (Math.abs(arr[lo] - v) < Math.abs(arr[hi] - v)) ? lo : hi;
+    }
+
+    function frameB(frac) {
+      const tCur = frac * tEnvMax; // full 6-period sweep
+      const tMod = tCur % CASE_B.P_days; // orbit repeats every period
+
+      const oi = nearestIdx(orb.t_days, tMod);
+      const x = orb.y1[oi], y = orb.y2[oi], lensed = orb.lensed[oi];
+      // y (and hence x,y here) formally diverges at the D_LS=0 crossing
+      // (theory.tex Sec. 4.2); clamp the marker to the visible pattern edge
+      // there instead of letting it fly off past the stage (which
+      // `overflow:hidden` would just silently clip -- clamping instead
+      // gives a clear "at the edge, off" visual rather than a marker that
+      // mysteriously vanishes).
+      const clampPct = (v) => Math.max(1.5, Math.min(98.5, v));
+      marker.style.left = clampPct((x + yMax) / (2 * yMax) * 100).toFixed(2) + "%";
+      marker.style.top = clampPct((yMax - y) / (2 * yMax) * 100).toFixed(2) + "%";
+      marker.classList.toggle("off", !lensed);
+
+      pulsesPlot.redraw(tCur);
+
+      const ei = nearestIdx(env.t_days, tCur);
+      const period = Math.floor(tCur / CASE_B.P_days) + 1;
+      readout.innerHTML = `día ${tCur.toFixed(2)} de ${tEnvMax.toFixed(0)}  (período orbital ${period}/6)   ` +
+        `|F|² = ${env.F2[ei].toFixed(3)}   ` +
+        (lensed ? `<span class="badge on">detrás del lente</span>` : `<span class="badge off">delante del lente — sin lensing</span>`);
+    }
+
+    player(document.getElementById("scrubB"), document.getElementById("playB"),
+      document.getElementById("speedBtnB"), document.getElementById("speedB"),
+      20000, frameB);
+  }
+})();
+</script>
+</body>
+</html>

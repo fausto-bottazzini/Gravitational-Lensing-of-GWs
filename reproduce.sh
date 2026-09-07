@@ -60,6 +60,8 @@ run_report() {
     pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
     pdflatex -interaction=nonstopmode -halt-on-error report.tex && \
     rm -f *.aux *.bbl *.blg *.log *.out *.toc )
+  echo "== rebuilding report/report.html (inlines cases/*/caseX_animation_data.json) =="
+  python3 report/build_report.py
 }
 
 case "$STEP" in

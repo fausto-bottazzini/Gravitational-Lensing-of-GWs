@@ -81,7 +81,7 @@ ran. Case B, `tests/`, and everything else never touch `pycbc` at all.
 
 | | |
 |---|---|
-| `report/` | the results: `report.html` and `report.pdf`, the two documents this project is presented from |
+| `report/` | the results: `report.html` (interactive, presentation-style) and `report.pdf` (full detail), the two documents this project is presented from. `report_template.html` + `build_report.py` generate `report.html` by inlining `cases/*/caseX_animation_data.json` |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
 | `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
 | `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |
