@@ -1,7 +1,11 @@
 {
   "causality_of_lensed_pulse": {
     "passed": true,
-    "message": "weak-image amplitude AFTER main pulse = 0.4101 (expect ~0.3820), BEFORE = 0.0000 (expect ~0) -- dT=2.049s"
+    "message": "strong image at t_ref+0.0000s, amplitude 1.0820 (expect sqrt(mu_+)=1.0820); weak image AFTER = 0.4101 (expect sqrt(mu_-)=0.4133), BEFORE = 0.0000 (expect ~0) -- dT=2.049s"
+  },
+  "causality_of_lensed_pulse_low_w": {
+    "passed": true,
+    "message": "w(f0)=6.19 (<30, so F_point_lens is exercised); strong image at t_ref+0.0000s, amplitude 1.0845 (expect sqrt(mu_+)=1.0820); weak image AFTER = 0.2542 (expect sqrt(mu_-)=0.4133), BEFORE = 0.0005 (expect ~0) -- dT=2.049s"
   },
   "paczynski_magnification": {
     "passed": true,
@@ -9,7 +13,7 @@
   },
   "low_w_limit": {
     "passed": true,
-    "message": "max |F(w=1e-4,y)-1| = 4.73e-04 (tol 2e-3)"
+    "message": "max |F(w=1e-4,y)-1| = 4.95e-04 (tol 2e-3)"
   },
   "geometric_optics_limit": {
     "passed": true,

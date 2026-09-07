@@ -33,6 +33,35 @@ Only phase-sensitive, time-domain reconstruction (Case A's lensed
 waveform/peak amplification, and the new causality regression test below)
 could catch this, and none of the original tests did.
 
+*** REFERENCE-PHASE NORMALIZATION FIX (2026-09-07, see wiki/log.md) ***
+Every F(w,y) below now also carries an extra factor exp(i*w*phi_+(y)),
+phi_+(y) = fermat_potential(x_plus(y), y) the MINIMUM (strong) image's own
+Fermat potential. Without it (the state of this file until this fix), F's
+absolute phase was the raw, un-subtracted phi(x,y) of theory.tex Eq. 2.5 --
+mathematically self-consistent (all four evaluators agreed with each other,
+since none of them subtracted anything, so every existing magnitude- or
+relative-phase-only test kept passing), but physically not what "F(w,y)"
+conventionally means in this literature (Takahashi & Nakamura 2003, their
+eq. 17-ish reference-phase subtraction): since ln|x| solves the deflection
+Poisson equation only up to an arbitrary additive constant, the ABSOLUTE
+phase w*phi_+(y) an un-normalized F carries is not a physical observable --
+only the phase DIFFERENCE between images (i.e. Delta_T(y), which this
+constant cancels out of) is. An independent review found this by asking
+why Case A's lensed merger peak lands 0.60s "before" the unlensed one: that
+number turned out to be EXACTLY 4*G*M_L*phi_+(y_A)/c^3 (agreement <2e-4s,
+under half a sample) -- an arbitrary convention artifact, not the
+interference effect an earlier version of this project's own analysis
+(RESULTS.md, report.tex, wiki/log.md) mistakenly concluded it was. With
+this fix, F is referenced to the strong image's OWN arrival: the
+geometric-optics limit becomes exactly F -> sqrt(mu_+) (zero phase) as
+w -> infinity along the strong-image-only direction, the lensed merger
+peaks at EXACTLY the unlensed merger time (not 0.6s before it), and the
+second-image echo lands at EXACTLY t_peak_unlensed + Delta_T(y) (not offset
+by the same arbitrary 0.6s). |F(w,y)| is unaffected (a unit-magnitude
+phase factor), so every Case B result, every diffraction-pattern figure,
+and rms_strain_amplification (Parseval) are unchanged; only Case A's
+absolute waveform TIMING changes.
+
 
 Everything here is evaluated at LEAST TWO independent ways and cross-checked
 in tests/test_waveoptics.py — see wiki/todo.md. Three evaluators of F(w,y):
@@ -110,28 +139,26 @@ def time_delay_difference(y):
 def F_geometric_optics(w, y):
     """Leading (infinite-w) geometric-optics amplification factor.
 
-    F -> exp(i*w*phi_+) * [sqrt(mu_+) - i*sqrt(|mu_-|)*exp(i*w*DeltaT)], the
-    standard two-image stationary-phase (Morse-index) result: minimum image
-    x_+ carries phase w*phi_+(y) (its own, UN-subtracted Fermat potential --
-    `F_point_lens`/`F_radial_1d`/`F_bruteforce_2d` below do not subtract a
-    reference phase either, so this term must be kept for the comparison to
-    close), saddle image x_- carries an extra Morse phase -pi/2 (factor -i)
-    relative to it, in the e^{-i2*pi*f*t} convention fixed in
-    wiki/conventions.md. The exp(i*w*phi_+) piece was missing in an earlier
-    version of this function; restored after `F_point_lens` disagreed with
-    it in phase (not amplitude) at large w -- see wiki/log.md, and
-    tests/test_waveoptics.py::test_geometric_optics_limit for the numbers
-    (relative error ~3e-4 at w=10, ~3e-5 at w=1000, shrinking as w grows).
+    F -> sqrt(mu_+) + i*sqrt(|mu_-|)*exp(-i*w*DeltaT), the standard two-image
+    stationary-phase (Morse-index) result, REFERENCED TO THE STRONG (minimum,
+    x_+) IMAGE'S OWN ARRIVAL: its own Fermat potential phi_+(y) has been
+    subtracted (see module docstring, "REFERENCE-PHASE NORMALIZATION FIX"),
+    so it carries zero phase here by construction and the saddle image x_-
+    carries only the physical, convention-independent relative delay
+    Delta_T(y) plus its Morse phase (factor i, in the e^{-i2*pi*f*t}
+    convention fixed in wiki/conventions.md). An earlier version of this
+    function kept the un-subtracted exp(i*w*phi_+) prefactor instead
+    (matching `F_point_lens` before ITS normalization fix, so the two still
+    agreed -- see wiki/log.md for why that agreement was not, by itself,
+    evidence of correctness).
     """
     w = np.asarray(w, dtype=float)
     x_plus, x_minus = image_positions(y)
     mu_plus = magnification(x_plus)
     mu_minus = magnification(x_minus)
     dT = time_delay_difference(y)
-    phi_plus = fermat_potential(x_plus, y)
-    envelope = np.sqrt(mu_plus) - 1j * np.sqrt(np.abs(mu_minus)) * np.exp(1j * w * dT)
-    F_raw = np.exp(1j * w * phi_plus) * envelope
-    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
+    F_raw = np.sqrt(mu_plus) - 1j * np.sqrt(np.abs(mu_minus)) * np.exp(1j * w * dT)
+    return np.conjugate(F_raw)  # sign-convention + reference-phase fixes, see module docstring
 
 
 # ---------------------------------------------------------------------
@@ -145,7 +172,8 @@ def _phi2d(x1, x2, y):
 
 
 def F_bruteforce_2d(w, y, x_max=40.0, n=1200, eta=0.0):
-    """Direct 2D quadrature of F(w,y) = (w/2pi i) int d^2x exp[i w phi(x,y)].
+    """Direct 2D quadrature of F(w,y) = (w/2pi i) int d^2x exp[i w phi(x,y)],
+    referenced to the strong image (see module docstring).
 
     Regularized with an optional Gaussian convergence factor exp(-eta*x^2)
     (eta=0 -> unregularized; increase eta slightly if the raw sum does not
@@ -161,7 +189,10 @@ def F_bruteforce_2d(w, y, x_max=40.0, n=1200, eta=0.0):
     integrand = np.where(mask, np.exp(1j * phase - eta * r2), 0.0)
     integral = np.sum(integrand) * dx * dx
     F_raw = (w / (2j * np.pi)) * integral
-    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
+    x_plus, _ = image_positions(y)
+    phi_plus = fermat_potential(x_plus, y)
+    # sign-convention + reference-phase fixes, see module docstring:
+    return np.conjugate(F_raw) * np.exp(1j * w * phi_plus)
 
 
 def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints=3000):
@@ -173,8 +204,8 @@ def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints
                  exp[i w (x^2/2 - ln x)]
 
     The integral is only conditionally convergent; regularized with a small
-    positive `eta` added to the exponent's imaginary part (x^2 -> x^2*(1-i
-    eta)), i.e. w -> w(1-i*eta), the standard i-epsilon prescription
+    positive `eta` added to the exponent's imaginary part (x^2 -> x^2*(1+i
+    eta)), i.e. w -> w(1+i*eta), the standard i-epsilon prescription
     (Ulmer & Goodman 1995): the integrand acquires a factor
     exp(-eta*w*x^2/2), which is negligible once eta*w*x^2/2 > `safety`.
     That fixes an x_max = sqrt(2*safety/(eta*w)) automatically, and the
@@ -210,7 +241,10 @@ def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints
         imag_part += im
     integral = real_part + 1j * imag_part
     F_raw = -1j * w * np.exp(1j * w * y**2 / 2.0) * integral
-    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
+    x_plus, _ = image_positions(y)
+    phi_plus = fermat_potential(x_plus, y)
+    # sign-convention + reference-phase fixes, see module docstring:
+    return np.conjugate(F_raw) * np.exp(1j * w * phi_plus)
 
 
 def F_point_lens(w, y, dps=30):
@@ -224,7 +258,12 @@ def F_point_lens(w, y, dps=30):
     complex parameters is not in scipy.special). This is the fast evaluator
     the case scripts use; cross-checked against `F_radial_1d` and
     `F_bruteforce_2d` in tests/test_waveoptics.py, and against the w->0 and
-    w->infinity limits derived independently above.
+    w->infinity limits derived independently above. The closed-form
+    expression above is the literal published one (no reference phase);
+    after conjugating (sign-convention fix) an extra factor
+    exp(i*w*phi_+(y)) is applied to reference it to the strong image's own
+    arrival (reference-phase fix) -- see module docstring, both dated
+    2026-09-07.
     """
     mp.mp.dps = dps
     w = mp.mpf(w)
@@ -234,7 +273,11 @@ def F_point_lens(w, y, dps=30):
     gam = mp.gamma(1 - i * w / 2)
     hyp = mp.hyp1f1(i * w / 2, 1, i * w * y**2 / 2)
     F_raw = complex(prefac * gam * hyp)
-    return F_raw.conjugate()  # sign-convention fix, see module docstring
+    y_f = float(y)
+    x_plus, _ = image_positions(y_f)
+    phi_plus = fermat_potential(x_plus, y_f)
+    # sign-convention + reference-phase fixes, see module docstring:
+    return F_raw.conjugate() * complex(np.exp(1j * float(w) * phi_plus))
 
 
 def F_hybrid(w, y, w_geo_threshold=30.0):

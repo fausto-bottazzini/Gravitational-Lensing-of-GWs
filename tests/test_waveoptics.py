@@ -44,9 +44,10 @@ def check_low_w_limit():
 
 def check_geometric_optics_limit():
     """F_point_lens (exact) vs F_geometric_optics (independent stationary-
-    phase derivation, including the exp(i*w*phi_+) reference-phase term --
-    see wiki/log.md for the bug this caught) must agree, and the relative
-    error must SHRINK as w grows (it's an asymptotic expansion)."""
+    phase derivation) must agree, and the relative error must SHRINK as w
+    grows (it's an asymptotic expansion). Both are referenced to the strong
+    image's own arrival (see module docstring, "REFERENCE-PHASE
+    NORMALIZATION FIX")."""
     y = 1.0
     ws = [10, 50, 200, 1000]
     errs = []
@@ -124,18 +125,12 @@ def check_hybrid_matches_at_threshold():
     return ok, f"max relative error |F_point_lens-F_geometric_optics| at w=30, over y in [0.3,1,1.6,2.5] = {worst:.2e} (tol 4e-2)"
 
 
-def check_causality_of_lensed_pulse():
-    """THE check that catches the sign-convention bug documented at the top
-    of waveoptics.py -- every other check here compares two evaluators of F
-    to each other, and |F| (all any of them test) is conjugation-invariant,
-    so none of them could have caught a global sign error. This one
-    actually applies F(f) to a short test pulse via FFT/IFFT (exactly as
-    cases/case_A_chirp/run.py does) and checks the physical requirement
-    that the weaker (saddle-point) image comes out AFTER the stronger
-    (minimum) image, not before -- a genuine causality/reconstruction test,
-    not a self-consistency one."""
-    y = 1.0
-    M_L_msun = 5.0e4
+def _lensed_test_pulse(y, M_L_msun, f0, t_ref, sigma, w_evaluator, fs=4096.0, T=16.0):
+    """Shared machinery for the two causality checks below: build a short
+    Gaussian-enveloped test pulse, lens it via FFT/multiply-by-F/IFFT exactly
+    as cases/case_A_chirp/run.py does, using `w_evaluator` (a callable
+    w,y -> complex) for F at every positive frequency. Returns (t, lensed,
+    dT_seconds, mu_plus, mu_minus)."""
     x_plus, x_minus = wo.image_positions(y)
     mu_plus = abs(wo.magnification(x_plus))
     mu_minus = abs(wo.magnification(x_minus))
@@ -146,41 +141,106 @@ def check_causality_of_lensed_pulse():
     t_char = 4.0 * units.msun_to_seconds(M_L_msun)  # seconds, = 4GM/c^3
     dT_seconds = dT_dimless * t_char
 
-    fs = 4096.0
-    T = 16.0
     n = int(T * fs)
     n = 1 << (n - 1).bit_length()
     t = np.arange(n) / fs
     freqs = np.fft.rfftfreq(n, d=1.0 / fs)
 
-    f0, t_ref, sigma = 40.0, 6.0, 0.05
     pulse = np.exp(-0.5 * ((t - t_ref) / sigma) ** 2) * np.cos(2 * np.pi * f0 * (t - t_ref))
     H = np.fft.rfft(pulse)
     w_arr = wo.w_of_frequency(np.abs(freqs), M_L_msun)
     F = np.ones_like(H, dtype=complex)
     pos = freqs > 0
-    F[pos] = np.array([wo.F_hybrid(w, y) for w in w_arr[pos]])
+    F[pos] = np.array([w_evaluator(w, y) for w in w_arr[pos]])
     lensed = np.fft.irfft(H * F, n=n)
+    return t, lensed, dT_seconds, mu_plus, mu_minus
 
-    def local_max_near(center, width=0.3):
-        mask = (t > center - width) & (t < center + width)
-        idx = np.where(mask)[0]
-        j = idx[np.argmax(np.abs(lensed[idx]))]
-        return np.abs(lensed[j])
 
-    amp_after = local_max_near(t_ref + dT_seconds, 0.3)
-    amp_before = local_max_near(t_ref - dT_seconds, 0.3)
-    expected = np.sqrt(mu_minus / mu_plus)  # relative to the main image's own amplitude scale
+def _local_peak(t, lensed, center, width=0.3):
+    """(time, |amplitude|) of the largest sample of `lensed` within `width`
+    of `center`."""
+    mask = (t > center - width) & (t < center + width)
+    idx = np.where(mask)[0]
+    j = idx[np.argmax(np.abs(lensed[idx]))]
+    return t[j], np.abs(lensed[j])
 
+
+def check_causality_of_lensed_pulse():
+    """THE check that catches the sign-convention bug documented at the top
+    of waveoptics.py -- every other check here compares two evaluators of F
+    to each other, and |F| (all any of them test) is conjugation-invariant,
+    so none of them could have caught a global sign error. This one
+    actually applies F(f) to a short test pulse via FFT/IFFT (exactly as
+    cases/case_A_chirp/run.py does) and checks the physical requirement
+    that the weaker (saddle-point) image comes out AFTER the stronger
+    (minimum) image, not before -- a genuine causality/reconstruction test,
+    not a self-consistency one. Also checks the reference-phase fix
+    (2026-09-07, see wiki/log.md and the module docstring): with it, the
+    strong image sits at EXACTLY t_ref (not offset by an arbitrary
+    convention-dependent amount) and at amplitude sqrt(mu_plus) (not 1),
+    and the weak image at amplitude sqrt(mu_minus) (not sqrt(mu_minus/mu_plus)
+    -- the earlier version of this check used the wrong normalization here
+    too, see wiki/log.md). y=1.0 gives w>>30 across the whole pulse band, so
+    this exercises F_geometric_optics only -- see
+    check_causality_of_lensed_pulse_low_w below for F_point_lens."""
+    y = 1.0
+    M_L_msun = 5.0e4
+    f0, t_ref, sigma = 40.0, 6.0, 0.05
+    t, lensed, dT_seconds, mu_plus, mu_minus = _lensed_test_pulse(
+        y, M_L_msun, f0, t_ref, sigma, wo.F_hybrid)
+
+    t_strong, amp_strong = _local_peak(t, lensed, t_ref, 0.3)
+    t_after, amp_after = _local_peak(t, lensed, t_ref + dT_seconds, 0.3)
+    _, amp_before = _local_peak(t, lensed, t_ref - dT_seconds, 0.3)
+    expected_strong = np.sqrt(mu_plus)
+    expected_weak = np.sqrt(mu_minus)
+
+    strong_at_t_ref = abs(t_strong - t_ref) < 2.0 / 4096.0  # within a couple of samples
+    strong_amp_ok = abs(amp_strong - expected_strong) < 0.05 * expected_strong
     # the weak image must show up clearly AFTER, not before
-    ok = (amp_after > 0.2 * expected) and (amp_before < 0.05 * expected)
-    return ok, (f"weak-image amplitude AFTER main pulse = {amp_after:.4f} "
-                f"(expect ~{expected:.4f}), BEFORE = {amp_before:.4f} (expect ~0) "
+    weak_after_ok = (amp_after > 0.2 * expected_weak) and (amp_before < 0.05 * expected_weak)
+    ok = strong_at_t_ref and strong_amp_ok and weak_after_ok
+    return ok, (f"strong image at t_ref+{t_strong - t_ref:.4f}s, amplitude {amp_strong:.4f} "
+                f"(expect sqrt(mu_+)={expected_strong:.4f}); weak image AFTER = {amp_after:.4f} "
+                f"(expect sqrt(mu_-)={expected_weak:.4f}), BEFORE = {amp_before:.4f} (expect ~0) "
+                f"-- dT={dT_seconds:.3f}s")
+
+
+def check_causality_of_lensed_pulse_low_w():
+    """Same as check_causality_of_lensed_pulse but at low w (~6, well below
+    w_geo_threshold=30), so F_hybrid dispatches to F_point_lens -- the
+    evaluator all of Case B and the sub-threshold part of Case A actually
+    use, and which the check above never exercises (an independent review
+    found this: with y=1.0/f0=40Hz/M_L=5e4Msun, 1.6e-34 of the pulse's power
+    sits below w_geo_threshold, see wiki/log.md). A lower carrier frequency
+    keeps the same M_L but puts the whole pulse's band below threshold."""
+    y = 1.0
+    M_L_msun = 5.0e4
+    f0, t_ref, sigma = 1.0, 6.0, 0.05
+    t, lensed, dT_seconds, mu_plus, mu_minus = _lensed_test_pulse(
+        y, M_L_msun, f0, t_ref, sigma, wo.F_hybrid)
+
+    w_at_f0 = wo.w_of_frequency(f0, M_L_msun)
+    t_strong, amp_strong = _local_peak(t, lensed, t_ref, 0.3)
+    t_after, amp_after = _local_peak(t, lensed, t_ref + dT_seconds, 0.3)
+    _, amp_before = _local_peak(t, lensed, t_ref - dT_seconds, 0.3)
+    expected_strong = np.sqrt(mu_plus)
+    expected_weak = np.sqrt(mu_minus)
+
+    strong_at_t_ref = abs(t_strong - t_ref) < 2.0 / 4096.0
+    strong_amp_ok = abs(amp_strong - expected_strong) < 0.1 * expected_strong
+    weak_after_ok = (amp_after > 0.2 * expected_weak) and (amp_before < 0.05 * expected_weak)
+    ok = (w_at_f0 < 30.0) and strong_at_t_ref and strong_amp_ok and weak_after_ok
+    return ok, (f"w(f0)={w_at_f0:.2f} (<30, so F_point_lens is exercised); strong image at "
+                f"t_ref+{t_strong - t_ref:.4f}s, amplitude {amp_strong:.4f} "
+                f"(expect sqrt(mu_+)={expected_strong:.4f}); weak image AFTER = {amp_after:.4f} "
+                f"(expect sqrt(mu_-)={expected_weak:.4f}), BEFORE = {amp_before:.4f} (expect ~0) "
                 f"-- dT={dT_seconds:.3f}s")
 
 
 CHECKS = [
     ("causality_of_lensed_pulse", check_causality_of_lensed_pulse),
+    ("causality_of_lensed_pulse_low_w", check_causality_of_lensed_pulse_low_w),
     ("paczynski_magnification", check_paczynski_magnification),
     ("low_w_limit", check_low_w_limit),
     ("geometric_optics_limit", check_geometric_optics_limit),
