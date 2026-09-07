@@ -203,6 +203,28 @@ def F_point_lens(w, y, dps=30):
     return complex(prefac * gam * hyp)
 
 
+def F_hybrid(w, y, w_geo_threshold=30.0):
+    """F(w,y), fast: `F_point_lens` (exact, mpmath) below `w_geo_threshold`,
+    `F_geometric_optics` (closed-form trig/algebra, no special functions)
+    above it.
+
+    Why this is needed, not just convenient: mpmath's confluent
+    hypergeometric series for `F_point_lens` converges slowly once its
+    argument `i*w*y^2/2` gets large (many terms before the series settles),
+    which happens exactly in the regime -- large w -- where
+    `F_geometric_optics` is independently validated to agree with it to
+    <0.1% (`tests/test_waveoptics.py::check_geometric_optics_limit`, errors
+    3e-4 at w=10 falling to 3e-5 at w=1000). `w_geo_threshold=20` sits
+    comfortably inside that validated agreement. First noticed as a stall:
+    evaluating `F_point_lens` at the actual (w,y) used in Case A took ~150 s
+    for one frequency sweep; `F_hybrid` needs no mpmath calls at all there
+    (see wiki/log.md).
+    """
+    if w < w_geo_threshold:
+        return F_point_lens(w, y)
+    return complex(F_geometric_optics(w, y))
+
+
 def F_point_lens_array(w_array, y):
     """Vectorized convenience wrapper around F_point_lens for an array of w
     at fixed y (the common case: sweeping frequency at one impact parameter,

@@ -1,0 +1,84 @@
+claims:
+  - id: static_lens_regime
+    statement: >
+      The chirp from f=10 Hz to f_isco takes 15.18 s, 4.4e-5 of the 4-day
+      outer orbital period, so the lens is frozen at a single impact
+      parameter for the whole observation.
+    evidence:
+      - run.py::build_waveform
+      - tests/test_system.py::check_static_lens_regime
+    numbers: [t_end_seconds, duration_seconds]
+  - id: y_A_value
+    statement: >
+      The impact parameter at the illustrative merger phase (closest
+      projected approach during the outer orbit) is y_A=1.589.
+    evidence:
+      - run.py::main (y_A search over one outer period)
+      - src/gwlens/geometry.py::impact_parameter_of_time
+    numbers: [y_A, y_A_outer_orbit_phase_fraction, lensed_at_merger_phase]
+  - id: w_regime
+    statement: >
+      w spans 61.9 (f=10 Hz) to 777.6 (f=f_isco), both above the
+      geometric-optics threshold w=30 where F_hybrid switches evaluators
+      (agreement with the exact closed form <4% there, per
+      tests/test_waveoptics.py::check_hybrid_matches_at_threshold).
+    evidence:
+      - src/gwlens/waveoptics.py::w_of_frequency
+      - src/gwlens/waveoptics.py::F_hybrid
+      - tests/test_waveoptics.py::check_hybrid_matches_at_threshold
+      - tests/test_waveoptics.py::check_geometric_optics_limit
+    numbers: [w_at_f_start, w_at_f_isco]
+  - id: dephasing_not_simple_amplification
+    statement: >
+      Peak-sample amplification (0.487) and RMS amplification (0.960)
+      disagree because F(f) modulates phase as well as amplitude across the
+      band; the lensed waveform is a dephased copy of the unlensed one, not
+      a rescaled one.
+    evidence:
+      - run.py::main (rms/peak amplification computation)
+      - caseA_strain_time.png
+      - caseA_F_of_f.png (bottom sub-panel: arg F)
+    numbers: [peak_strain_amplification, rms_strain_amplification]
+figures:
+  - file: caseA_F_of_f.png
+    produced_by: run.py::main
+    shows: >
+      |F(f)| and arg F(f) across the whole chirp band, plus a 3 Hz zoom
+      where individual interference fringes are resolved.
+    from_scratch: >
+      Frequency array from the FFT of the generated chirp; fringe
+      identification and the zoom window choice.
+    from_library: >
+      numpy.fft for the FFT/frequency grid, matplotlib for rendering.
+    choices:
+      - "3 Hz zoom width, chosen to show ~10 resolved fringes without over-cropping."
+    supports: [w_regime]
+  - file: caseA_strain_time.png
+    produced_by: run.py::main
+    shows: Lensed vs. unlensed time-domain chirp strain.
+    from_scratch: Restricted-PN time-domain waveform generation and lensing via FFT/IFFT.
+    from_library: numpy.fft, matplotlib.
+    choices:
+      - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
+    supports: [dephasing_not_simple_amplification]
+  - file: caseA_diffraction_pattern.png
+    produced_by: run.py::main (make_ring_pattern)
+    shows: >
+      Extended |F(w,y)|^2 amplification pattern on the source plane at two
+      frequencies, full pattern and zoomed near the source.
+    from_scratch: >
+      Radial F(w,r) evaluation and its interpolation onto a 2D grid;
+      resolution chosen from the local fringe spacing 2*pi/(w*y).
+    from_library: scipy.interpolate.interp1d, matplotlib (LogNorm colour scale).
+    choices:
+      - "Radial/display grid resolution set from the fringe spacing at each w, after a first version aliased (see wiki/log.md)."
+      - "LogNorm color scale -- the central Einstein-ring spike otherwise saturates a linear scale."
+    supports: [y_A_value, w_regime]
+  - file: caseA_detector_envelope.png
+    produced_by: run.py::main
+    shows: Idealized single-detector strain envelope (Hilbert transform), lensed vs. unlensed.
+    from_scratch: Envelope comparison and the merger-time annotation.
+    from_library: scipy.signal.hilbert.
+    choices:
+      - "No noise, antenna pattern, or PSD -- explicitly an idealized/illustrative detector view, as scoped in wiki/conventions.md."
+    supports: [dephasing_not_simple_amplification]

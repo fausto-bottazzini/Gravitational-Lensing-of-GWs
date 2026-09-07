@@ -106,6 +106,24 @@ def check_einstein_ring_regularization():
     return ok, f"geometric mu(y->0) = {mu_blowup:.2e} (diverges, as expected); |F(w,0)| for w=1,5,20 -> {['%.3f'%v for v in F0]} (stays finite)"
 
 
+def check_hybrid_matches_at_threshold():
+    """At w=w_geo_threshold exactly, F_point_lens (exact) and
+    F_geometric_optics (what F_hybrid switches to just above threshold)
+    must already agree well, at the y values Case A/B actually use --
+    isolates the approximation error at the switch point, rather than
+    conflating it with real F(w) variation between two different w (an
+    earlier version of this check compared w=19.9 to w=20.1 and mixed the
+    two effects together)."""
+    w = 30.0
+    worst = 0.0
+    for y in [0.3, 1.0, 1.6, 2.5]:
+        exact = wo.F_point_lens(w, y)
+        geo_approx = wo.F_geometric_optics(w, y)
+        worst = max(worst, abs(exact - geo_approx) / abs(exact))
+    ok = worst < 0.04
+    return ok, f"max relative error |F_point_lens-F_geometric_optics| at w=30, over y in [0.3,1,1.6,2.5] = {worst:.2e} (tol 4e-2)"
+
+
 CHECKS = [
     ("paczynski_magnification", check_paczynski_magnification),
     ("low_w_limit", check_low_w_limit),
@@ -113,6 +131,7 @@ CHECKS = [
     ("radial_1d_converges_to_closed_form", check_radial_1d_converges_to_closed_form),
     ("bruteforce_2d_agrees", check_bruteforce_2d_agrees),
     ("einstein_ring_regularization", check_einstein_ring_regularization),
+    ("hybrid_matches_at_threshold", check_hybrid_matches_at_threshold),
 ]
 
 

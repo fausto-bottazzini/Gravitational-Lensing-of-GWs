@@ -84,16 +84,36 @@ def phase_of_time(t, f_func, t0, t1, n=200_000):
     return tt, phase
 
 
-def restricted_pn_amplitude(f_hz, mchirp_msun, d_eff_mpc):
+def restricted_pn_amplitude_fd(f_hz, mchirp_msun, d_eff_mpc):
     """Restricted (leading-order, quadrupole) PN amplitude prefactor, the
-    standard textbook stationary-phase-approximation scaling
-    |h(f)| ~ A0 f^{-7/6}, A0 = sqrt(5/24)/pi^{2/3} * (G Mchirp/c^3)^{5/6} *
-    c / (D_eff), so that the plotted time- and frequency-domain amplitudes
-    have the right *relative* scaling; the absolute normalization is not the
-    point of this project (no calibration against a detector's absolute
-    strain units is claimed) and is logged as a choice in wiki/log.md.
+    standard textbook stationary-phase-approximation (SPA) scaling of the
+    FREQUENCY-DOMAIN Fourier transform, |h(f)| ~ A0 f^{-7/6}. NOT the
+    time-domain envelope (that INCREASES toward merger, see
+    `restricted_pn_amplitude_td` below) -- kept only for reference/any
+    future frequency-domain figure; the case scripts use the td version.
     """
     Mc_sec = units.msun_to_seconds(mchirp_msun)
     D_sec = d_eff_mpc * units.MPC_SI / units.C_SI  # Mpc -> light-seconds
     A0 = np.sqrt(5.0 / 24.0) / np.pi ** (2.0 / 3.0) * Mc_sec ** (5.0 / 6.0) / D_sec
     return A0 * np.asarray(f_hz, dtype=float) ** (-7.0 / 6.0)
+
+
+def restricted_pn_amplitude_td(f_hz, mchirp_msun, d_eff_mpc):
+    """Restricted (leading-order, quadrupole) TIME-DOMAIN strain envelope:
+
+        h(t) = (4/D_eff) * (G*Mchirp/c^2)^(5/3) * (pi*f_gw(t)/c)^(2/3)
+
+    (e.g. Maggiore, "Gravitational Waves" Vol. 1, restricted-PN (2,2) mode;
+    O(1) inclination/polarization prefactors folded into the leading 4, not
+    separately calibrated -- logged as a choice in wiki/log.md, along with
+    everywhere else this project does not claim an absolutely calibrated
+    strain). Grows with f, as a real inspiral's amplitude must -- an earlier
+    version of the case script used `restricted_pn_amplitude_fd` (the
+    frequency-domain, DEcreasing f^-7/6 scaling) as if it were the
+    time-domain envelope; caught by eye (the plotted chirp's amplitude was
+    shrinking toward merger instead of growing) -- see wiki/log.md.
+    """
+    Mc_sec = units.msun_to_seconds(mchirp_msun)
+    R_c_m = Mc_sec * units.C_SI  # G*Mchirp/c^2, metres
+    D_eff_m = d_eff_mpc * units.MPC_SI
+    return (4.0 / D_eff_m) * R_c_m ** (5.0 / 3.0) * (np.pi * np.asarray(f_hz, dtype=float) / units.C_SI) ** (2.0 / 3.0)

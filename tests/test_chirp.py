@@ -64,8 +64,21 @@ def check_chirp_mass_symmetry():
     return ok, f"Mc(20,40)={a:.6f}=Mc(40,20)={b:.6f}; Mc/Mtot at equal mass={eq_mass_ratio:.6f} vs 2^-6/5={expected:.6f}"
 
 
+def check_td_amplitude_increases_with_frequency():
+    """The TIME-DOMAIN restricted-PN amplitude must INCREASE with f (a real
+    inspiral gets louder approaching merger) -- catches exactly the bug an
+    earlier version of cases/case_A_chirp/run.py had, using the
+    frequency-domain f^-7/6 SPA scaling as if it were the time-domain
+    envelope (which f^-7/6 makes DEcrease); see wiki/log.md."""
+    f = np.array([10.0, 50.0, 125.0])
+    a = chirp.restricted_pn_amplitude_td(f, 15.0, 5.0e-3)
+    ok = a[0] < a[1] < a[2]
+    return ok, f"amplitude_td at f=10,50,125 Hz -> {a} (must be increasing)"
+
+
 CHECKS = [
     ("freq_of_time_matches_f0", check_freq_of_time_matches_f0),
+    ("td_amplitude_increases_with_frequency", check_td_amplitude_increases_with_frequency),
     ("closed_form_matches_numeric_ode", check_closed_form_matches_numeric_ode),
     ("isco_frequency_reasonable", check_isco_frequency_reasonable),
     ("chirp_mass_symmetry", check_chirp_mass_symmetry),

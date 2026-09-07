@@ -3,6 +3,10 @@
     "passed": true,
     "message": "f(t=0)=20.000000 Hz vs input f0=20.0 Hz, relerr=3.55e-16"
   },
+  "td_amplitude_increases_with_frequency": {
+    "passed": true,
+    "message": "amplitude_td at f=10,50,125 Hz -> [1.00668756e-17 2.94357227e-17 5.42210648e-17] (must be increasing)"
+  },
   "closed_form_matches_numeric_ode": {
     "passed": true,
     "message": "max relative error closed-form vs solve_ivp = 6.13e-09 (tol 1e-6)"
