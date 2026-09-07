@@ -50,13 +50,35 @@ examples:
 
 ## Fourier convention
 
-`h(f) = ∫ h(t) e^{-2*pi*i*f*t} dt`, `h(t) = ∫ h(f) e^{+2*pi*i*f*t} df`.
-This sign convention is the one that makes the stationary-phase/geometric-optics
-limit of `F(f)` come out as a **time delay** `+i*2*pi*f*Delta_t` in the exponent
-(a later-arriving image gets a `+` phase), matching Takahashi & Nakamura (2003).
-Any formula copied from a paper using the opposite convention must have its `i`
-sign flipped before it lands in this repo — checked case by case in
-`wiki/log.md`.
+`h(f) = ∫ h(t) e^{-2*pi*i*f*t} dt`, `h(t) = ∫ h(f) e^{+2*pi*i*f*t} df` — same
+sign as `numpy.fft.rfft`/`irfft`, which is why the case scripts can multiply
+by `F(f)` and inverse-FFT directly with no extra bookkeeping.
+
+**A later-arriving image gets a `-i*2*pi*f*Delta_t` phase in THIS
+convention** (the standard Fourier delay theorem: `h(t-Delta_t)` has
+transform `e^{-2*pi*i*f*Delta_t} H(f)` when the forward transform carries
+`e^{-2*pi*i*f*t}`) — **not** `+i*2*pi*f*Delta_t` as an earlier version of
+this page claimed. That claim was wrong and, because everything in
+`waveoptics.py` was derived (or cited from the literature) consistently
+under it, every evaluator of `F(w,y)` had the identical sign error for
+most of this project's development: `theory.tex` Eq. 2.5's own integral,
+as literally written, and the closed form quoted from Takahashi & Nakamura
+(2003) both carry the *opposite* convention from this one. Caught by an
+independent review's causality test (a weak/saddle-point image came out
+*before* the strong one when a test pulse was lensed and inverse-FFT'd),
+confirmed independently, and fixed by having every public function in
+`waveoptics.py` return the complex conjugate of the integral as originally
+written — see that file's module docstring and `wiki/log.md` for the full
+account. `|F(w,y)|` is unaffected (conjugation-invariant), so this bug
+never showed up in any magnitude-only check or figure; only the
+phase-sensitive time-domain reconstruction in Case A was wrong.
+
+Any formula copied from a paper must have its overall phase checked against
+THIS convention (delay -> `-i`), not assumed — a literature formula derived
+under the opposite convention needs its `i` sign flipped before it lands in
+this repo, and that check needs to be an actual causality/reconstruction
+test (see `tests/test_waveoptics.py::check_causality_of_lensed_pulse`), not
+just agreement between two evaluators of the same (possibly wrong) sign.
 
 ## Lensing / wave-optics notation
 

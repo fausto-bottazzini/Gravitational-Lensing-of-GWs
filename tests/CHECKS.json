@@ -1,4 +1,8 @@
 {
+  "causality_of_lensed_pulse": {
+    "passed": true,
+    "message": "weak-image amplitude AFTER main pulse = 0.4101 (expect ~0.3820), BEFORE = 0.0000 (expect ~0) -- dT=2.049s"
+  },
   "paczynski_magnification": {
     "passed": true,
     "message": "max relative error vs Paczynski(1986) = 2.13e-15 (tol 1e-10)"

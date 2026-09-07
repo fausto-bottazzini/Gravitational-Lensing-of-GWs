@@ -152,9 +152,24 @@ fondo curvo (p.\ ej.\ \citealp{Isaacson1968}). El r\'egimen de alta
 frecuencia (eikonal) relevante ac\'a queda fijado al comparar la longitud
 de onda de la GW $\lambda_{GW}$ con la escala de longitud de curvatura del
 fondo $\mathcal{R}$: el tratamiento de rayos/lente delgado de abajo es
-v\'alido cuando $\lambda_{GW}\ll\mathcal{R}$. Para un lente puntual
-$\mathcal{R}\sim R_E$ (el radio de Einstein), y el t\'ermino de acoplamiento
-a la curvatura en la Ec.~\eqref{eq:linearized} es entonces subdominante
+v\'alido cuando $\lambda_{GW}\ll\mathcal{R}$.
+
+$\mathcal{R}$ es una escala de curvatura del propio campo del lente
+(t\'ipicamente $\sim\sqrt{b^3/GM_L}$ a par\'ametro de impacto f\'isico $b$)
+--- \textbf{no} el radio de Einstein $R_E$: son cantidades distintas,
+$\mathcal{R}$ local al campo del lente, $R_E$ una escala geom\'etrica de
+proyecci\'on que depende adem\'as de $D_L,D_S,D_{LS}$. Identificarlas sin
+m\'as, $\mathcal{R}\sim R_E$, es s\'olo una estimaci\'on de orden de
+magnitud, y da la impresi\'on equivocada de que el Caso~B --- que opera en
+$w_B=O(1)$, es decir $\lambda_{GW}\sim R_E$ por definici\'on de $w$ ---
+violar\'ia la condici\'on. En campo d\'ebil, con $b\gg R_{\rm Sch}(M_L)$,
+$\mathcal{R}\sim\sqrt{b^3/GM_L}=b\sqrt{b/R_{\rm Sch}}\gg b\gtrsim R_E$: la
+condici\'on sigue cumpli\'endose c\'omodamente incluso en el Caso~B, por el
+mismo tipo de raz\'on de escalas grande ya cuantificado en
+\S\ref{sec:paraxial} y el Cap\'itulo~\ref{ch:beyond} (no tabulada aparte
+ac\'a). Con esa identificaci\'on entendida como una estimaci\'on, no una
+igualdad, el t\'ermino de acoplamiento
+a la curvatura en la Ec.~\eqref{eq:linearized} es subdominante
 frente a $\bar\Box h_{\mu\nu}$ por un factor $\sim(\lambda_{GW}/\mathcal{R})^2$
 (\citealp{Peters1974}; \citealp{Takahashi2003}, \S2). Al descartarlo, cada
 amplitud de polarizaci\'on independiente $h_{\mu\nu}=e_{\mu\nu}\,\Phi$
@@ -233,8 +248,8 @@ definiendo el potencial de deflexi\'on adimensional $\psi(\vb x)$ v\'ia
 $t_d = (1+z_L)\dfrac{D_S}{D_L D_{LS}}\left[\tfrac12|\vb x-\vb
 y|^2-\psi(\vb x)\right]$, la Ec.~\eqref{eq:Fdim} se convierte en
 \begin{equation}
-  F(w,\vb y) \;=\; \frac{w}{2\pi i}\int d^2\vb x\;
-  \exp\!\Big[\,i\,w\,\varphi(\vb x,\vb y)\,\Big],
+  F(w,\vb y) \;=\; \overline{\frac{w}{2\pi i}\int d^2\vb x\;
+  \exp\!\Big[\,i\,w\,\varphi(\vb x,\vb y)\,\Big]},
   \qquad
   \varphi(\vb x,\vb y)\equiv \tfrac12|\vb x-\vb y|^2-\psi(\vb x),
   \label{eq:Fdimless}
@@ -244,10 +259,43 @@ donde la frecuencia adimensional es
   w \;\equiv\; 8\pi\,\frac{GM_L}{c^3}\,f
   \label{eq:wdef}
 \end{equation}
-(el factor $(1+z_L)$ es $1$ ac\'a, seg\'un el Cap\'itulo~1). Esto es
-exactamente la funci\'on \code{F\_bruteforce\_2d} en \code{waveoptics.py}:
-todav\'ia no se us\'o ninguna forma cerrada, s\'olo la
-Ec.~\eqref{eq:helmholtz} y la reducci\'on de lente delgado/paraxial.
+(el factor $(1+z_L)$ es $1$ ac\'a, seg\'un el Cap\'itulo~1), y la barra
+superior denota conjugaci\'on compleja. Esto es exactamente la funci\'on
+\code{F\_bruteforce\_2d} en \code{waveoptics.py} (que calcula la integral
+sin la barra y devuelve su conjugado como \'ultimo paso): todav\'ia no se
+us\'o ninguna forma cerrada, s\'olo la Ec.~\eqref{eq:helmholtz} y la
+reducci\'on de lente delgado/paraxial.
+
+\begin{checkbox}[title={La conjugaci\'on, y el error de signo que revel\'o}]
+La integral de Fresnel-Kirchhoff, tal cual se deriva de la
+Ec.~\eqref{eq:helmholtz} (sin la barra de conjugaci\'on), es la forma que
+aparece en la literatura de lensing citada ac\'a (\citealp{Takahashi2003} y
+las referencias que la preceden) --- pero esa literatura, casi siempre, usa
+la convenci\'on de Fourier \emph{opuesta} a la de este proyecto
+(\code{wiki/conventions.md}: $h(f)=\int h(t)e^{-2\pi ift}dt$, la misma que
+\code{numpy.fft.rfft}). Una versi\'on anterior de este cap\'itulo, y de
+\code{waveoptics.py} completo (\code{F\_bruteforce\_2d}, \code{F\_radial\_1d},
+\code{F\_point\_lens}, \code{F\_geometric\_optics}), usaba la integral SIN
+conjugar, consistentemente en todos lados --- por eso los cuatro evaluadores
+segu\'ian de acuerdo entre s\'i (todos los chequeos de este cap\'itulo, que
+s\'olo comparan evaluadores entre ellos, segu\'ian pasando) mientras el
+signo global estaba mal. El error se detect\'o con una revisi\'on
+independiente: lenteando un pulso de prueba corto v\'ia FFT/IFFT (igual que
+\code{cases/case\_A\_chirp/run.py}) y notando que la imagen d\'ebil (punto
+silla) aparec\'ia \emph{antes} que la imagen fuerte en vez de despu\'es ---
+inv\'irtiendo la causalidad, ya que $\Delta T>0$ en la
+Ec.~\eqref{eq:images} de m\'as abajo significa, por definici\'on, que esa
+imagen llega \emph{m\'as tarde}. Confirmado de forma independiente
+(\code{tests/test\_waveoptics.py::check\_causality\_of\_lensed\_pulse}) y
+corregido conjugando el resultado final de las cuatro funciones. Como
+$|F(w,\vb y)|$ no cambia al conjugar, \textbf{ning\'un} chequeo o figura de
+s\'olo magnitud de este proyecto se vio afectado (todos los patrones de
+difracci\'on, las franjas de $|F(f)|$, todos los resultados del Caso~B);
+s\'olo la reconstrucci\'on de la forma de onda lensada en el tiempo, en el
+Caso~A, dependía del signo, y camb\'io. V\'ease \code{wiki/log.md} para el
+relato completo, incluyendo el n\'umero exacto que cambi\'o
+(\code{peak\_strain\_amplification} pas\'o de $0.962$ a $1.091$).
+\end{checkbox}
 
 \begin{checkbox}[title={Chequeo: $w\to0$}]
 F\'isicamente, una onda mucho m\'as larga que la escala de efecto del lente
@@ -317,33 +365,49 @@ el retraso de la imagen (siempre de paridad positiva, ``m\'inimo'') $x_+$
 relativo a s\'i misma es trivialmente cero, mientras que la imagen de
 punto silla $x_-$ llega m\'as tarde por
 $\Delta T(y)\equiv\varphi(x_-,y)-\varphi(x_+,y)>0$. Evaluar la
-Ec.~\eqref{eq:Fdimless} por fase estacionaria (v\'alido cuando
-$w\to\infty$) suma las dos im\'agenes con fases de \'indice de Morse
-(m\'inimo: $0$; punto silla: $-\pi/2$, es decir, un factor global de $-i$,
-en la convenci\'on $h(f)=\int h(t)e^{-i2\pi ft}dt$ fijada en
-\code{wiki/conventions.md}) \emph{y} la fase propia, sin sustraer, de cada
-imagen $w\,\varphi(x_+,y)$:
+Ec.~\eqref{eq:Fdimless} (con su barra de conjugaci\'on) por fase
+estacionaria (v\'alido cuando $w\to\infty$) suma las dos im\'agenes con
+fases de \'indice de Morse (m\'inimo: $0$; punto silla: $+\pi/2$, es decir,
+un factor global de $+i$, en la convenci\'on $h(f)=\int h(t)e^{-i2\pi
+ft}dt$ fijada en \code{wiki/conventions.md} --- una imagen que llega
+\emph{despu\'es}, con $\Delta T>0$, debe llevar fase $e^{-iw\Delta T}$ ah\'i,
+por el teorema de retraso de Fourier est\'andar) \emph{y} la fase propia,
+sin sustraer, de cada imagen $-w\,\varphi(x_+,y)$:
 \begin{equation}
   F_{\rm geo}(w,y) \;=\;
-  e^{\,iw\varphi(x_+,y)}\left[\sqrt{\mu(x_+)} \;-\; i\sqrt{|\mu(x_-)|}\,
-  e^{\,iw\Delta T(y)}\right].
+  e^{\,-iw\varphi(x_+,y)}\left[\sqrt{\mu(x_+)} \;+\; i\sqrt{|\mu(x_-)|}\,
+  e^{\,-iw\Delta T(y)}\right].
   \label{eq:Fgeo}
 \end{equation}
 
-\begin{checkbox}[title={Un error, y c\'omo se detect\'o}]
-Una versi\'on anterior de la Ec.~\eqref{eq:Fgeo} omit\'ia el factor
-$e^{iw\varphi(x_+,y)}$ inicial (asumiendo impl\'icitamente una
-sustracci\'on de fase de referencia que la Ec.~\eqref{eq:Fdimless} no
-hace). Esto daba el $|F|$ correcto pero la fase equivocada comparada con la
-forma cerrada exacta (\S\ref{sec:closedform}) a $w$ grande. El error se
-diagnostic\'o comparando ambas directamente y reconociendo que la fase
-residual escalaba linealmente con $w$ a la tasa $\varphi(x_+,y)$ --- y se
-corrigi\'o restaurando el factor faltante. Despu\'es de la correcci\'on,
-\code{tests/test\_waveoptics.py::check\_geometric\_optics\_limit} encuentra
-un acuerdo relativo de $3\times10^{-4}$ en $w=10$, que baja a
-$3\times10^{-5}$ en $w=1000$, el comportamiento esperado de una expansi\'on
-asint\'otica ($w\to\infty$). V\'ease \code{wiki/log.md} para el relato
-completo.
+\begin{checkbox}[title={Dos errores de signo, uno menor y uno serio}]
+\textbf{El menor}, encontrado primero: una versi\'on anterior de la
+Ec.~\eqref{eq:Fgeo} omit\'ia el factor de fase propia del t\'ermino
+inicial (asumiendo impl\'icitamente una sustracci\'on de fase de
+referencia que la Ec.~\eqref{eq:Fdimless} no hace). Esto daba el $|F|$
+correcto pero la fase equivocada comparada con la forma cerrada exacta
+(\S\ref{sec:closedform}) a $w$ grande; diagnosticado comparando ambas
+directamente y reconociendo que la fase residual escalaba linealmente con
+$w$ a la tasa $\varphi(x_+,y)$, y corregido restaurando el factor.
+
+\textbf{El serio}, encontrado despu\'es, por una revisi\'on independiente:
+la Ec.~\eqref{eq:Fgeo} completa (junto con la Ec.~\eqref{eq:Fdimless} y
+todo lo derivado de ella) ten\'ia el signo global equivocado, heredado de
+una afirmaci\'on incorrecta en una versi\'on anterior de
+\code{wiki/conventions.md} sobre qu\'e signo le corresponde a una imagen
+retrasada en esta convenci\'on de Fourier. Ambos errores son invisibles a
+$|F|$ (el primero cambia s\'olo la fase relativa entre t\'erminos, el
+segundo conjuga todo por igual), as\'i que ninguno de los chequeos de
+magnitud de este cap\'itulo los detect\'o nunca --- s\'olo una
+reconstrucci\'on de forma de onda en el tiempo, sensible a la fase, pod\'ia
+hacerlo (\code{tests/test\_waveoptics.py::
+check\_causality\_of\_lensed\_pulse}, agregado reci\'en cuando se
+encontr\'o el segundo error). V\'ease el chequeo de conjugaci\'on m\'as
+arriba y \code{wiki/log.md} para el relato completo. Despu\'es de ambas
+correcciones, \code{tests/test\_waveoptics.py::
+check\_geometric\_optics\_limit} encuentra un acuerdo relativo de
+$3\times10^{-4}$ en $w=10$, que baja a $3\times10^{-5}$ en $w=1000$, el
+comportamiento esperado de una expansi\'on asint\'otica ($w\to\infty$).
 \end{checkbox}
 
 \section{El resultado exacto: una funci\'on hipergeom\'etrica confluente}
@@ -352,20 +416,27 @@ completo.
 Resolver la Ec.~\eqref{eq:Fdimless} para el lente de masa puntual de manera
 exacta (originalmente \citealp{Peters1974}; \citealp{Deguchi1986}; la forma
 est\'andar citada en la literatura de lensing de GWs es
-\citealp{Takahashi2003}) da
+\citealp{Takahashi2003}, en \emph{su} convenci\'on de Fourier, la opuesta a
+la de este proyecto) da, ya conjugada a la convenci\'on de
+\code{wiki/conventions.md} (Ec.~\eqref{eq:Fdimless}):
 \begin{equation}
   F(w,y) \;=\;
-  \exp\!\left[\frac{\pi w}{4} + i\frac{w}{2}\ln\frac{w}{2}\right]
-  \Gamma\!\left(1-\frac{iw}{2}\right)
-  {}_1F_1\!\left(\frac{iw}{2},\,1;\,\frac{iwy^2}{2}\right).
+  \exp\!\left[\frac{\pi w}{4} - i\frac{w}{2}\ln\frac{w}{2}\right]
+  \Gamma\!\left(1+\frac{iw}{2}\right)
+  {}_1F_1\!\left(-\frac{iw}{2},\,1;\,-\frac{iwy^2}{2}\right).
   \label{eq:Fclosed}
 \end{equation}
 Esto es \code{src/gwlens/waveoptics.py::F\_point\_lens}, evaluada con
 aritm\'etica compleja de precisi\'on arbitraria (\code{mpmath}, ya que
-\code{scipy.special.hyp1f1} no acepta par\'ametros complejos). En vez de
-confiar en la Ec.~\eqref{eq:Fclosed} s\'olo por la cita, se la chequea
+\code{scipy.special.hyp1f1} no acepta par\'ametros complejos) y conjugada
+como \'ultimo paso (\code{Gamma} y \code{hyp1f1} tienen coeficientes de
+Taylor reales, as\'i que conjugar el resultado final equivale a conjugar
+cada argumento, que es como qued\'o escrita la Ec.~\eqref{eq:Fclosed}
+arriba). En vez de confiar en ella s\'olo por la cita, se la chequea
 contra dos evaluaciones num\'ericas derivadas de manera independiente de la
-propia Ec.~\eqref{eq:Fdimless}.
+propia Ec.~\eqref{eq:Fdimless} --- y, m\'as importante, contra el chequeo de
+causalidad de la p\'agina anterior, que ninguna comparaci\'on entre
+evaluadores de $F$ pod\'ia hacer por s\'i sola.
 
 \subsection*{Chequeo independiente 1: la integral 1D reducida con Bessel}
 Escribiendo $|\vb x-\vb y|^2=x^2+y^2-2xy\cos\theta$ en coordenadas polares
@@ -661,13 +732,16 @@ esferoidales con peso de esp\'in).
   mitad ``de adelante'' de la \'orbita externa (\S\ref{sec:paraxial}): ah\'i
   se estim\'o que la fracci\'on de \'angulo s\'olido de la radiaci\'on de la
   fuente que pasa lo bastante cerca del lente como para retrodispersarse es
-  despreciable, comparando $a_\mathrm{out}$ con $R_{\rm Sch}(M_L)$
-  (raz\'on $\sim1800$). El coeficiente de reflexi\'on exacto de la
-  Ec.~\eqref{eq:reggewheeler} dar\'ia un n\'umero real para esa fracci\'on
-  en vez de una estimaci\'on geom\'etrica de \'angulo s\'olido, pero no se
-  espera que cambie la conclusi\'on: la barrera de potencial s\'olo importa
-  para par\'ametros de impacto de pocos $R_{\rm Sch}$, muy por debajo de
-  cualquier trayectoria relevante en este sistema.
+  despreciable, usando el mismo cociente ya tabulado en la
+  Tabla~\ref{tab:paraxial}, $D_{LS}/(2R_{\rm Sch})\sim919$ en el punto de
+  lensing m\'as profundo (un par\'ametro de impacto t\'ipico de la
+  \'orbita, en unidades del radio de Schwarzschild): la barrera de
+  potencial de la Ec.~\eqref{eq:reggewheeler} s\'olo importa para
+  par\'ametros de impacto de pocos $R_{\rm Sch}$, casi tres \'ordenes de
+  magnitud por debajo de eso. El coeficiente de reflexi\'on exacto de esa
+  ecuaci\'on dar\'ia un n\'umero real para la fracci\'on retrodispersada en
+  vez de esta estimaci\'on geom\'etrica de raz\'on de escalas, pero no se
+  espera que cambie la conclusi\'on cualitativa.
   \item \textbf{Factores de graybody / absorci\'on parcial}, si el lente
   tiene un horizonte de eventos --- ausentes por completo de la integral
   de difracci\'on de este proyecto, que conserva el flujo total de manera

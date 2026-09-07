@@ -4,6 +4,36 @@ Notation follows wiki/conventions.md (dimensionless lens-plane position x,
 dimensionless source position/impact parameter y, dimensionless frequency
 w = 8 pi G M_L f / c^3). Full derivation: theory/theory.tex.
 
+*** SIGN-CONVENTION FIX (2026-09-07, see wiki/log.md) ***
+Every F(w,y) below is the COMPLEX CONJUGATE of the literal Fresnel integral
+F_raw(w,y) = (w/2*pi*i) * int d^2x exp(i*w*phi(x,y)) (theory.tex Eq. 2.5) --
+each function computes F_raw internally (unchanged from the original
+derivation) and returns its conjugate. This was found to be necessary by an
+independent review's causality test, confirmed here independently: with
+F_raw applied directly (i.e. WITHOUT this conjugation) as
+h_lensed(f)=F_raw(f,y)*h_unlensed(f) and inverse-transformed with
+numpy.fft.irfft (which implements THIS project's own declared convention,
+wiki/conventions.md: h(t)=int h(f) e^{+2pi i f t} df), a short test pulse's
+weak (saddle-point) image comes out BEFORE the strong (minimum) image --
+acausal. Conjugating fixes it: re-running the same test, the weak image
+lands AFTER the strong one, at the correct delay Delta_t, with the correct
+amplitude ratio sqrt(|mu_-/mu_+|). The root cause: wiki/conventions.md
+asserted "a later-arriving image gets a +i*w*Delta_t phase" in the
+h(f)=int h(t) e^{-2*pi*i*f*t} dt convention -- that assertion is simply
+wrong (the standard Fourier delay theorem gives e^{-i*2*pi*f*Delta_t} for a
+delay of Delta_t>0 in THAT convention, not e^{+i*2*pi*f*Delta_t}), and
+every formula below (all independently re-derived or cited under that one
+wrong premise) inherited the same overall sign error, consistently, which
+is exactly why they kept passing their OWN cross-checks against each other
+without it ever showing up: |F| is conjugation-invariant, so every
+magnitude-only check (Paczynski magnification, the w->0 and w->infinity
+limits, the three-evaluator F(w,y) agreement, every Case B pulse-height and
+Case A fringe-amplitude plot) already gave the same answer either way.
+Only phase-sensitive, time-domain reconstruction (Case A's lensed
+waveform/peak amplification, and the new causality regression test below)
+could catch this, and none of the original tests did.
+
+
 Everything here is evaluated at LEAST TWO independent ways and cross-checked
 in tests/test_waveoptics.py — see wiki/todo.md. Three evaluators of F(w,y):
 
@@ -100,7 +130,8 @@ def F_geometric_optics(w, y):
     dT = time_delay_difference(y)
     phi_plus = fermat_potential(x_plus, y)
     envelope = np.sqrt(mu_plus) - 1j * np.sqrt(np.abs(mu_minus)) * np.exp(1j * w * dT)
-    return np.exp(1j * w * phi_plus) * envelope
+    F_raw = np.exp(1j * w * phi_plus) * envelope
+    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
 
 
 # ---------------------------------------------------------------------
@@ -129,7 +160,8 @@ def F_bruteforce_2d(w, y, x_max=40.0, n=1200, eta=0.0):
     phase = w * _phi2d(x1, x2, y)
     integrand = np.where(mask, np.exp(1j * phase - eta * r2), 0.0)
     integral = np.sum(integrand) * dx * dx
-    return (w / (2j * np.pi)) * integral
+    F_raw = (w / (2j * np.pi)) * integral
+    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
 
 
 def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints=3000):
@@ -177,7 +209,8 @@ def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints
         real_part += re
         imag_part += im
     integral = real_part + 1j * imag_part
-    return -1j * w * np.exp(1j * w * y**2 / 2.0) * integral
+    F_raw = -1j * w * np.exp(1j * w * y**2 / 2.0) * integral
+    return np.conjugate(F_raw)  # sign-convention fix, see module docstring
 
 
 def F_point_lens(w, y, dps=30):
@@ -200,7 +233,8 @@ def F_point_lens(w, y, dps=30):
     prefac = mp.e ** (mp.pi * w / 4 + i * (w / 2) * mp.log(w / 2))
     gam = mp.gamma(1 - i * w / 2)
     hyp = mp.hyp1f1(i * w / 2, 1, i * w * y**2 / 2)
-    return complex(prefac * gam * hyp)
+    F_raw = complex(prefac * gam * hyp)
+    return F_raw.conjugate()  # sign-convention fix, see module docstring
 
 
 def F_hybrid(w, y, w_geo_threshold=30.0):
