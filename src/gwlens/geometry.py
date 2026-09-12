@@ -16,17 +16,25 @@ from . import units
 def solve_kepler_equation(M_anom, e, tol=1e-13, max_iter=100):
     """Eccentric anomaly E from mean anomaly M via Newton-Raphson on
     M = E - e sin E (standard; e.g. Murray & Dermott, "Solar System
-    Dynamics" Sec. 2.4). Vectorized over M_anom."""
+    Dynamics" Sec. 2.4). Vectorized over M_anom.
+
+    Raises RuntimeError if it has not converged after `max_iter`, rather
+    than returning the last iterate: a silently unconverged E is a wrong
+    orbit that every downstream quantity would inherit without a symptom.
+    `doppler.emission_time` refuses the same way for the same reason."""
     M_anom = np.atleast_1d(np.asarray(M_anom, dtype=float))
     E = M_anom.copy() if e < 0.8 else np.full_like(M_anom, np.pi)
+    dE = np.full_like(E, np.inf)  # so max_iter=0 still reports, not NameErrors
     for _ in range(max_iter):
         f = E - e * np.sin(E) - M_anom
         fp = 1.0 - e * np.cos(E)
         dE = -f / fp
         E += dE
         if np.max(np.abs(dE)) < tol:
-            break
-    return E
+            return E
+    raise RuntimeError(
+        f"solve_kepler_equation did not converge for e={e}: max |dE| = "
+        f"{np.max(np.abs(dE)):.3e} after {max_iter} iterations (tol={tol})")
 
 
 def true_anomaly(E, e):

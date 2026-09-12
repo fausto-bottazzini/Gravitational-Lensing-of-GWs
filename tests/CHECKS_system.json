@@ -1,7 +1,7 @@
 {
   "hierarchy": {
     "passed": true,
-    "message": "Mardling-Aarseth stability: 93x the critical a_out/a_in=51.20 at the tighter epoch; inner binary 292x inside its Hill radius about the lens; a_in/a_out = 2.11e-04 (point source). Requires 10x margin on the first two, <1e-3 on the third."
+    "message": "Mardling-Aarseth stability: 93x the critical a_out/a_in=51.20 at the tighter epoch; inner binary 292x inside its Hill radius about the lens; point source, geometric a_in/a_out = 2.11e-04 and wave-optics a_in/eta_0 = 6.40e-03 at conjunction (eta_0 = 8.954e+09 m), the latter 30x tighter and the one that governs. Requires 10x margin on the first two, <1e-3 and <1e-2 on the last two."
   },
   "outer_orbit_is_static_over_the_observation": {
     "passed": true,
@@ -18,5 +18,9 @@
   "wave_optics_regime_nontrivial": {
     "passed": true,
     "message": "w_B=0.309 (require <1, diffractive); Case A band w=61.9 to 777.6 (require >30 throughout, geometric optics)"
+  },
+  "adiabatic_approximation_where_it_is_applied": {
+    "passed": true,
+    "message": "t_resp = 4GM_L/c^3 = 0.985 s; where |F|>1.01, min |dln y/dt|^-1 / t_resp = 5845x at 8e3 samples and 5844x at 2e4 (require >100x, and agreement to 5% between the two so the number is the system's and not the grid's)"
   }
 }

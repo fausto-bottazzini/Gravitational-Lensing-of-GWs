@@ -21,7 +21,7 @@
   },
   "radial_1d_converges_to_closed_form": {
     "passed": true,
-    "message": "eta=[0.02, 0.01, 0.005] -> relerr=['2.57e-02', '1.29e-02', '6.49e-03'], error ratios=['1.98', '1.99'] (expect ~2, O(eta))"
+    "message": "(w=1.00, y=1.000) eta=[0.02, 0.01, 0.005] -> relerr=['2.6e-02', '1.3e-02', '6.5e-03'], ratios=['1.98', '1.99'] (expect ['2.0', '2.0'], linear in eta); (w=25.00, y=1.589) eta=[0.001, 0.00025] -> relerr=['6.1e-02', '1.6e-02'], ratios=['3.92'] (expect ['4.0'], linear in eta)"
   },
   "bruteforce_2d_agrees": {
     "passed": true,

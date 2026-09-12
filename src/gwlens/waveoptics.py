@@ -145,7 +145,12 @@ def F_bruteforce_2d(w, y, x_max=25.0, n=1200, eta=0.005):
     O(eta) regularization error it should be, the same way `F_radial_1d`'s
     does. The defaults here are exactly the arguments
     tests/test_waveoptics.py::check_bruteforce_2d_agrees passes, so the
-    default call is the one that has actually been validated.
+    default call is the one that has actually been validated -- and it is
+    validated ONLY near w~1. `x_max` and `n` fix a grid while the
+    integrand oscillates faster with w, so with these same defaults the
+    relative error is 2.3e-2 at (w=1, y=1.589), 1.2e-1 at (w=6.19,
+    y=1.589) and 7.5e-1 at (w=10, y=1). Raise `n` and lower `eta`
+    together for larger w, or use `F_radial_1d`, which is far cheaper.
 
     O(n^2) points on a square grid; slow, spot-check only.
     """
@@ -183,10 +188,30 @@ def F_radial_1d(w, y, eta=0.01, safety=25.0, min_breakpoints=60, max_breakpoints
     hand-tuned cutoff. Convergence as eta -> 0 (at fixed accuracy) is
     checked in tests/test_waveoptics.py against `F_point_lens`.
 
-    The residual regularization error is O(eta), and measured: at w=y=1 the
-    relative error is 2.6e-2 at eta=0.02 and 6.5e-3 at eta=0.005, halving
-    with eta as it should. The default eta=0.01 is ~1.3% on a bare
-    `F_radial_1d(w, y)` call; pass a smaller one if that matters.
+    The residual regularization error is O(eta) at FIXED (w,y), but its
+    coefficient is not 1. The regulator multiplies the integrand by
+    exp(-eta*w*x^2/2), so the small parameter is eta*w*x_+^2/2, and the
+    measured relative error tracks 1-exp(-eta*w*x_+^2/2) across the plane:
+
+        w=1     y=1.000  eta=0.01  ->  1.3e-2
+        w=25    y=1.589  eta=0.01  ->  4.9e-1   (just below F_hybrid's cut)
+        w=62    y=1.589  eta=0.01  ->  6.5e-1
+
+    So `eta` has to be chosen for the w in hand: the default eta=0.01 is
+    ~1.3% only near w~1, and is worthless above w~10. At fixed (w,y) the
+    error does fall linearly with eta -- at w=25, y=1.589 it runs 6.1e-2
+    then 1.6e-2 for eta = 1e-3 then 2.5e-4 -- which is what makes the
+    eta->0 extrapolation in tests/test_waveoptics.py an independent check
+    on `F_point_lens` rather than a coincidence at one point.
+
+    `max_breakpoints` caps a request of 4*n_osc = 2*safety/(pi*eta)
+    subdivisions, which does not depend on w, so the cap binds for
+    eta < 2*safety/(pi*max_breakpoints) = 5.3e-3 with the defaults --
+    including at the eta values quoted just above. Measured, raising the
+    cap to 4e5 at eta=1e-4 changes the answer by nothing at w=6.19: the
+    quadrature is converged well before the cap, so the cap costs time
+    rather than accuracy. It does mean the subdivision count is not a
+    convergence indicator, and that eta, not the cap, is the knob.
     """
     from scipy.special import j0
 

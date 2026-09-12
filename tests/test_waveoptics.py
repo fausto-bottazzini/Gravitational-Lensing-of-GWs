@@ -69,25 +69,55 @@ def check_geometric_optics_limit():
 
 def check_radial_1d_converges_to_closed_form():
     """F_radial_1d (from-scratch Bessel-reduced integral, i-epsilon
-    regularized) must converge to F_point_lens as eta -> 0, at the expected
-    O(eta) rate (checked, not assumed)."""
-    w, y = 1.0, 1.0
-    F_exact = wo.F_point_lens(w, y)
-    etas = [0.02, 0.01, 0.005]
-    errs = [abs(wo.F_radial_1d(w, y, eta=e) - F_exact) / abs(F_exact) for e in etas]
-    decreasing = errs[0] > errs[1] > errs[2]
-    # O(eta): halving eta should roughly halve the error
-    ratios = [errs[i] / errs[i + 1] for i in range(len(errs) - 1)]
-    linear_ok = all(1.3 < r < 3.0 for r in ratios)
-    ok = decreasing and errs[-1] < 0.01 and linear_ok
-    msg = f"eta={etas} -> relerr={['%.2e'%e for e in errs]}, error ratios={['%.2f'%r for r in ratios]} (expect ~2, O(eta))"
-    return ok, msg
+    regularized) must converge to F_point_lens as eta -> 0, at the linear
+    rate, checked rather than assumed. This is the ONLY independent
+    validation `F_point_lens` has: theory.pdf Sec. 3.4 is explicit that
+    `F_geometric_optics` is not a second opinion but a second evaluation of
+    the same integral, so agreement with it proves nothing about the
+    closed form.
+
+    Run at TWO points, and the second one is the reason: the regulator's
+    small parameter is eta*w*x_+^2/2, not eta, and w=1 is the single place
+    in the plane where those two readings agree numerically. A check there
+    alone therefore cannot tell them apart, and says nothing about the rest
+    of the range. `F_hybrid` calls `F_point_lens` for every w < 30 and
+    switches to the asymptotic form above, so the demanding end of its
+    operating range is w -> 30; the second point sits just under it, at
+    w=25 with Case A's y=1.589. There eta must be ~40x smaller for the same
+    accuracy -- at eta=1e-3 the error is 6.1e-2, sixty times what a bare
+    "O(eta)" reading would predict. Case B's own w_B = 0.31 is easier than
+    either point, so it is covered a fortiori rather than spending test
+    time on it."""
+    puntos = [(1.0, 1.0, [0.02, 0.01, 0.005], 1.0e-2),
+              (25.0, 1.589, [1.0e-3, 2.5e-4], 2.0e-2)]
+    ok, partes = True, []
+    for w, y, etas, tol in puntos:
+        F_exact = wo.F_point_lens(w, y)
+        errs = [abs(wo.F_radial_1d(w, y, eta=e) - F_exact) / abs(F_exact)
+                for e in etas]
+        ratios = [errs[i] / errs[i + 1] for i in range(len(errs) - 1)]
+        esperado = [etas[i] / etas[i + 1] for i in range(len(etas) - 1)]
+        # linear in eta: the error ratio must track the eta ratio
+        lineal = all(0.7 * s < r < 1.4 * s for r, s in zip(ratios, esperado))
+        baja = all(errs[i] > errs[i + 1] for i in range(len(errs) - 1))
+        ok = ok and baja and lineal and errs[-1] < tol
+        partes.append(
+            f"(w={w:.2f}, y={y:.3f}) eta={etas} -> "
+            f"relerr={['%.1e' % e for e in errs]}, "
+            f"ratios={['%.2f' % r for r in ratios]} "
+            f"(expect {['%.1f' % s for s in esperado]}, linear in eta)")
+    return ok, "; ".join(partes)
 
 
 def check_bruteforce_2d_agrees():
     """F_bruteforce_2d (2D quadrature, no Bessel-identity shortcut at all) at
     modest resolution agrees with F_point_lens at the few-% level, the same
-    O(eta) regularization error seen in the 1D check above."""
+    regularization error seen in the 1D check above. Deliberately left at
+    w=y=1: the fixed grid (x_max, n) cannot follow the integrand as w
+    grows, and with these defaults the error is 7.5e-1 by w=10. Raising
+    the resolution enough to make this meaningful at Case B's w costs
+    minutes, and `F_radial_1d` already provides that check there at a
+    thousandth of the cost. This one is a shape check on the 2D form."""
     w, y = 1.0, 1.0
     F_exact = wo.F_point_lens(w, y)
     F_2d = wo.F_bruteforce_2d(w, y, x_max=25, n=1200, eta=0.005)

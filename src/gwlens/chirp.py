@@ -77,7 +77,7 @@ def freq_of_time_numeric(t_array, f0, mchirp_msun):
 
 
 def phase_of_time(f_func, t0, t1, n=200_000):
-    """Phi(t) = 2*pi*int_{t0}^t f(t') dt', by cumulative Simpson/trapezoid
+    """Phi(t) = 2*pi*int_{t0}^t f(t') dt', by cumulative trapezoid
     over a fine grid (numerical -- avoids trusting a closed-form phase
     formula that this project does not need elsewhere)."""
     tt = np.linspace(t0, t1, n)

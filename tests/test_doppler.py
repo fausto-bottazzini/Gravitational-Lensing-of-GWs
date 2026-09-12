@@ -79,7 +79,9 @@ def check_retarded_time_is_the_whole_first_order_doppler():
     over which beta itself changes by ~2.7e-4 -- numerically the same size
     as beta^2, so comparing against beta(t_obs) instead looks exactly like a
     spurious second-order disagreement and invites 'fixing' it with a gamma
-    factor that does not belong here (doppler.doppler_factor's docstring).
+    factor that does not belong here (see doppler.py's module docstring,
+    item 3, for why the retarded-time construction does not reproduce the
+    special-relativistic D and must not be expected to).
     The message below reports both numbers so that trap stays visible."""
     kw = _orbit_kwargs()
     t_obs = np.linspace(0.0, kw["period_out"], 200001)
