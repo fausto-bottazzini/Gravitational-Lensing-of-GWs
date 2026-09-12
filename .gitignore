@@ -9,3 +9,5 @@ __pycache__/
 *.synctex.gz
 .claude/
 checks/independent_review/
+*.bbl
+*.blg
