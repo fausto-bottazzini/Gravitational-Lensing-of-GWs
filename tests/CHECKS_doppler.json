@@ -18,5 +18,9 @@
   "case_A_roemer_is_negligible": {
     "passed": true,
     "message": "over the 15.2 s chirp: degenerate slope beta_los=2.27e-06 (absorbed into M_chirp), non-degenerate residual 8.64e-06 s -> 0.0068 rad at f_isco=125.6 Hz (require < 0.05 rad). Constant orbital redshift 4.076e-04: an M_chirp bias, not a waveform feature."
+  },
+  "orbital_redshift_is_the_schwarzschild_factor": {
+    "passed": true,
+    "message": "1+z_orb = 1.000407636024; rebuilt from 2GM/rc^2 and (r Omega/c)^2 it agrees to 0.0e+00; its leading term 3GM/(2 r c^2) = 4.073869e-04 reproduces z_orb = 4.076360e-04 to 6.1e-04 relative, as 2GM/rc^2 = 5.432e-04"
   }
 }

@@ -8,16 +8,17 @@ environment, falls back to `src/gwlens/taylorf2.py` (the hand-built,
 restricted 2PN inspiral-ONLY SPA waveform already validated in
 tests/test_taylorf2.py) -- no merger, no ringdown, cut off at f_isco.
 
-Why both exist, not just one: `pycbc`/`lalsimulation` has real, historically
-poor native-Windows support (see wiki/log.md -- a first `pip install pycbc`
-attempt on native Windows hung indefinitely resolving the lalsuite
-dependency chain). It installs cleanly on Linux/macOS, INCLUDING WSL2,
-which is where this repository's own committed IMRPhenomD results were
-actually generated (see README.md for exactly how). A plain
-`pip install -r requirements.txt` on native Windows will NOT have `pycbc`
--- that is expected, not an error, and this module's automatic fallback
-keeps every script runnable there too, just with the inspiral-only
-waveform instead of the full IMR one.
+Why both exist, not just one: `pycbc`/`lalsimulation` does not install on
+native Windows -- there are no wheels for its lalsuite dependency chain
+there. It installs cleanly on Linux/macOS, INCLUDING WSL2, which is where
+this repository's committed IMRPhenomD results were generated (see
+README.md for exactly how). So a plain `pip install -r requirements.txt`
+on native Windows will NOT provide `pycbc`: that is expected, not an
+error, and the fallback keeps every script runnable there too, with the
+inspiral-only waveform instead of the full IMR one. This is also why the
+`pycbc` import lives inside the function that needs it rather than at the
+top of the module: a static check run on Windows will flag it as
+unresolved, which is the intended state, not a broken import.
 
 Which path actually ran is always recorded (`waveform_source` in the
 calling script's `numbers.json`) -- never silently assumed.
@@ -33,11 +34,10 @@ def get_unlensed_htilde_fd(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower,
     k=0,1,2,..., numpy.fft.rfftfreq's convention). `merger_time`, if given,
     places the merger at that time (seconds) after an `irfft` of the
     returned array on this same grid -- needed because pycbc's FD
-    waveforms are NOT delivered pre-aligned to a convenient positive time
-    (see wiki/log.md for how this was diagnosed, the same symptom as the
-    earlier TaylorF2 sign bug: an unshifted `irfft` put the merger right at
-    the edge of the array, wrapping most of the inspiral to the "wrong"
-    end). Returns (H, source_label).
+    waveforms are NOT delivered pre-aligned to a convenient positive time:
+    an unshifted `irfft` puts the merger hard against the edge of the array
+    and wraps most of the inspiral to the other end. Returns
+    (H, source_label).
     """
     try:
         H, label = _pycbc_imrphenomd(freqs, m1_msun, m2_msun, d_eff_mpc, f_lower)

@@ -10,8 +10,7 @@ this is the larger of the two things the orbit does, by orders of
 magnitude, and it is pure timing, so it leaves every amplitude result
 alone. It is kinematics of the source rather than optics of the lens, so
 the static-lens formalism has nothing to say about it; D'Orazio & Loeb
-(2020) model the two together in their Appendix A. Added 2026-09-07 after
-being missing entirely -- see wiki/log.md.
+(2020) model the two together in their Appendix A.
 
 Three physically distinct pieces, kept separate because they are observable
 in completely different ways:

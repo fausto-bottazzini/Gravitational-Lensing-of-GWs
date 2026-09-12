@@ -68,7 +68,7 @@ def spa_phase(f_hz, m1_msun, m2_msun, t_c, phi_c=0.0):
 
 def spa_amplitude(f_hz, m1_msun, m2_msun, d_eff_mpc):
     """|h(f)| ~ f^(-7/6) SPA amplitude, parametrized by (m1, m2).
-"
+
     The single definition of the frequency-domain amplitude scaling in this
     repo. Note this is NOT the time-domain envelope, which grows towards
     merger: that one is chirp.restricted_pn_amplitude_td.

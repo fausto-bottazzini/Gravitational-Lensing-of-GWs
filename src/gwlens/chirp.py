@@ -34,11 +34,6 @@ def isco_frequency(m_total_msun):
     return 1.0 / (6.0 ** 1.5 * np.pi * M_sec)
 
 
-def _k_of_mchirp(mchirp_msun):
-    Mc_sec = units.msun_to_seconds(mchirp_msun)
-    return (96.0 / 5.0) * np.pi ** (8.0 / 3.0) * Mc_sec ** (5.0 / 3.0)
-
-
 def time_to_merger(f_hz, mchirp_msun):
     """tau(f) = t_c - t, from integrating df/dt = k f^{11/3}:
     tau(f) = (5/256) * (pi f)^{-8/3} * (G*Mchirp/c^3)^{-5/3}."""
@@ -60,6 +55,11 @@ def freq_of_time(t, t_c, mchirp_msun):
     # folded into one bracket, the exponents on (5/256) and Mc_sec are easy
     # to get wrong, and tests/test_chirp.py exists partly to catch that.
     return (1.0 / np.pi) * (5.0 / 256.0) ** (3.0 / 8.0) * tau ** (-3.0 / 8.0) * Mc_sec ** (-5.0 / 8.0)
+
+
+def _k_of_mchirp(mchirp_msun):
+    Mc_sec = units.msun_to_seconds(mchirp_msun)
+    return (96.0 / 5.0) * np.pi ** (8.0 / 3.0) * Mc_sec ** (5.0 / 3.0)
 
 
 def freq_of_time_numeric(t_array, f0, mchirp_msun):

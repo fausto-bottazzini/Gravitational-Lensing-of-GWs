@@ -5,14 +5,16 @@ Run with `python3 tests/test_doppler.py`. Same plain-script, PASS/FAIL,
 writes-its-own-JSON convention as the rest of tests/ (no pytest, see
 wiki/conventions.md).
 
-Five checks, deliberately. Each one, if it failed, would invalidate a number
+Six checks, deliberately. Each one, if it failed, would invalidate a number
 that cases/ or report/ actually states; nothing here re-checks algebra for
 its own sake (2 a sin(i)/c is 2 a sin(i)/c, a face-on orbit has no
 line-of-sight motion, and a fixed-point iteration converges -- none of those
 would ever have been wrong in a way that changed a result, so none of them
 are here). What IS here: the tie between the closed-form kinematics and the
 orbit code the lensing uses, the identity that makes the retarded-time
-substitution a complete first-order treatment, and the three quantitative
+substitution a complete first-order treatment, the coefficient in the
+constant orbital redshift (which no other check would catch, since a
+constant redshift makes no waveform feature), and the three quantitative
 claims Case A and Case B rest on.
 """
 import json
@@ -162,12 +164,42 @@ def check_case_A_roemer_is_negligible():
                 f"Constant orbital redshift {z_orb:.3e}: an M_chirp bias, not a waveform feature.")
 
 
+def check_orbital_redshift_is_the_schwarzschild_factor():
+    """`orbital_redshift_factor` returns the EXACT Schwarzschild dtau/dt of a
+    circular geodesic, 1/sqrt(1 - 3GM/(r c^2)). Rebuilt here from its two
+    pieces instead of from that formula: the static metric term 2GM/(r c^2),
+    and the transverse-Doppler term (r Omega/c)^2, which for the exact
+    Schwarzschild coordinate angular velocity Omega^2 = GM/r^3 is a further
+    GM/(r c^2). Their sum is the 3 in the factor, and the leading term of the
+    result must then be 3GM/(2 r c^2) -- the split the module docstring states
+    and that cases/ report as a chirp-mass bias. Worth its own check because
+    the redshift is constant: it produces no waveform feature, so no other
+    check in this suite would notice a wrong coefficient here."""
+    r = system.A_OUT_M
+    r_g = units.msun_to_meters(system.M_LENS_MSUN)      # GM_L/c^2, in metres
+    Omega = np.sqrt(r_g * units.C_SI ** 2 / r ** 3)     # Omega^2 = GM/r^3
+    dtau_dt = np.sqrt(1.0 - 2.0 * r_g / r - (r * Omega / units.C_SI) ** 2)
+    exact = dp.orbital_redshift_factor(r, system.M_LENS_MSUN)
+    rebuilt_err = abs(exact - 1.0 / dtau_dt) * dtau_dt
+
+    lead = 1.5 * r_g / r        # grav GM/(r c^2) + transverse GM/(2 r c^2)
+    lead_err = abs((exact - 1.0) - lead) / lead
+
+    ok = rebuilt_err < 1e-13 and lead_err < 1e-3
+    return ok, (f"1+z_orb = {exact:.12f}; rebuilt from 2GM/rc^2 and (r Omega/c)^2 "
+                f"it agrees to {rebuilt_err:.1e}; its leading term "
+                f"3GM/(2 r c^2) = {lead:.6e} reproduces z_orb = {exact - 1.0:.6e} "
+                f"to {lead_err:.1e} relative, as 2GM/rc^2 = {2 * r_g / r:.3e}")
+
+
 CHECKS = [
     ("los_velocity_matches_the_orbit_code", check_los_velocity_matches_the_orbit_code),
     ("retarded_time_is_the_whole_first_order_doppler", check_retarded_time_is_the_whole_first_order_doppler),
     ("roemer_dwarfs_the_image_delay", check_roemer_dwarfs_the_image_delay),
     ("envelope_unaffected_by_roemer", check_envelope_unaffected_by_roemer),
     ("case_A_roemer_is_negligible", check_case_A_roemer_is_negligible),
+    ("orbital_redshift_is_the_schwarzschild_factor",
+     check_orbital_redshift_is_the_schwarzschild_factor),
 ]
 
 
