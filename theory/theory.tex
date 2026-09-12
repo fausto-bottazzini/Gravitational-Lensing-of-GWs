@@ -1,6 +1,19 @@
-\documentclass[11pt]{report}
-\usepackage[a4paper,margin=2.7cm]{geometry}
-\usepackage{amsmath,amssymb,amsthm}
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noquoting]{babel}
+
+% --- tipografia: cuerpo y matematica en la misma familia (Times/newtx) ---
+\usepackage{amsmath,amsthm}
+\usepackage{newtxtext}
+\let\openbox\relax
+\usepackage{newtxmath}
+\let\Bbbk\relax
+\usepackage{amssymb}
+\usepackage{microtype}
+
+\usepackage[a4paper,left=2.5cm,right=2.5cm,top=2cm,bottom=2cm,
+            includeheadfoot,headsep=12pt]{geometry}
 \usepackage{booktabs}
 \usepackage{physics}
 \usepackage{graphicx}
@@ -9,984 +22,2667 @@
 \usepackage{siunitx}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
-\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,
-  urlcolor=blue!45!black,filecolor=blue!45!black]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[colorlinks=true,linkcolor=black!75,citecolor=black!60!blue,
+  urlcolor=black!60!blue,filecolor=black!60!blue]{hyperref}
 
-\newtcolorbox{checkbox}[1][]{colback=blue!4!white,colframe=blue!40!black,
-  boxrule=0.4pt,arc=1mm,left=6pt,right=6pt,top=4pt,bottom=4pt,breakable,
-  title={Chequeo},fonttitle=\bfseries\small,coltitle=blue!30!black,#1}
-\newtcolorbox{choicebox}[1][]{colback=orange!5!white,colframe=orange!45!black,
-  boxrule=0.4pt,arc=1mm,left=6pt,right=6pt,top=4pt,bottom=4pt,breakable,
-  title={Decisi\'on tomada},fonttitle=\bfseries\small,coltitle=orange!30!black,#1}
+% --- titulos de capitulo y seccion, sobrios ------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\filright}
+  {\footnotesize\scshape\chaptertitlename\ \thechapter}{0.4em}
+  {\LARGE\bfseries}
+\titlespacing*{\chapter}{0pt}{-18pt}{28pt}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
 
-\newcommand{\code}[1]{\texttt{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancyhead[LE]{\footnotesize\scshape\leftmark}
+\fancyhead[RO]{\footnotesize\scshape\rightmark}
+\fancyfoot[C]{\thepage}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ \ #1}}
+
+% --- un unico tipo de recuadro: aplicacion numerica al sistema concreto ---
+\newtcolorbox{ejemplo}[1][]{enhanced,breakable,
+  colback=black!2!white,colframe=black!45!white,
+  boxrule=0.4pt,arc=0.6mm,left=8pt,right=8pt,top=8pt,bottom=6pt,
+  fonttitle=\bfseries\footnotesize\scshape,coltitle=black,
+  colbacktitle=black!8!white,
+  attach boxed title to top left={xshift=6pt,yshift=-2.4mm},
+  boxed title style={colframe=black!45!white,boxrule=0.4pt,arc=0.4mm},
+  #1}
+
+
 \newcommand{\Msun}{M_{\odot}}
-\renewcommand{\abstractname}{Resumen}
-\renewcommand{\contentsname}{\'Indice}
-\renewcommand{\chaptername}{Cap\'itulo}
-
-\title{\Large Lente Gravitacional en \'Optica de Ondas de Ondas Gravitacionales\\
-\large en un Sistema Triple Jer\'arquico: una Derivaci\'on Completa}
-\author{Trabajo final --- Gravitational Waves and AI-Assisted Research}
-\date{Septiembre 2026}
+\newcommand{\ain}{a_{\mathrm{in}}}
+\newcommand{\aout}{a_{\mathrm{out}}}
+\newcommand{\repourl}{https://github.com/fausto-bottazzini/Gravitational-Lensing-of-GWs}
 
 \begin{document}
-\maketitle
 
-\begin{abstract}
-\noindent
-Este cap\'itulo deriva, a partir de la ecuaci\'on de onda linealizada, el
-formalismo usado para calcular c\'omo una onda gravitacional (GW) emitida por
-una binaria compacta es lenteada por un tercer cuerpo, m\'as masivo, del
-mismo sistema triple jer\'arquico. Seguimos la reducci\'on a campo escalar de
-la propagaci\'on de GWs en el fondo de campo d\'ebil del lente hasta llegar a
-la integral de difracci\'on de Kirchhoff--Fresnel, resolvemos el lente de
-masa puntual en forma cerrada y lo verificamos contra dos m\'etodos
-num\'ericos independientes, derivamos la geometr\'ia espec\'ifica de una
-fuente y un lente que comparten un mismo sistema f\'isico (a diferencia del
-lente cosmol\'ogico usual, bien separado), y cerramos con los dos reg\'imenes
---- un lente est\'atico durante un chirp r\'apido, y un lente en movimiento
-muestreado por una fuente cuasi-monocrom\'atica de evoluci\'on lenta --- que
-\code{cases/case\_A\_chirp} y \code{cases/case\_B\_monochromatic}
-instancian num\'ericamente. Cada chequeo numerado abajo est\'a implementado
-y corre en \code{tests/}; este documento deriva \emph{por qu\'e} cada chequeo
-es el correcto, no s\'olo que pasa.
-\end{abstract}
+% ======================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{4.5cm}
+{\LARGE\bfseries Lente gravitacional de ondas gravitacionales\\[0.35em]
+en \'optica de ondas\par}
+\vspace{0.9cm}
+{\large Teor\'ia de una fuente y un lente ligados\\[0.2em]
+en un triple jer\'arquico\par}
+\vspace{2.2cm}
+\rule{0.45\textwidth}{0.4pt}\\[0.9cm]
+{\large Notas te\'oricas\par}
+\vspace{0.4cm}
+{Trabajo final --- \emph{Gravitational Waves and AI-Assisted Research}\par}
+\vspace{2.4cm}
+{Septiembre de 2026\par}
+\vfill
+\end{titlepage}
+
+% ======================================================================
+\chapter*{Prefacio}
+\addcontentsline{toc}{chapter}{Prefacio}
+\markboth{Prefacio}{Prefacio}
+
+Este texto es un desarrollo autocontenido de la teor\'ia del lente
+gravitacional de ondas gravitacionales (GWs) en el r\'egimen de \'optica de
+ondas, especializado en una configuraci\'on que la literatura de lentes suele
+no tratar: la fuente y el lente pertenecen al \emph{mismo} sistema ligado, un
+triple jer\'arquico.
+
+La motivaci\'on de escribirlo es did\'actica. En un art\'iculo o en un informe
+de resultados, una deducci\'on como la que lleva de la ecuaci\'on de onda
+linealizada a la integral de difracci\'on de Kirchhoff--Fresnel se despacha
+con una cita a un libro de texto. En estas p\'aginas se hace la deducci\'on
+completa, paso por paso, porque el objetivo es \emph{entender} las cuentas y no solamente
+poder ejecutarlas. El texto est\'a organizado, entonces, como un libro de
+texto breve y no como un reporte: cada cap\'itulo introduce las magnitudes
+que usa, las deduce a partir de las anteriores, y remite a fuentes reales
+para los resultados que no se demuestran en \'el.
+
+\paragraph{Qu\'e se supone conocido.} Relatividad general a nivel de
+perturbaciones sobre un fondo (la descomposici\'on
+$g_{\mu\nu}=\bar g_{\mu\nu}+h_{\mu\nu}$ y el gauge de Lorenz), mec\'anica
+celeste kepleriana elemental, an\'alisis de Fourier, y la noci\'on de que una
+binaria compacta emite GWs y hace inspiral. Nada de \'optica ondulatoria ni
+de teor\'ia de lentes se da por sabido: ambas se construyen desde el
+principio.
+
+\paragraph{Convenciones.} Se trabaja con signatura $(-,+,+,+)$ y se mantienen
+$G$ y $c$ expl\'icitas en todas las f\'ormulas, para
+que cada expresi\'on sea directamente evaluable en unidades SI. Las masas se
+dan en masas solares $\Msun$, las distancias en unidades astron\'omicas o
+p\'arsec seg\'un la escala, y las frecuencias $f$ son siempre frecuencias de
+la onda gravitacional, que es el doble de la frecuencia orbital de la
+binaria que la emite.
+
+\paragraph{Relaci\'on con el resto del proyecto.} Este texto es la referencia
+te\'orica de un proyecto que adem\'as produce un informe de resultados y una
+presentaci\'on. La dependencia va en un solo sentido: aquellos citan a
+\'este, y \'este se lee sin ellos. Cuando en estas p\'aginas aparecen valores
+num\'ericos concretos ---masas, per\'iodos, frecuencias--- es porque sirven
+para dimensionar el problema y ver qu\'e r\'egimen es relevante, no porque el
+desarrollo dependa de ellos; esas evaluaciones van siempre en recuadros
+aparte, separadas del hilo te\'orico. El c\'odigo que las produce est\'a en
+\href{\repourl}{el repositorio del proyecto}.
 
 \tableofcontents
 
 % ======================================================================
-\chapter{Planteo y alcance}
+\chapter{Triples jer\'arquicos como sistemas de lente}
 \label{ch:scope}
 % ======================================================================
 
-\section{El cuadro f\'isico}
+En el problema de lente gravitacional tal como aparece en los libros de texto
+\citep{SchneiderEhlersFalco1992}, la fuente y el lente son objetos sin
+ninguna relaci\'on entre s\'i: una galaxia lejana y un c\'umulo que se
+interpone, separados por distancias cosmol\'ogicas que ninguno de los dos
+puede modificar. Toda la geometr\'ia queda fijada por tres distancias
+constantes y por un par\'ametro de impacto que, en la pr\'actica, tampoco
+cambia.
 
-El sistema es un triple jer\'arquico: una binaria compacta interna de masas
-$m_1,m_2$ (la \emph{fuente} de GWs) orbita, a semieje mayor $a_\mathrm{in}$,
-un centro de masa com\'un que a su vez orbita un tercer cuerpo, m\'as
-masivo, de masa $M_L$ (el \emph{lente}) a semieje mayor $a_\mathrm{out}$,
-con
+El sistema que se estudia en este texto rompe esa independencia. La fuente y
+el lente est\'an gravitatoriamente ligados entre s\'i, porque son dos
+componentes de un mismo sistema triple. La consecuencia inmediata es que la
+geometr\'ia del lente deja de ser un dato externo y pasa a ser din\'amica,
+fijada por una \'orbita, con su propio per\'iodo y su propia escala de
+longitud. Eso introduce una complicaci\'on, que se trata en el
+cap\'itulo~\ref{ch:geometry}, y al mismo tiempo hace posible un fen\'omeno
+que un lente cosmol\'ogico no puede producir: un lente que se mueve de manera
+peri\'odica y repetible frente a la fuente, y que por lo tanto act\'ua muchas
+veces sobre la misma se\~nal.
+
+Este cap\'itulo construye el sistema. Fija la notaci\'on que se usa en todo el
+texto (\S\ref{sec:anatomia}), enuncia la condici\'on de jerarqu\'ia y muestra
+que no es una sino cuatro condiciones f\'isicas distintas, cada una con su
+propia escala de tiempo (\S\ref{sec:jerarquia}), establece bajo qu\'e
+hip\'otesis la binaria interna puede tratarse como una fuente puntual, sin lo
+cual no habr\'ia problema de lente en el sentido usual (\S\ref{sec:puntual}),
+discute qu\'e cambia en la geometr\'ia de distancias cuando el lente no es
+cosmol\'ogico (\S\ref{sec:distancias}), y separa los dos reg\'imenes
+temporales en los que el mismo sistema se comporta de manera cualitativamente
+distinta (\S\ref{sec:regimenes}).
+
+% ----------------------------------------------------------------------
+\section{Anatom\'ia de un triple jer\'arquico}
+\label{sec:anatomia}
+
+Un sistema triple es \emph{jer\'arquico} cuando sus tres cuerpos no forman un
+tr\'io en interacci\'on mutua comparable, sino dos \'orbitas de escalas muy
+distintas encajadas una dentro de la otra. Dos de los cuerpos, de masas $m_1$
+y $m_2$, forman una binaria estrecha, la \emph{binaria interna}, de semieje
+mayor $\ain$. El centro de masa de esa binaria, tratado como un \'unico cuerpo
+de masa
 \begin{equation}
-  a_\mathrm{in} \ll a_\mathrm{out}.
+  M_b \equiv m_1+m_2 ,
+  \label{eq:Mb}
+\end{equation}
+orbita a su vez a un tercer cuerpo mucho m\'as masivo, de masa $M_L$, en una
+\'orbita amplia, la \emph{\'orbita externa}, de semieje mayor $\aout$,
+excentricidad $e_\mathrm{out}$ e inclinaci\'on $i_\mathrm{out}$ respecto del
+plano del cielo. La Figura~\ref{fig:triple} re\'une la disposici\'on y las
+magnitudes que se acaban de nombrar.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.95,>=Latex,font=\footnotesize]
+
+% ---------------- panel (a): jerarquia de escalas -------------------
+\begin{scope}
+  \node[font=\footnotesize\bfseries] at (-4.6,1.05) {(a)};
+  \draw[thick] (0,0) ellipse (3.5 and 1.0);
+  \fill (0,0) circle (0.10);
+  \node[anchor=north] at (0,-0.17) {$M_L$ (lente)};
+  \draw[<->] (0,0.17) -- (3.5,0.17) node[midway,above] {$\aout$};
+  \fill (3.5,0) circle (0.09);
+  \draw[gray] (3.5,0) circle (0.23);
+  \draw[gray,dashed] (3.66,0.18) -- (4.75,0.80);
+  \draw[gray,dashed] (3.66,-0.18) -- (4.75,-0.70);
+  \begin{scope}[shift={(5.65,0.05)}]
+    \draw[gray] (-0.95,-0.85) rectangle (0.95,0.85);
+    \draw[thick] (0,0.05) circle (0.30);
+    \fill (-0.30,0.05) circle (0.06);
+    \fill (0.30,0.05) circle (0.06);
+    \draw[<->] (-0.30,-0.46) -- (0.30,-0.46) node[midway,below=0pt] {$\ain$};
+    \node[anchor=south] at (0,0.42) {$m_1,m_2$};
+  \end{scope}
+  \node[anchor=north] at (5.65,-0.95) {fuente};
+\end{scope}
+
+% ---------------- panel (b): orientacion ----------------------------
+\begin{scope}[shift={(0,-3.9)}]
+  \node[font=\footnotesize\bfseries] at (-4.6,1.05) {(b)};
+  % linea de vision
+  \draw[<-,gray] (2.30,0) -- (-3.5,0);
+  \node[anchor=east,gray] at (-3.6,0) {al observador};
+  % plano del cielo
+  \draw[dashed] (0,-1.35) -- (0,1.45);
+  \node[anchor=south] at (0,1.47) {plano del cielo};
+  % traza del plano orbital
+  \draw[thick] (-2.30,-0.84) -- (2.30,0.84);
+  \node[anchor=north] at (-1.95,-0.80) {plano orbital};
+  % inclinacion
+  \draw[->] (0,0.62) arc (90:20:0.62);
+  \node at (0.74,0.52) {$i_\mathrm{out}$};
+  % lente y fuente
+  \fill (0,0) circle (0.10);
+  \node[anchor=north east] at (-0.08,-0.12) {$M_L$};
+  \fill (1.70,0.62) circle (0.08);
+  \node[anchor=south] at (1.40,0.72) {fuente};
+  % proyecciones
+  \draw[dotted] (1.70,0.62) -- (1.70,0);
+  \draw[<->] (0,-0.55) -- (1.70,-0.55) node[midway,below] {$D_{LS}$};
+  \draw[dotted] (1.70,0.62) -- (2.45,0.62);
+  \draw[<->] (2.45,0) -- (2.45,0.62);
+  \node[anchor=west,align=left] at (2.55,0.36) {separaci\'on\\transversal};
+\end{scope}
+
+\end{tikzpicture}
+\caption{Geometr\'ia del triple jer\'arquico. \textbf{(a)} Escalas: la binaria
+interna, de masas $m_1$ y $m_2$ y semieje mayor $\ain$, recorre como un solo
+cuerpo una \'orbita de semieje mayor $\aout\gg\ain$ alrededor del tercer
+cuerpo, de masa $M_L$. El recuadro ampl\'ia la binaria interna, que a la
+escala del dibujo ser\'ia invisible. \textbf{(b)} Orientaci\'on: la
+inclinaci\'on $i_\mathrm{out}$ es el \'angulo entre el plano orbital y el
+plano del cielo, de modo que $i_\mathrm{out}=90^{\circ}$ corresponde a una
+\'orbita de canto, que lleva a la fuente exactamente por detr\'as del lente.
+La separaci\'on entre la fuente y el lente se descompone en una componente
+transversal, que fija el par\'ametro de impacto, y una componente paralela a
+la l\'inea de visi\'on, que es la que act\'ua como $D_{LS}$ en la teor\'ia de
+lente delgado (\S\ref{sec:dls}).}
+\label{fig:triple}
+\end{figure}
+
+En este texto los papeles est\'an repartidos de la siguiente manera: la
+binaria interna es la \emph{fuente} de ondas gravitacionales, y el tercer
+cuerpo es el \emph{lente}, de donde viene el sub\'indice $L$ en su masa.
+Adem\'as se supone siempre
+\begin{equation}
+  M_L \gg M_b ,
+  \label{eq:masiveL}
+\end{equation}
+de modo que el baricentro del triple coincide, con la precisi\'on que hace
+falta, con la posici\'on del lente: es la binaria la que orbita al lente, y no
+ambos a un punto intermedio. Las dos \'orbitas obedecen por separado la
+tercera ley de Kepler,
+\begin{equation}
+  P_\mathrm{in}^{2}=\frac{4\pi^{2}\ain^{3}}{G M_b},
+  \qquad
+  P_\mathrm{out}^{2}=\frac{4\pi^{2}\aout^{3}}{G\,(M_L+M_b)},
+  \label{eq:kepler}
+\end{equation}
+y la jerarqu\'ia del sistema se expresa en la separaci\'on de escalas
+\begin{equation}
+  \ain \ll \aout ,
   \label{eq:hierarchy}
 \end{equation}
-Esta es la condici\'on de estabilidad ordinaria de un triple jer\'arquico, y
-cumple una doble funci\'on ac\'a: es tambi\'en exactamente la condici\'on
-bajo la cual la binaria interna puede tratarse, a los fines del lensing,
-como una \'unica fuente puntual --- ambos miembros son deflectados de
-manera id\'entica, as\'i que no hay lensing diferencial a trav\'es de la
-binaria misma (sin subestructura de ``microlensing binario''). En todo
-momento, $M_L \gg m_1+m_2$, as\'i que el lente permanece, con la precisi\'on
-usada ac\'a, en reposo en el baricentro del triple mientras la binaria
-interna (como un todo) lo orbita.
+que es la condici\'on que da nombre a esta clase de sistemas y el eje de todo
+lo que sigue.
 
-Suponemos que el triple est\'a dentro de nuestra propia Galaxia (o un
-sistema similarmente cercano), as\'i que el lente y la fuente est\'an
-esencialmente a la misma distancia de la Tierra y el corrimiento al rojo
-cosmol\'ogico no juega ning\'un rol: las distancias $D_L$ (observador a
-lente), $D_S$ (observador a fuente) y $D_{LS}$ (lente a fuente) son
-distancias eucl\'ideas ordinarias, y el corrimiento al rojo del lente es
-$z_L=0$ (el factor $(1+z_L)$ que multiplica la masa del lente en toda la
-literatura de lensing cosmol\'ogico es simplemente $1$ ac\'a). El
-Cap\'itulo~\ref{ch:geometry} desarrolla una consecuencia de esto que un
-tratamiento cosmol\'ogico de libro de texto no tiene que enfrentar:
-$D_{LS}$ \emph{no} es una distancia grande y de variaci\'on lenta --- la fija
-la \'orbita externa misma, y puede ser chica, cero, o incluso formalmente
-negativa.
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    S\'imbolo & Significado \\
+    \midrule
+    $m_1,\,m_2$ & masas de las componentes de la binaria interna (la fuente) \\
+    $M_b=m_1+m_2$ & masa total de la binaria interna \\
+    $\mathcal{M}$ & masa de chirp de la binaria interna, Ec.~\eqref{eq:chirpmass} \\
+    $M_L$ & masa del tercer cuerpo (el lente) \\
+    $\ain,\,P_\mathrm{in}$ & semieje mayor y per\'iodo de la \'orbita interna \\
+    $\aout,\,P_\mathrm{out}$ & semieje mayor y per\'iodo de la \'orbita externa \\
+    $e_\mathrm{out},\,i_\mathrm{out}$ & excentricidad e inclinaci\'on de la \'orbita externa \\
+    $q_\mathrm{out}=M_L/M_b$ & cociente de masas externo \\
+    $f$ & frecuencia de la onda gravitacional emitida \\
+    $D_L,\,D_S,\,D_{LS}$ & distancias observador--lente, observador--fuente, lente--fuente \\
+    $h(f)$ & forma de onda sin lente \\
+    $h_L(f)=F(f)h(f)$ & forma de onda a la salida del lente \\
+    $F(w,y)$ & factor de amplificaci\'on, Ec.~\eqref{eq:Fdimless} \\
+    $R_E,\;\theta_E$ & radio de Einstein lineal y angular, Ec.~\eqref{eq:thetaE_t} \\
+    $y$ & par\'ametro de impacto adimensional, $y=\theta/\theta_E$ \\
+    $w$ & frecuencia adimensional del problema de ondas, Ec.~\eqref{eq:wdef} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Notaci\'on empleada a lo largo del texto. Las magnitudes de las
+  cuatro \'ultimas filas se construyen en los cap\'itulos~\ref{ch:scalar}
+  y~\ref{ch:pointlens}.}
+  \label{tab:notacion}
+\end{table}
 
-\subsection*{Dos \'epocas del mismo inspiral}
+La masa de chirp que aparece en la tabla,
+\begin{equation}
+  \mathcal{M}\equiv\frac{(m_1m_2)^{3/5}}{(m_1+m_2)^{1/5}},
+  \label{eq:chirpmass}
+\end{equation}
+es la \'unica combinaci\'on de $m_1$ y $m_2$ que entra en la forma de onda de
+inspiral a orden dominante; se deduce en el cap\'itulo~\ref{ch:waveform}.
+
+% ----------------------------------------------------------------------
+\section{La condici\'on de jerarqu\'ia son cuatro condiciones}
+\label{sec:jerarquia}
+
+La desigualdad~\eqref{eq:hierarchy} es cualitativa, y por s\'i sola no
+garantiza nada. Decir que $\ain$ es mucho menor que $\aout$ no dice
+\emph{cu\'anto} menor hace falta que sea, y la respuesta depende de qu\'e se
+le pida al sistema. En rigor hay cuatro exigencias f\'isicas independientes
+detr\'as de esa \'unica desigualdad, cada una con su propia escala de tiempo
+asociada. Vale la pena desglosarlas, porque se cumplen con holguras muy
+distintas, y ese escalonamiento dice algo sobre qu\'e es lo primero que falla
+cuando el tercer cuerpo se acerca.
+
+\subsection*{Estabilidad din\'amica de la \'orbita}
+\label{sub:estabilidad}
+
+La primera exigencia es la m\'as b\'asica: que el triple siga siendo un
+triple. Un sistema de tres cuerpos con \'orbitas demasiado pr\'oximas es
+ca\'otico y termina eyectando a uno de sus miembros en unos pocos per\'iodos.
+El l\'imite entre configuraciones estables e inestables no se obtiene en forma
+cerrada, pero existe un criterio emp\'irico ampliamente usado, ajustado sobre
+integraciones num\'ericas de tres cuerpos y motivado por un argumento de
+superposici\'on de resonancias entre ambas \'orbitas
+(\citealp{MardlingAarseth2001}, su Ec.~90):
+\begin{equation}
+  \frac{\aout\,(1-e_\mathrm{out})}{\ain}
+  \;>\;
+  2.8\left[\left(1+q_\mathrm{out}\right)
+  \frac{1+e_\mathrm{out}}{\sqrt{1-e_\mathrm{out}}}\right]^{2/5},
+  \qquad q_\mathrm{out}=\frac{M_L}{M_b}.
+  \label{eq:mardling}
+\end{equation}
+La estructura de la f\'ormula es leg\'ible sin conocer el ajuste. Lo que
+importa no es la raz\'on de semiejes sino la raz\'on entre el pericentro de la
+\'orbita externa, $\aout(1-e_\mathrm{out})$, y el tama\~no de la interna,
+porque es en el pericentro donde la perturbaci\'on es m\'as violenta; y el
+umbral crece con la masa relativa del perturbador, a trav\'es de
+$q_\mathrm{out}$, con un exponente suave. El coeficiente $2.8$ es emp\'irico,
+y la expresi\'on est\'a calibrada para $q_\mathrm{out}\lesssim5$ y \'orbitas
+coplanares progradas, que es el caso m\'as restrictivo, ya que las
+configuraciones inclinadas son algo m\'as estables. Un triple cuyo tercer
+cuerpo sea mucho m\'as masivo que la binaria interna queda muy por fuera de
+ese rango de calibraci\'on, de modo que el umbral que da la
+Ec.~\eqref{eq:mardling} debe leerse como una estimaci\'on de orden de
+magnitud y no como un valor exacto.
+
+\subsection*{El radio de Hill}
+\label{sub:hill}
+
+La segunda exigencia es que la binaria interna siga ligada a s\'i misma, es
+decir, que la marea del tercer cuerpo no la desarme. La escala relevante es el
+\emph{radio de Hill}: la distancia hasta la cual la gravedad propia de un
+cuerpo domina sobre la del cuerpo mucho m\'as masivo al que orbita. Como el
+concepto reaparece m\'as adelante, conviene deducirlo.
+
+Conviene trabajar en el sistema de referencia que rota con la \'orbita
+externa, con origen en el centro de masa de la binaria interna, y considerar
+una part\'icula de prueba a distancia $r\ll\aout$ de ese origen, sobre la
+l\'inea que une la binaria con el lente. Sobre ella act\'uan tres t\'erminos:
+la atracci\'on de la propia binaria, $GM_b/r^{2}$, dirigida hacia el origen;
+la diferencia entre la atracci\'on del lente sobre la part\'icula y sobre el
+origen, que a primer orden en $r/\aout$ vale $2GM_L\,r/\aout^{3}$; y la fuerza
+centr\'ifuga $\Omega^{2}r$, con
+$\Omega^{2}=G(M_L+M_b)/\aout^{3}\simeq GM_L/\aout^{3}$. Los dos \'ultimos
+apuntan hacia afuera y suman $3GM_L\,r/\aout^{3}$. Igualando ambos efectos,
+\begin{equation}
+  \frac{GM_b}{r^{2}}=\frac{3GM_L\,r}{\aout^{3}}
+  \qquad\Longrightarrow\qquad
+  r_H=\aout\left(\frac{M_b}{3M_L}\right)^{1/3},
+  \label{eq:hill}
+\end{equation}
+que es el radio de Hill de la binaria interna alrededor del lente; para
+\'orbitas externas exc\'entricas se eval\'ua en el pericentro, reemplazando
+$\aout\to\aout(1-e_\mathrm{out})$ (\citealp{MurrayDermott1999}, \S3.12). El
+factor $3$ en el denominador, y no $2$, proviene de haber incluido el
+t\'ermino centr\'ifugo junto con el de marea. La exigencia es entonces
+\begin{equation}
+  \ain \ll r_H .
+  \label{eq:hill_cond}
+\end{equation}
+
+\subsection*{Oscilaciones de Kozai--Lidov}
+\label{sub:kozai}
+
+La tercera exigencia es m\'as sutil, porque no amenaza la existencia del
+sistema sino la forma de la se\~nal. En un triple jer\'arquico, el efecto del
+tercer cuerpo promediado sobre ambas \'orbitas, el t\'ermino secular
+cuadrupolar, no se anula: intercambia excentricidad de la \'orbita interna por
+inclinaci\'on mutua, manteniendo constante la componente del momento angular
+interno a lo largo del momento angular total,
+\begin{equation}
+  \sqrt{1-e_\mathrm{in}^{2}}\;\cos i_\mathrm{tot}=\text{const.}
+  \label{eq:kozai_integral}
+\end{equation}
+Esta es la integral de Kozai (\citealp{Kozai1962}; \citealp{Lidov1962};
+en la notaci\'on moderna, \citealp{Naoz2016}, su Ec.~17). Si la inclinaci\'on
+mutua inicial est\'a en la ventana
+$39.2^{\circ}\lesssim i_\mathrm{tot}\lesssim 140.8^{\circ}$, delimitada por
+$\cos i_\mathrm{min}=\pm\sqrt{3/5}$ (\citealp{Naoz2016}, su Ec.~21), la
+\'unica manera de conservar~\eqref{eq:kozai_integral} mientras
+$i_\mathrm{tot}$ decrece es que $e_\mathrm{in}$ crezca, y el sistema entra en
+oscilaciones peri\'odicas de gran amplitud entre excentricidad e
+inclinaci\'on. Una binaria que empez\'o circular puede alcanzar
+$e_\mathrm{in}\to1$.
+
+Esto importa por una raz\'on concreta: toda la forma de onda que se construye
+en el cap\'itulo~\ref{ch:waveform} supone una binaria interna \emph{circular}.
+Si Kozai--Lidov bombea la excentricidad durante la observaci\'on, esa forma de
+onda deja de ser v\'alida. La escala de tiempo del efecto es
+\begin{equation}
+  t_{KL}\;\simeq\;\frac{8}{15\pi}\,
+  \frac{M_L+M_b}{M_L}\,
+  \frac{P_\mathrm{out}^{2}}{P_\mathrm{in}}\,
+  \left(1-e_\mathrm{out}^{2}\right)^{3/2},
+  \label{eq:tkl}
+\end{equation}
+donde el prefactor num\'erico depende de la configuraci\'on y es de orden
+unidad (\citealp{MardlingAarseth2001}, su Ec.~91, escribe esta misma
+expresi\'on con un factor $g(e_\mathrm{in},\omega_\mathrm{in},i)$ de orden
+unidad en lugar de $8/15\pi$). La exigencia natural ser\'ia que $t_{KL}$ sea
+mucho mayor que la duraci\'on de la observaci\'on.
+
+Hay, sin embargo, un mecanismo que apaga el efecto aunque
+la~\eqref{eq:tkl} no resulte grande: la precesi\'on relativista del periastro
+de la propia binaria interna. Si la \'orbita interna precede por efecto de la
+relatividad general m\'as r\'apido de lo que el forzado secular externo puede
+reorientarla, el t\'ermino de Kozai se promedia a cero antes de alcanzar a
+actuar (\citealp{BlaesLeeSocrates2002}, su Ec.~5, deducida en su
+Ec.~A6). La escala de la precesi\'on relativista es
+\begin{equation}
+  t_{GR}=\frac{P_\mathrm{in}\,\ain\,c^{2}\,(1-e_\mathrm{in}^{2})}{3GM_b},
+  \label{eq:tgr}
+\end{equation}
+(equivalente a la Ec.~3 de ese trabajo), y la condici\'on de supresi\'on es
+\begin{equation}
+  t_{GR}\ll t_{KL}.
+  \label{eq:kozai_quench}
+\end{equation}
+Este es el criterio que efectivamente hay que verificar en un sistema
+compacto: en binarias de agujeros negros estelares muy estrechas, $t_{GR}$ es
+cort\'isimo y Kozai--Lidov queda desactivado aunque el tercer cuerpo est\'e
+cerca.
+
+\subsection*{Estacionariedad de la \'orbita externa}
+\label{sub:estacionaria}
+
+La cuarta exigencia es que la \'orbita externa no evolucione durante la
+observaci\'on. La \'orbita externa tambi\'en radia ondas gravitacionales y,
+por lo tanto, tambi\'en decae, con el tiempo de inspiral de Peters
+(\citealp{Peters1964}, su Ec.~5.10), que para una \'orbita circular es
+\begin{equation}
+  t_\mathrm{GW}=\frac{5}{256}\,
+  \frac{c^{5}\,\aout^{4}}{G^{3}M_LM_b(M_L+M_b)} .
+  \label{eq:peters}
+\end{equation}
+La dependencia $\aout^{4}$ hace que esta escala sea enorme para cualquier
+\'orbita externa razonable, y en consecuencia $\aout$ y $P_\mathrm{out}$
+pueden tomarse constantes: la \'orbita externa provee una geometr\'ia que se
+repite peri\'odicamente sin deriva secular. Esa es la hip\'otesis que permite
+tratar el movimiento del lente como estrictamente peri\'odico en el
+cap\'itulo~\ref{ch:regimes}.
+
+Vale notar que esa misma \'orbita externa emite ondas gravitacionales a la
+frecuencia $2/P_\mathrm{out}$, que para per\'iodos de d\'ias es del orden de
+unos pocos microhertz, muy por debajo de la banda de cualquier detector actual
+o planeado. Esa es la raz\'on por la que su emisi\'on no se modela en este
+texto: lo que delata la presencia de la \'orbita externa no es su propia
+radiaci\'on, sino el efecto que imprime sobre la se\~nal de la binaria
+interna, que se estudia en el \S\ref{sec:kinematics}.
+
+\begin{ejemplo}[title={El triple concreto de este proyecto}]
+Los desarrollos de este texto son generales, pero conviene tener un juego de
+n\'umeros en la cabeza. Las aplicaciones num\'ericas del proyecto usan una
+binaria interna de $20$ y $15\,\Msun$, cuya masa de chirp resulta
+$\mathcal{M}=15.05\,\Msun$, en \'orbita alrededor de un lente de
+$5\times10^{4}\,\Msun$. La \'orbita externa es circular, de per\'iodo
+$P_\mathrm{out}=4$~d, lo que por la Ec.~\eqref{eq:kepler} corresponde a
+$\aout=1.82$~UA, y est\'a casi de canto, con
+$i_\mathrm{out}=87^{\circ}$. Todo el sistema se ubica a $D_L=5$~kpc del
+observador. Las cuatro condiciones se eval\'uan en la \'epoca desfavorable de
+las dos que se estudian, la de mayor separaci\'on de la binaria interna,
+$\ain=3.8\times10^{-4}$~UA:
+\begin{itemize}\itemsep2pt
+  \item Estabilidad, Ec.~\eqref{eq:mardling}: con $q_\mathrm{out}=1.4\times10^{3}$
+    el umbral vale $51$, frente a una raz\'on $\aout/\ain=4.8\times10^{3}$,
+    de modo que el margen es de $93$.
+  \item Radio de Hill, Ec.~\eqref{eq:hill}: $r_H=0.11$~UA, de modo que la
+    binaria interna queda $292$ veces adentro.
+  \item Kozai--Lidov, Ec.~\eqref{eq:tkl}: $t_{KL}=16$~a\~nos, veinticuatro
+    veces el tiempo que le queda a la binaria hasta el merger, que es de
+    $240$~d\'ias. A ese margen se suma la supresi\'on por precesi\'on
+    relativista, con $t_{KL}/t_{GR}=3.4\times10^{4}$.
+  \item \'Orbita externa, Ec.~\eqref{eq:peters}:
+    $t_\mathrm{GW}=4.0\times10^{7}$~a\~nos, de los cuales transcurre una
+    fracci\'on $1.6\times10^{-8}$ antes de que la binaria interna llegue al
+    merger.
+\end{itemize}
+Las cuatro condiciones se cumplen, pero no todas con la misma holgura, y el
+orden en que se escalonan es el contenido f\'isico de este bloque de
+n\'umeros. La estacionariedad de la \'orbita externa sobra por casi ocho
+\'ordenes de magnitud; la marea y la estabilidad din\'amica, por dos; y el
+forzado secular de Kozai--Lidov, por poco m\'as de uno. Al acercar el tercer cuerpo, entonces,
+lo primero que deja de estar garantizado en un triple compacto no es que el
+sistema siga existiendo, sino que la binaria interna siga siendo circular.
+\end{ejemplo}
+
+% ----------------------------------------------------------------------
+\section{La binaria interna como fuente puntual}
+\label{sec:puntual}
+
+Hay una segunda funci\'on, completamente distinta, que cumple la misma
+condici\'on~\eqref{eq:hierarchy}, y es la que la vuelve central para este
+texto. En la teor\'ia de lentes la fuente se supone puntual, o a lo sumo una
+distribuci\'on extensa cuya imagen se obtiene convolucionando; si la fuente
+tiene tama\~no propio comparable a las escalas del lente, distintas partes de
+ella se deflectan de manera distinta y el problema cambia de naturaleza.
+
+La fuente en este caso es una binaria de tama\~no $\ain$. Que se la pueda
+tratar como puntual significa que sus dos componentes son deflectadas de
+manera id\'entica, es decir, que la deflexi\'on var\'ia despreciablemente a lo
+largo de $\ain$. Si $\alpha(b)$ es el \'angulo de deflexi\'on a par\'ametro de
+impacto $b$, la deflexi\'on diferencial a trav\'es de la binaria es
+\begin{equation}
+  \Delta\alpha\;\simeq\;\left|\dv{\alpha}{b}\right|\ain
+  \;=\;\frac{\alpha(b)}{b}\,\ain ,
+  \label{eq:diffdefl}
+\end{equation}
+donde la \'ultima igualdad usa $\alpha\propto b^{-1}$, v\'alida para un lente
+puntual (cap\'itulo~\ref{ch:pointlens}). La condici\'on
+$\Delta\alpha\ll\alpha$ es entonces, simplemente,
+\begin{equation}
+  \ain\ll b .
+  \label{eq:pointsource}
+\end{equation}
+Como el par\'ametro de impacto de este sistema es del orden del tama\~no de la
+\'orbita externa, $b\lesssim\aout$, la condici\'on de fuente puntual se reduce
+a $\ain\ll\aout$, que es de nuevo la condici\'on de jerarqu\'ia.
+
+El criterio que acaba de deducirse es el de \'optica geom\'etrica, y es el m\'as
+d\'ebil de los dos que hay que satisfacer: en \'optica de ondas lo que borra el
+patr\'on de difracci\'on no es que las im\'agenes se separen, sino que
+distintos puntos de la fuente produzcan patrones corridos entre s\'i, de modo
+que el tama\~no de la fuente debe compararse con el radio de Einstein y no con
+el par\'ametro de impacto. En un triple jer\'arquico esa condici\'on, m\'as
+exigente, tambi\'en se cumple con holgura.
+
+Esta coincidencia no es casual, pero tampoco es una identidad: son dos
+requisitos f\'isicamente distintos que resultan tener la misma forma. Uno es
+din\'amico, que el sistema no se desarme, y el otro es \'optico, que no haya
+deflexi\'on diferencial a trav\'es de la fuente. Que se cumplan juntos es lo
+que hace que un triple jer\'arquico sea un sistema de lente tratable. Si la
+binaria interna fuera comparable en tama\~no a la \'orbita externa, habr\'ia
+que resolver un problema de \emph{microlente binario}, con dos fuentes
+deflectadas de manera distinta e interferencia entre sus se\~nales, que no
+aparece en ning\'un momento en este texto.
+
+% ----------------------------------------------------------------------
+\section{Un lente gal\'actico, no cosmol\'ogico}
+\label{sec:distancias}
+
+Se supone que el triple est\'a dentro de nuestra propia Galaxia, o en un
+sistema similarmente cercano. Esto tiene dos consecuencias que simplifican la
+geometr\'ia y una que la complica.
+
+La primera simplificaci\'on es que las tres distancias del problema, $D_L$ del
+observador al lente, $D_S$ del observador a la fuente y $D_{LS}$ del lente a
+la fuente, son distancias eucl\'ideas ordinarias y no distancias de
+di\'ametro angular en una cosmolog\'ia en expansi\'on. En particular vale
+\begin{equation}
+  D_S=D_L+D_{LS},
+  \label{eq:euclid}
+\end{equation}
+que en el caso cosmol\'ogico es falsa.
+
+La segunda es que el corrimiento al rojo del lente es nulo, $z_L=0$. En la
+literatura de lentes cosmol\'ogicos la masa del lente aparece siempre en la
+combinaci\'on $(1+z_L)M_L$, la llamada masa redshifteada, porque las escalas
+temporales medidas por el observador est\'an dilatadas respecto de las del
+lente. En un lente gal\'actico ese factor vale $1$ y la distinci\'on
+desaparece, de modo que la masa que entra en las f\'ormulas es la masa propia
+del lente.
+
+La complicaci\'on est\'a en $D_{LS}$. Conviene ser expl\'icito sobre qu\'e es,
+porque no es la separaci\'on entre la fuente y el lente sino su
+\emph{proyecci\'on sobre la l\'inea de visi\'on}. La teor\'ia de lente
+delgado, que se construye en el cap\'itulo~\ref{ch:scalar}, descompone el
+problema en un plano del lente y un plano de la fuente, ambos perpendiculares
+a la l\'inea de visi\'on; $D_{LS}$ es la distancia entre esos dos planos, es
+decir, la componente de la separaci\'on orbital paralela a la l\'inea de
+visi\'on. La componente perpendicular no entra en $D_{LS}$, sino que es la que fija el
+par\'ametro de impacto. En un lente de libro de texto la distinci\'on no
+importa, porque la separaci\'on transversal es min\'uscula frente a la
+longitudinal, pero en un triple ambas son del mismo orden, $\aout$, y hay que
+tratarlas por separado.
+
+De ah\'i salen las tres diferencias con el caso cosmol\'ogico. Primero,
+$D_{LS}$ es peque\~na: del orden de unas unidades astron\'omicas, frente a los
+kilop\'arsec de $D_L$. Segundo, var\'ia a lo largo de la \'orbita externa,
+porque la proyecci\'on sobre la l\'inea de visi\'on cambia a medida que la
+fuente recorre su \'orbita. Y tercero, se anula y cambia de signo dos veces
+por per\'iodo, cuando la fuente cruza el plano del cielo que pasa por el
+lente: con $D_{LS}<0$ la fuente est\'a m\'as cerca del observador que el
+lente, y no hay configuraci\'on de lente en absoluto. El
+cap\'itulo~\ref{ch:geometry} se ocupa en detalle de estas tres consecuencias.
+
+% ----------------------------------------------------------------------
+\section{Dos reg\'imenes del mismo inspiral}
+\label{sec:regimenes}
+
 La binaria interna pierde energ\'ia por radiaci\'on gravitacional y hace
-inspiral. Estudiamos dos instant\'aneas de ese inspiral:
-\begin{description}
-  \item[Caso A --- el chirp.] Inspiral tard\'io: la frecuencia de la GW
-    barre la banda sensible de un detector de tipo terrestre en segundos.
-    Eso es enormemente m\'as r\'apido que cualquier per\'iodo orbital
-    externo plausible, as\'i que el lente queda \emph{congelado} en un
-    \'unico par\'ametro de impacto durante toda la observaci\'on.
-  \item[Caso B --- cuasi-monocrom\'atico.] Inspiral temprano: la binaria
-    interna est\'a separada, la frecuencia de la GW es baja y deriva de
-    manera despreciable durante una observaci\'on que abarca varios
-    per\'iodos externos. Ahora el movimiento orbital externo \emph{s\'i} se
-    resuelve, y el par\'ametro de impacto barre peri\'odicamente.
-\end{description}
-Ambos reg\'imenes se precisan, y se chequean contra los n\'umeros
-efectivamente usados en \code{cases/}, en el Cap\'itulo~\ref{ch:regimes}.
+inspiral: su separaci\'on $\ain$ decrece y la frecuencia $f$ de la onda que
+emite crece, lentamente al principio y de manera acelerada al final. Ese
+barrido en frecuencia recorre varios \'ordenes de magnitud, y el sistema de
+lente responde de manera cualitativamente distinta seg\'un en qu\'e momento
+del barrido se lo observe.
 
-\begin{choicebox}
-La masa del lente, $M_L\sim5\times10^4\,\Msun$ (un ``IMBH'', entre los
-rangos convencionales de agujero negro de masa intermedia y
-supermasivo), se elige para que el par\'ametro de \'optica de ondas $w$
-(definido en la Ec.~\ref{eq:wdef}) no sea astron\'omicamente extremo en la
-frecuencia de ninguna de las dos \'epocas, no porque sea una masa de lente
-t\'ipica para un triple jer\'arquico en la literatura. \code{wiki/log.md}
-registra esta decisi\'on y los n\'umeros que produce; no es un valor
-ajustado m\'as all\'a de ese \'unico requisito.
-\end{choicebox}
+Lo que decide cu\'al de los dos comportamientos se da es la comparaci\'on
+entre dos escalas de tiempo: la duraci\'on $T_\mathrm{obs}$ de la
+observaci\'on y el per\'iodo orbital externo $P_\mathrm{out}$, que es el
+tiempo en el que la geometr\'ia del lente se repite.
+
+\begin{description}
+  \item[R\'egimen de lente est\'atico ($T_\mathrm{obs}\ll P_\mathrm{out}$).]
+    Corresponde al inspiral tard\'io. La frecuencia barre la banda sensible de
+    un detector terrestre en segundos, mientras que el per\'iodo externo se
+    mide en d\'ias. Durante toda la observaci\'on el lente queda congelado en
+    un \'unico par\'ametro de impacto. La se\~nal es un chirp, y el efecto del
+    lente es una modulaci\'on que depende de la frecuencia pero no del tiempo,
+    de modo que la firma est\'a en el espectro.
+  \item[R\'egimen cuasi-monocrom\'atico ($T_\mathrm{obs}\gg P_\mathrm{out}$).]
+    Corresponde al inspiral temprano. La binaria est\'a a\'un separada, la
+    frecuencia es baja y deriva de manera despreciable a lo largo de una
+    observaci\'on que abarca varios per\'iodos externos. Ahora el movimiento
+    orbital s\'i se resuelve: el par\'ametro de impacto barre
+    peri\'odicamente, y la se\~nal, de frecuencia casi fija, queda modulada en
+    amplitud con el per\'iodo de la \'orbita externa. La firma est\'a en el
+    dominio temporal.
+\end{description}
+
+Los dos reg\'imenes son el mismo sistema visto en dos \'epocas distintas de un
+\'unico inspiral, no dos sistemas distintos.
+
+% ----------------------------------------------------------------------
+\section{Escalas del problema}
+\label{sec:escalas}
+
+Queda por decir qu\'e fija las escalas. El fen\'omeno que este texto quiere
+describir es la difracci\'on de la onda gravitacional por el lente, y la
+difracci\'on solo es apreciable cuando la longitud de onda es comparable al
+tama\~no caracter\'istico del lente. Ese tama\~no es el radio de Schwarzschild
+$2GM_L/c^{2}$, y la comparaci\'on relevante es entre el retardo temporal que
+el lente introduce y el per\'iodo de la onda. En el
+cap\'itulo~\ref{ch:scalar} esa comparaci\'on se reduce a un \'unico
+par\'ametro adimensional, $w=8\pi GM_Lf/c^{3}$, proporcional al producto
+$M_Lf$: cuando $w\ll1$ la onda es demasiado larga para resolver el lente y
+pasa sin perturbarse; cuando $w\gg1$ el lente se comporta como una lente
+cl\'asica y basta la \'optica geom\'etrica; y la \'optica de ondas es
+indispensable en la franja intermedia, $w\sim1$.
+
+Esto tiene una consecuencia pr\'actica inmediata. La condici\'on $w\sim1$
+equivale a $M_Lf\approx8\times10^{3}\,\Msun\,$Hz, de manera que la masa de
+lente que pone al sistema en r\'egimen de \'optica de ondas queda fijada por
+la banda en que se lo observe. Para un detector terrestre, que trabaja entre
+decenas y centenares de hertz, corresponde a lentes de masa estelar, de unas
+decenas a unos centenares de masas solares. Para las frecuencias de
+decihertz de la \'epoca temprana del inspiral, corresponde a lentes de masa
+intermedia, del orden de $10^{4}$ a $10^{5}\,\Msun$. Esa es la raz\'on por la
+que las aplicaciones num\'ericas de este proyecto usan un lente de
+$5\times10^{4}\,\Msun$: no porque sea la masa t\'ipica del tercer cuerpo de un
+triple en la literatura, sino porque, con las dos \'epocas del inspiral que se
+estudian, deja al sistema a uno y otro lado de la transici\'on, con
+difracci\'on plena en la \'epoca temprana y \'optica geom\'etrica en la
+tard\'ia.
 
 % ======================================================================
-\chapter{De la ecuaci\'on de onda a un campo escalar}
+\chapter{De la ecuaci\'on de onda a la integral de difracci\'on}
 \label{ch:scalar}
 % ======================================================================
 
-El objetivo que le interesa al usuario de este proyecto se detiene ac\'a:
-llegar al punto en que el lensing de ondas gravitacionales es un problema
-de difracci\'on de campo \emph{escalar}, y justificar por qu\'e eso es
-leg\'itimo.
+Una onda gravitacional es una perturbaci\'on tensorial, de esp\'in 2, de la
+m\'etrica. Un problema de difracci\'on \'optica, en cambio, se plantea para un
+campo escalar. El objetivo de este cap\'itulo es mostrar que, en el r\'egimen
+que interesa, los dos problemas son el mismo: que la propagaci\'on de una GW
+por el campo de un lente se reduce exactamente a la difracci\'on de un campo
+escalar sin masa, y que el resultado de esa difracci\'on se condensa en un
+\'unico n\'umero complejo, el factor de amplificaci\'on $F$.
 
-\section{La ecuaci\'on de onda sobre un fondo de campo d\'ebil}
+El camino tiene cuatro pasos. Primero se escribe la ecuaci\'on de propagaci\'on
+de la GW sobre un fondo curvo (\S\ref{sec:propagacion}). Despu\'es se muestra
+que, en el l\'imite de longitud de onda corta, el t\'ermino que acopla la onda
+con la curvatura del fondo es subdominante, y cada polarizaci\'on satisface por
+separado una ecuaci\'on escalar (\S\ref{sec:reduccion}). Esa ecuaci\'on escalar,
+en el dominio de la frecuencia y sobre una m\'etrica de campo d\'ebil, se
+convierte en una ecuaci\'on de Helmholtz con \'indice de refracci\'on variable
+(\S\ref{sec:helmholtz}). Y finalmente la aproximaci\'on de lente delgado
+reduce la propagaci\'on a una integral de difracci\'on bidimensional sobre el
+plano del lente (\S\ref{sec:lentedelgado}), que en variables adimensionales
+adopta la forma con la que se trabaja en todo el resto del texto
+(\S\ref{sec:adimensional}).
 
-Escribimos la m\'etrica completa como un fondo m\'as una perturbaci\'on
-chica, $g_{\mu\nu}=\bar g_{\mu\nu}+h_{\mu\nu}$, donde $\bar g_{\mu\nu}$ es la
-propia m\'etrica de campo d\'ebil del lente (potencial newtoniano
-$U=-GM_L/r$, $|U|/c^2\ll1$ en todas partes relevantes ac\'a ya que el lente
-est\'a muy fuera de su propio radio de Schwarzschild a los par\'ametros de
-impacto considerados) y $h_{\mu\nu}$ es la GW. En el gauge de Lorenz sobre
-este fondo, las ecuaciones de Einstein linealizadas en el vac\'io dan una
-ecuaci\'on de onda para $h_{\mu\nu}$ con un t\'ermino de acoplamiento a la
-curvatura,
+Cada uno de esos pasos se enuncia en el cuerpo del cap\'itulo con el detalle
+necesario para seguir el argumento; las cuentas intermedias completas est\'an
+en el ap\'endice~\ref{ap:deducciones}, con un enlace desde cada ecuaci\'on.
+
+% ----------------------------------------------------------------------
+\section{Propagaci\'on de una onda gravitacional sobre un fondo curvo}
+\label{sec:propagacion}
+
+Se escribe la m\'etrica completa como un fondo m\'as una perturbaci\'on
+peque\~na,
 \begin{equation}
-  \bar\Box h_{\mu\nu} - 2\bar R_{\mu\alpha\nu\beta}h^{\alpha\beta} = 0 .
+  g_{\mu\nu}=\bar g_{\mu\nu}+h_{\mu\nu},
+  \qquad |h_{\mu\nu}|\ll1 ,
+  \label{eq:split}
+\end{equation}
+donde $\bar g_{\mu\nu}$ es la m\'etrica del lente y $h_{\mu\nu}$ es la onda
+gravitacional que lo atraviesa. Es importante notar que esta separaci\'on no
+es la habitual de la teor\'ia linealizada, en la que el fondo es el espacio
+plano: el fondo es el campo del lente, y la perturbaci\'on peque\~na es solo
+la onda.
+
+Para el lente se usa su forma de campo d\'ebil. Con el potencial newtoniano
+$U(\vb r)=-GM_L/r$,
+\begin{equation}
+  d\bar s^{2}=-\left(1+\frac{2U}{c^{2}}\right)c^{2}dt^{2}
+  +\left(1-\frac{2U}{c^{2}}\right)d\vb r^{2},
+  \qquad \frac{|U|}{c^{2}}\ll1 ,
+  \label{eq:weakfield}
+\end{equation}
+que es la m\'etrica isotr\'opica de campo d\'ebil (\citealp{Takahashi2003}, su
+Ec.~2). La condici\'on $|U|/c^{2}\ll1$ se cumple con enorme holgura en todo el
+recorrido de la onda, porque el par\'ametro de impacto es de escala
+astron\'omica mientras que el radio de Schwarzschild del lente es de
+$10^{-3}$~UA; el cap\'itulo~\ref{ch:geometry} cuantifica esa holgura.
+
+Sustituyendo la Ec.~\eqref{eq:split} en las ecuaciones de Einstein en vac\'io,
+conservando los t\'erminos lineales en $h_{\mu\nu}$ e imponiendo el gauge
+transverso, sin traza y de Lorenz sobre el fondo,
+\begin{equation}
+  h^{\mu}_{\ \ \nu;\mu}=0, \qquad h^{\mu}_{\ \ \mu}=0 ,
+  \label{eq:gauge}
+\end{equation}
+se obtiene la ecuaci\'on de propagaci\'on
+\begin{equation}
+  h_{\mu\nu;\alpha}^{\qquad;\alpha}
+  \;+\;2\bar R_{\alpha\mu\beta\nu}\,h^{\alpha\beta}\;=\;0 ,
   \label{eq:linearized}
 \end{equation}
-Este es el punto de partida est\'andar para la propagaci\'on de GWs sobre un
-fondo curvo (p.\ ej.\ \citealp{Isaacson1968}). El r\'egimen de alta
-frecuencia (eikonal) relevante ac\'a queda fijado al comparar la longitud
-de onda de la GW $\lambda_{GW}$ con la escala de longitud de curvatura del
-fondo $\mathcal{R}$: el tratamiento de rayos/lente delgado de abajo es
-v\'alido cuando $\lambda_{GW}\ll\mathcal{R}$.
+donde el punto y coma denota derivada covariante respecto de $\bar g_{\mu\nu}$
+y $\bar R_{\alpha\mu\beta\nu}$ es el tensor de Riemann del fondo. Esta es la
+ecuaci\'on est\'andar de propagaci\'on de GWs sobre un fondo curvo
+(\citealp{Isaacson1968}; \citealp{Takahashi2003}, su Ec.~4). La deducci\'on
+completa, desde las ecuaciones de Einstein hasta la Ec.~\eqref{eq:linearized},
+est\'a en el \S\ref{ap:linearized}.
 
-$\mathcal{R}$ es una escala de curvatura del propio campo del lente
-(t\'ipicamente $\sim\sqrt{b^3/GM_L}$ a par\'ametro de impacto f\'isico $b$)
---- \textbf{no} el radio de Einstein $R_E$: son cantidades distintas,
-$\mathcal{R}$ local al campo del lente, $R_E$ una escala geom\'etrica de
-proyecci\'on que depende adem\'as de $D_L,D_S,D_{LS}$. Identificarlas sin
-m\'as, $\mathcal{R}\sim R_E$, es s\'olo una estimaci\'on de orden de
-magnitud, y da la impresi\'on equivocada de que el Caso~B --- que opera en
-$w_B=O(1)$, es decir $\lambda_{GW}\sim R_E$ por definici\'on de $w$ ---
-violar\'ia la condici\'on. En campo d\'ebil, con $b\gg R_{\rm Sch}(M_L)$,
-$\mathcal{R}\sim\sqrt{b^3/GM_L}=b\sqrt{b/R_{\rm Sch}}\gg b\gtrsim R_E$: la
-condici\'on sigue cumpli\'endose c\'omodamente incluso en el Caso~B, por el
-mismo tipo de raz\'on de escalas grande ya cuantificado en
-\S\ref{sec:paraxial} y el Cap\'itulo~\ref{ch:beyond} (no tabulada aparte
-ac\'a). Con esa identificaci\'on entendida como una estimaci\'on, no una
-igualdad, el t\'ermino de acoplamiento
-a la curvatura en la Ec.~\eqref{eq:linearized} es subdominante
-frente a $\bar\Box h_{\mu\nu}$ por un factor $\sim(\lambda_{GW}/\mathcal{R})^2$
-(\citealp{Peters1974}; \citealp{Takahashi2003}, \S2). Al descartarlo, cada
-amplitud de polarizaci\'on independiente $h_{\mu\nu}=e_{\mu\nu}\,\Phi$
-(tensor de polarizaci\'on fijo $e_{\mu\nu}$, transverso y sin traza) obedece
-la \emph{misma} ecuaci\'on que un campo escalar sin masa sobre el fondo del
-lente,
+El primer t\'ermino es el operador de onda covariante, que describe la
+propagaci\'on libre. El segundo acopla la onda con la curvatura del fondo, y
+es el responsable de que, en general, un campo tensorial no se propague como
+un campo escalar: es el t\'ermino que puede mezclar las polarizaciones de la
+onda entre s\'i.
+
+% ----------------------------------------------------------------------
+\section{Reducci\'on a un campo escalar}
+\label{sec:reduccion}
+
+El t\'ermino de curvatura de la Ec.~\eqref{eq:linearized} es despreciable
+cuando la longitud de onda es mucho menor que el radio de curvatura
+caracter\'istico del fondo. El argumento es de an\'alisis dimensional: cada
+derivada aplicada a la onda aporta un factor $1/\lambda_{GW}$, de modo que el
+primer t\'ermino es de orden $h/\lambda_{GW}^{2}$; el tensor de Riemann, por
+su parte, es de orden $1/\mathcal{R}^{2}$, donde $\mathcal{R}$ es el radio de
+curvatura del fondo, con lo que el segundo t\'ermino es de orden
+$h/\mathcal{R}^{2}$. Su cociente es
 \begin{equation}
-  \bar\Box\,\Phi = 0 .
+  \frac{\text{t\'ermino de curvatura}}{\text{t\'ermino de onda}}
+  \;\sim\;\left(\frac{\lambda_{GW}}{\mathcal{R}}\right)^{2},
+  \label{eq:eikonal_ratio}
+\end{equation}
+y el r\'egimen en el que se trabaja es el de \emph{longitud de onda corta},
+\begin{equation}
+  \lambda_{GW}\ll\mathcal{R} .
+  \label{eq:eikonal}
+\end{equation}
+
+Conviene ser cuidadoso con qu\'e es $\mathcal{R}$, porque la confusi\'on m\'as
+natural lleva a conclusiones equivocadas. $\mathcal{R}$ es una escala de
+curvatura del campo del lente, no una escala geom\'etrica de proyecci\'on. A
+par\'ametro de impacto f\'isico $b$, las componentes del tensor de Riemann de
+la m\'etrica~\eqref{eq:weakfield} son de orden $GM_L/(c^{2}b^{3})$, de donde
+\begin{equation}
+  \mathcal{R}\;\sim\;\sqrt{\frac{c^{2}b^{3}}{GM_L}}
+  \;=\;b\,\sqrt{\frac{2b}{R_{\rm Sch}}},
+  \qquad R_{\rm Sch}\equiv\frac{2GM_L}{c^{2}} .
+  \label{eq:curvature_radius}
+\end{equation}
+En particular $\mathcal{R}$ no es el radio de Einstein $R_E$, que es una
+escala geom\'etrica y depende adem\'as de las tres distancias del problema. La
+distinci\'on es importante: el r\'egimen central de este texto es
+$\lambda_{GW}\sim R_E$, es decir, $w\sim1$, y si se identificaran
+$\mathcal{R}$ y $R_E$ parecer\'ia que la condici\'on~\eqref{eq:eikonal} se
+viola justamente donde el problema es interesante. Lo que muestra la
+Ec.~\eqref{eq:curvature_radius} es que, en campo d\'ebil, donde
+$b\gg R_{\rm Sch}$, se tiene $\mathcal{R}\gg b\gtrsim R_E$, de modo que la
+condici\'on se cumple con holgura incluso cuando $\lambda_{GW}\sim R_E$.
+
+Bajo la Ec.~\eqref{eq:eikonal}, entonces, el t\'ermino de curvatura se
+descarta y la Ec.~\eqref{eq:linearized} queda
+$h_{\mu\nu;\alpha}^{\qquad;\alpha}=0$. Escribiendo la onda como el producto de
+un tensor de polarizaci\'on por una amplitud escalar,
+\begin{equation}
+  h_{\mu\nu}=\phi\;e_{\mu\nu},
+  \label{eq:polarization_split}
+\end{equation}
+con $e_{\mu\nu}$ transportado paralelamente a lo largo del rayo, cada
+polarizaci\'on independiente obedece la misma ecuaci\'on de onda escalar sobre
+el fondo del lente,
+\begin{equation}
+  \partial_{\mu}\!\left(\sqrt{-\bar g}\;\bar g^{\mu\nu}\partial_{\nu}\phi\right)=0 ,
   \label{eq:scalar_wave}
 \end{equation}
-Esta es la reducci\'on clave: el lensing en este r\'egimen no mezcla ni rota
-las dos polarizaciones de la GW, y cada polarizaci\'on es amplificada/
-retrasada por el mismo factor (complejo, dependiente de la frecuencia)
-derivado m\'as abajo. Es tambi\'en por qu\'e resolver el problema de
-difracci\'on de campo escalar \emph{es} resolver el problema de lensing de
-GWs ac\'a, y nada de la estructura de esp\'in 2 sobrevive m\'as all\'a de
-este punto.
+que es la Ec.~7 de \citet{Takahashi2003}. El cambio del tensor de
+polarizaci\'on a lo largo del recorrido es de orden $U$, y por lo tanto
+despreciable en campo d\'ebil.
 
-\begin{checkbox}
-Esta reducci\'on s\'olo se usa, nunca se re-deriva num\'ericamente en este
-proyecto --- es un resultado est\'andar citado arriba. Lo que \emph{s\'i} se
-chequea num\'ericamente, repetidamente m\'as abajo, es todo lo que se
-construye sobre ella: la integral de difracci\'on a la que da lugar, la
-forma cerrada del lente puntual, y su l\'imite de \'optica geom\'etrica. El
-Cap\'itulo~\ref{ch:beyond} discute qu\'e har\'ia falta para ir m\'as all\'a
-de esta reducci\'on por completo.
-\end{checkbox}
+Esta es la reducci\'on central del cap\'itulo, y conviene enunciar con
+precisi\'on qu\'e afirma. El lente, en este r\'egimen, no mezcla ni rota las
+dos polarizaciones de la onda gravitacional: act\'ua sobre cada una por
+separado, y lo hace con el mismo factor complejo. Toda la estructura de
+esp\'in 2 de la radiaci\'on queda contenida en $e_{\mu\nu}$, que se propaga
+sin cambios, y el problema de lente se reduce por completo al de la amplitud
+escalar $\phi$. Resolver un problema de difracci\'on escalar \emph{es},
+entonces, resolver el problema de lente de ondas gravitacionales. Las
+correcciones a esta imagen son de orden $(\lambda_{GW}/\mathcal{R})^{2}$; el
+cap\'itulo~\ref{ch:beyond} discute qu\'e formalismo har\'ia falta para
+calcularlas.
 
-\section{La ecuaci\'on de Helmholtz y el lente delgado}
+% ----------------------------------------------------------------------
+\section{Ecuaci\'on de Helmholtz e \'indice de refracci\'on}
+\label{sec:helmholtz}
 
-Para la m\'etrica de campo d\'ebil
-$\bar g_{\mu\nu}=\eta_{\mu\nu}-2U\,\delta_{\mu\nu}$ (forma is\'otropa de
-campo d\'ebil, unidades $c=1$ en esta secci\'on), la
-Ec.~\eqref{eq:scalar_wave} para una onda de frecuencia angular fija
-$\omega$, $\Phi(\vb r,t)=\psi(\vb r)e^{-i\omega t}$, se convierte en
+El paso siguiente es pasar al dominio de la frecuencia. Para una onda de
+frecuencia angular fija $\omega=2\pi f$ se escribe
+$\phi(\vb r,t)=\tilde\phi(\vb r)\,e^{-i\omega t}$, y al sustituir la
+m\'etrica~\eqref{eq:weakfield} en la Ec.~\eqref{eq:scalar_wave}, conservando
+solo los t\'erminos de primer orden en $U$, se obtiene
 \begin{equation}
-  \left(\nabla^2 + \omega^2\right)\psi = 4\omega^2 U\,\psi ,
+  \left(\nabla^{2}+\frac{\omega^{2}}{c^{2}}\right)\tilde\phi
+  \;=\;\frac{4\,\omega^{2}}{c^{4}}\,U\,\tilde\phi ,
   \label{eq:helmholtz}
 \end{equation}
-una ecuaci\'on de Helmholtz con el potencial del lente actuando como una
-perturbaci\'on del \'indice de refracci\'on (dependiente de la frecuencia),
-$n(\vb r)=1-2U(\vb r)$ --- exactamente an\'alogo a la \'optica
-geom\'etrica/de ondas en un medio de \'indice de refracci\'on variable, que
-es el origen de llamar a todo este formalismo ``\'optica de ondas''.
+la Ec.~8 de \citet{Takahashi2003}. El paso intermedio, que incluye el c\'alculo
+de $\sqrt{-\bar g}$ y de $\bar g^{\mu\nu}$ a primer orden en $U$, est\'a
+desarrollado en el \S\ref{ap:helmholtz}.
 
-\subsection*{Reducci\'on de lente delgado (Fresnel--Kirchhoff)}
-Como $a_\mathrm{out}\ll D_L,D_S$ (Ec.~\ref{eq:hierarchy} y las distancias de
-escala gal\'actica de arriba), la deflexi\'on ocurre en una regi\'on cuya
-extensi\'on a lo largo de la l\'inea de visi\'on es despreciable comparada
-con $D_L$ y $D_S$: la aproximaci\'on est\'andar de lente delgado.
-Propagando la Ec.~\eqref{eq:helmholtz} desde el plano de la fuente al plano
-del lente y de ah\'i al observador v\'ia la integral de difracci\'on de
-Fresnel (aproximaci\'on paraxial, v\'alida ya que todos los \'angulos
-involucrados son $\ll1$) da el factor de amplificaci\'on --- la raz\'on
-entre la onda lenteada y la no lenteada en el observador,
+La forma de la Ec.~\eqref{eq:helmholtz} es la de una ecuaci\'on de Helmholtz
+ordinaria en un medio de \'indice de refracci\'on variable. Reescribi\'endola
+como $\left(\nabla^{2}+\omega^{2}n^{2}/c^{2}\right)\tilde\phi=0$ y comparando
+a primer orden se identifica
 \begin{equation}
-  F(f) \;=\; \frac{D_S}{D_L D_{LS}}\,\frac{f}{i}
-  \int d^2\vb\xi\; \exp\!\left[\, i 2\pi f\, t_d(\vb\xi;\vb\eta)\,\right],
+  n(\vb r)\;=\;1-\frac{2U(\vb r)}{c^{2}}\;=\;1+\frac{2GM_L}{c^{2}r} ,
+  \label{eq:refractive_index}
+\end{equation}
+de manera que el campo gravitatorio del lente act\'ua sobre la onda
+exactamente como lo har\'ia un medio \'opticamente m\'as denso concentrado
+alrededor de la masa. La onda se propaga m\'as lentamente cerca del lente,
+que es el origen del retardo de Shapiro, y el frente de onda se curva hacia
+\'el. De esta analog\'ia viene el nombre \emph{\'optica de ondas}: a partir de
+este punto el problema es formalmente id\'entico al de la difracci\'on de la
+luz por un medio inhomog\'eneo, y se lo puede resolver con las herramientas de
+la \'optica ondulatoria.
+
+% ----------------------------------------------------------------------
+\section{Lente delgado y la integral de Fresnel--Kirchhoff}
+\label{sec:lentedelgado}
+
+La Ec.~\eqref{eq:helmholtz} es tridimensional y no tiene soluci\'on cerrada
+para un potencial arbitrario. Lo que la vuelve tratable es que la regi\'on en
+la que la onda se desv\'ia apreciablemente, cuya extensi\'on es la del
+par\'ametro de impacto del rayo, resulta corta frente a las distancias que la
+onda recorre antes y despu\'es de atravesarla, que son $D_{LS}$ y $D_L$. La
+primera de las dos merece atenci\'on. En un lente cosmol\'ogico ambas son
+enormes y la comparaci\'on es trivial, pero en un triple $D_{LS}$ no es una
+distancia astron\'omica sino la proyecci\'on de la \'orbita externa sobre la
+l\'inea de visi\'on, de modo que la raz\'on sigue siendo chica, pero por un
+factor modesto y no por los muchos \'ordenes de magnitud del caso
+cosmol\'ogico. El \S\ref{sec:paraxial} la eval\'ua y precisa cu\'anta
+exactitud deja. Aceptado eso, se puede suponer que toda la deflexi\'on ocurre
+en un \'unico plano perpendicular a la l\'inea de visi\'on, el \emph{plano del
+lente}, y que a ambos lados de \'el la onda se propaga libremente. Esa es la
+aproximaci\'on de \emph{lente delgado}, y la Figura~\ref{fig:lensgeom} fija la
+geometr\'ia y los nombres.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0,>=Latex,font=\footnotesize]
+  \draw[thick] (0,-1.9) -- (0,2.0);
+  \draw[thick] (4.9,-1.9) -- (4.9,2.0);
+  \node[anchor=south,align=center] at (0,2.05) {plano\\del lente};
+  \node[anchor=south,align=center] at (4.9,2.05) {plano\\de la fuente};
+  \draw[dashed,gray] (-3.4,0) -- (5.6,0);
+  \fill (-3.2,0) circle (0.09);
+  \node[anchor=south] at (-3.2,0.14) {observador};
+  \fill (0,0) circle (0.10);
+  \node[anchor=north east] at (-0.08,-0.10) {$M_L$};
+  \fill (4.9,0.85) circle (0.08);
+  \node[anchor=south] at (4.9,0.99) {fuente};
+  \draw[thick] (-3.2,0) -- (0,1.45) -- (4.9,0.85);
+  \draw[<->] (-0.32,0.06) -- (-0.32,1.45) node[midway,left] {$\vb\xi$};
+  \draw[<->] (5.28,0.06) -- (5.28,0.85) node[midway,right] {$\vb\eta$};
+  \draw[dotted] (4.9,0.85) -- (5.38,0.85);
+  \draw[<->] (-3.2,-1.45) -- (0,-1.45) node[midway,below] {$D_L$};
+  \draw[<->] (0,-1.45) -- (4.9,-1.45) node[midway,below] {$D_{LS}$};
+  \draw[<->] (-3.2,-2.35) -- (4.9,-2.35) node[midway,below] {$D_S$};
+\end{tikzpicture}
+\caption{Geometr\'ia de lente delgado. Toda la deflexi\'on se concentra en el
+plano del lente; $\vb\xi$ es la posici\'on de ese plano por la que pasa un
+rayo dado y $\vb\eta$ la posici\'on de la fuente en su propio plano, ambas
+medidas desde el eje \'optico. Las tres distancias son paralelas a la l\'inea
+de visi\'on. En \'optica de ondas no se suma un n\'umero finito de rayos, sino
+que se integra sobre todas las posiciones $\vb\xi$ del plano del lente.}
+\label{fig:lensgeom}
+\end{figure}
+
+La cantidad de inter\'es es el cociente entre la amplitud que llega al
+observador con el lente presente y la que llegar\'ia sin \'el,
+\begin{equation}
+  F(f)\;\equiv\;\frac{\tilde\phi^{L}(f)}{\tilde\phi(f)} ,
+  \label{eq:Fdef}
+\end{equation}
+llamado \emph{factor de amplificaci\'on} (\citealp{Takahashi2003}, su Ec.~9).
+Aplicando el teorema integral de Kirchhoff a la Ec.~\eqref{eq:helmholtz} en la
+geometr\'ia de la Figura~\ref{fig:lensgeom}, y usando la aproximaci\'on
+paraxial, v\'alida porque todos los \'angulos involucrados son muy peque\~nos,
+se obtiene
+\begin{equation}
+  F(f)\;=\;\frac{D_S}{c\,D_LD_{LS}}\,\frac{f}{i}
+  \int d^{2}\vb\xi\;
+  \exp\!\left[\,2\pi i\,f\,t_d(\vb\xi;\vb\eta)\,\right] ,
   \label{eq:Fdim}
 \end{equation}
-donde $\vb\xi$ es la posici\'on en el plano del lente, $\vb\eta$ la
-posici\'on (fija) de la fuente, y $t_d$ el retraso temporal (geom\'etrico
-$+$ Shapiro) de un rayo que pasa por $\vb\xi$ relativo al camino no
-deflectado (\citealp{SchneiderEhlersFalco1992}; \citealp{Takahashi2003}).
-Por construcci\'on, $h_{\rm lensado}(f)=F(f)\,h_{\rm no\ lensado}(f)$: todo
-lo que el lente le hace a la forma de onda (equivalente escalar) est\'a
-contenido en este \'unico n\'umero complejo, dependiente de la frecuencia.
+donde $t_d$ es el retardo temporal de un rayo que pasa por $\vb\xi$ respecto
+del camino no deflectado (\citealp{SchneiderEhlersFalco1992};
+\citealp{Takahashi2003}, su Ec.~10). El desarrollo completo est\'a en el
+\S\ref{ap:fresnel}.
 
-\subsection*{Forma adimensional}
-Escalando la posici\'on en el plano del lente por el radio de Einstein
-$\xi_0\equiv R_E$ y la posici\'on de la fuente por la escala
-correspondiente en el plano de la fuente $\eta_0\equiv \xi_0 D_S/D_L$, con
-$\vb x\equiv\vb\xi/\xi_0$, $\vb y\equiv\vb\eta/\eta_0$ (as\'i $y=|\vb y|$ es
-el par\'ametro de impacto adimensional usado en todo este proyecto), y
-definiendo el potencial de deflexi\'on adimensional $\psi(\vb x)$ v\'ia
-$t_d = (1+z_L)\,\xi_0^2\dfrac{D_S}{D_L D_{LS}}\left[\tfrac12|\vb x-\vb
-y|^2-\psi(\vb x)\right]$ (el factor $\xi_0^2$ es necesario por an\'alisis
-dimensional: $\vb x,\vb y$ son adimensionales por construcci\'on, as\'i que
-es lo que convierte el corchete de vuelta a un \'area f\'isica antes de
-dividir por las distancias, dando unidades de tiempo), la Ec.~\eqref{eq:Fdim}
-se convierte en
+La interpretaci\'on de la Ec.~\eqref{eq:Fdim} es el principio de Huygens:
+cada punto del plano del lente reemite la onda, con una fase proporcional al
+retardo que acumula el rayo que pasa por ah\'i, y el campo en el observador es
+la suma coherente de todas esas contribuciones. La \'optica geom\'etrica se
+recupera cuando esa suma est\'a dominada por los puntos de fase estacionaria,
+que son las im\'agenes; la \'optica de ondas es lo que ocurre cuando el resto
+del plano tambi\'en contribuye apreciablemente.
+
+El retardo temporal tiene dos partes,
 \begin{equation}
-  F_{\rm raw}(w,\vb y) \;=\; \overline{\frac{w}{2\pi i}\int d^2\vb x\;
-  \exp\!\Big[\,i\,w\,\varphi(\vb x,\vb y)\,\Big]},
-  \qquad
-  \varphi(\vb x,\vb y)\equiv \tfrac12|\vb x-\vb y|^2-\psi(\vb x),
-  \label{eq:Fdimless}
+  t_d(\vb\xi;\vb\eta)\;=\;
+  \underbrace{\frac{D_S}{2c\,D_LD_{LS}}
+  \left|\vb\xi-\frac{D_L}{D_S}\vb\eta\right|^{2}}_{\text{geom\'etrico}}
+  \;-\;
+  \underbrace{\frac{2}{c^{3}}\int U\,dz}_{\text{Shapiro}} ,
+  \label{eq:td_split}
 \end{equation}
-donde la frecuencia adimensional es
+donde el primer t\'ermino es el exceso de camino de una trayectoria quebrada
+respecto de la recta, y el segundo es el retardo que acumula la onda al
+atravesar el pozo de potencial, es decir, el retardo de Shapiro, que es la
+integral del exceso de \'indice de refracci\'on de la
+Ec.~\eqref{eq:refractive_index} a lo largo del rayo.
+
+Con la definici\'on~\eqref{eq:Fdef}, la forma de onda que llega al observador
+es simplemente
 \begin{equation}
-  w \;\equiv\; 8\pi\,\frac{GM_L}{c^3}\,f
+  h_L(f)\;=\;F(f)\,h(f) ,
+  \label{eq:hlensed}
+\end{equation}
+donde $h(f)$ es la forma de onda que se habr\'ia observado sin lente. Todo lo
+que el lente le hace a la se\~nal, amplificaci\'on y retardo, est\'a contenido
+en ese \'unico n\'umero complejo dependiente de la frecuencia.
+
+% ----------------------------------------------------------------------
+\section{Forma adimensional}
+\label{sec:adimensional}
+
+La Ec.~\eqref{eq:Fdim} contiene cuatro escalas dimensionales: dos distancias
+independientes, una masa y una frecuencia. Casi todas se pueden absorber en la
+normalizaci\'on, y conviene hacerlo, porque el resultado deja ver que el
+problema depende en realidad de solo dos par\'ametros.
+
+Se escala la posici\'on en el plano del lente por el radio de Einstein y la
+posici\'on de la fuente por la escala correspondiente en su propio plano,
+\begin{equation}
+  \xi_0\equiv R_E=\sqrt{\frac{4GM_L}{c^{2}}\frac{D_LD_{LS}}{D_S}},
+  \qquad
+  \eta_0\equiv\xi_0\frac{D_S}{D_L},
+  \qquad
+  \vb x\equiv\frac{\vb\xi}{\xi_0},
+  \qquad
+  \vb y\equiv\frac{\vb\eta}{\eta_0} .
+  \label{eq:scalings}
+\end{equation}
+El m\'odulo $y=|\vb y|$ es el \emph{par\'ametro de impacto adimensional}: mide
+la separaci\'on angular proyectada entre la fuente y el lente en unidades del
+radio de Einstein angular, y es el par\'ametro que controla toda la geometr\'ia
+del problema. Con $y\ll1$ la fuente est\'a casi alineada y el lente act\'ua con
+fuerza; con $y\gg1$ el efecto se apaga.
+
+En estas variables el retardo temporal se escribe
+\begin{equation}
+  t_d\;=\;\frac{\xi_0^{2}D_S}{c\,D_LD_{LS}}\,
+  \Big[\tfrac12|\vb x-\vb y|^{2}-\psi(\vb x)+\phi_m(\vb y)\Big] ,
+  \label{eq:td_dimensionless}
+\end{equation}
+que es la Ec.~12 de \citet{Takahashi2003}, particularizada a $z_L=0$. El
+factor $\xi_0^{2}$ es necesario por an\'alisis dimensional, ya que $\vb x$ e
+$\vb y$ son adimensionales y el corchete debe volver a tener unidades de
+\'area antes de dividirse por las distancias y por $c$ para dar un tiempo. La funci\'on $\psi(\vb x)$ es el
+\emph{potencial de deflexi\'on adimensional}, que satisface la ecuaci\'on de
+Poisson bidimensional $\nabla^{2}_{\vb x}\psi=2\Sigma/\Sigma_{cr}$ con
+$\Sigma$ la densidad superficial del lente y
+$\Sigma_{cr}=D_S c^2/(4\pi G D_LD_{LS})$ la densidad cr\'itica
+(\citealp{Takahashi2003}, su Ec.~13). La constante $\phi_m(\vb y)$ es
+arbitraria, y su papel se discute enseguida.
+
+Sustituyendo la Ec.~\eqref{eq:td_dimensionless} en la~\eqref{eq:Fdim} y
+definiendo
+\begin{equation}
+  \varphi(\vb x,\vb y)\equiv\tfrac12|\vb x-\vb y|^{2}-\psi(\vb x),
+  \qquad
+  w\;\equiv\;8\pi\,\frac{GM_L}{c^{3}}\,f ,
   \label{eq:wdef}
 \end{equation}
-(el factor $(1+z_L)$ es $1$ ac\'a, seg\'un el Cap\'itulo~\ref{ch:scope}), y la barra
-superior denota conjugaci\'on compleja. $F_{\rm raw}$ es exactamente lo que
-calcula \code{F\_bruteforce\_2d} en \code{waveoptics.py} (la integral sin la
-barra, conjugada como \'ultimo paso): todav\'ia no se us\'o ninguna forma
-cerrada, s\'olo la Ec.~\eqref{eq:helmholtz} y la reducci\'on de lente
-delgado/paraxial.
-
-$F_{\rm raw}$ no es todav\'ia $F(w,\vb y)$, la cantidad efectivamente usada
-en todo lo dem\'as de este proyecto: como $\psi(\vb x)=\ln|\vb x|$ (punto
-siguiente) resuelve la ecuaci\'on de Poisson de deflexi\'on s\'olo a menos
-de una constante aditiva arbitraria, la fase \emph{absoluta} que
-$F_{\rm raw}$ lleva no es un observable f\'isico --- s\'olo la fase
-\emph{relativa} entre im\'agenes lo es. $F(w,\vb y)$ se define referida a la
-llegada de la imagen fuerte (m\'inimo, $x_+$, \'unica para $y>0$; \S3.1),
-restando su propia fase de Fermat:
+la integral queda
 \begin{equation}
-  F(w,\vb y) \;\equiv\; F_{\rm raw}(w,\vb y)\;e^{\,i w \varphi(x_+,\vb y)},
-  \label{eq:Fnorm}
+  F(w,\vb y)\;=\;\left[\,\frac{w}{2\pi i}\int d^{2}\vb x\;
+  \exp\!\Big(i\,w\,\big[\varphi(\vb x,\vb y)+\phi_m(\vb y)\big]\Big)\right]^{\!*} ,
+  \label{eq:Fdimless}
 \end{equation}
-la normalizaci\'on de referencia de fase de \citet{Takahashi2003}. Con
-ella, la imagen fuerte no lleva fase en absoluto ($F\to\sqrt{\mu(x_+)}$
-cuando $w\to\infty$ a lo largo de esa imagen sola, Ec.~\eqref{eq:Fgeo}), y
-s\'olo el retraso $\Delta T(y)$ entre im\'agenes --- la cantidad f\'isica
---- sobrevive. Todas las ecuaciones de $F(w,y)$ de ac\'a en adelante
-(Ecs.~\ref{eq:Fgeo}, \ref{eq:Fclosed}, \ref{eq:Fradial}) ya incluyen este
-factor.
+que es la forma con la que se trabaja de aqu\'i en adelante. Los pasos
+intermedios est\'an en el \S\ref{ap:adimensional}. El par\'ametro $w$ es la
+\emph{frecuencia adimensional} del problema: comparando con el retardo de
+Shapiro del lente, $\sim4GM_L/c^{3}$, se ve que $w$ es la fase, en radianes,
+que ese retardo imprime sobre la onda, de modo que $w/2\pi$ lo mide en
+per\'iodos. El problema entero depende, entonces, de
+dos n\'umeros: $w$ e $y$.
 
-\begin{checkbox}[title={Por qu\'e la barra de conjugaci\'on}]
-La integral de Fresnel-Kirchhoff, tal cual se deriva de la
-Ec.~\eqref{eq:helmholtz} (sin conjugar), es la forma que aparece en la
-literatura de lensing citada ac\'a (\citealp{Takahashi2003} y las
-referencias que la preceden) --- pero esa literatura, casi siempre, usa la
-convenci\'on de Fourier \emph{opuesta} a la de este proyecto
-(\code{wiki/conventions.md}: $h(f)=\int h(t)e^{-2\pi ift}dt$, la misma que
-\code{numpy.fft.rfft}). Por el teorema de retraso de Fourier est\'andar en
-esa convenci\'on, una imagen que llega despu\'es (retraso $\Delta t>0$)
-lleva fase $e^{-i2\pi f\Delta t}$, no $e^{+i2\pi f\Delta t}$: el signo
-opuesto al que da la integral sin conjugar. Conjugar el resultado final de
-cada evaluador de $F$ es lo que corrige ese signo global y hace que la
-imagen d\'ebil (punto silla) llegue \emph{despu\'es} de la fuerte, como
-exige $\Delta T>0$ en la Ec.~\eqref{eq:images} de m\'as abajo --- verificado
-directamente lenteando un pulso de prueba corto v\'ia FFT/IFFT (igual que
-\code{cases/case\_A\_chirp/run.py}) y comprobando el orden de llegada de las
-dos im\'agenes, \code{tests/test\_waveoptics.py::
-check\_causality\_of\_lensed\_pulse}. Como $|F(w,\vb y)|$ no cambia al
-conjugar, esto es invisible a cualquier chequeo o figura de s\'olo
-magnitud (todos los patrones de difracci\'on, las franjas de $|F(f)|$,
-todos los resultados del Caso~B); s\'olo la reconstrucci\'on de la forma de
-onda lensada en el tiempo, en el Caso~A, depende de este signo.
-\end{checkbox}
+\subsection*{Convenci\'on de Fourier y conjugaci\'on}
 
-\begin{checkbox}[title={Por qu\'e $F$ se refiere a la imagen fuerte}]
-$\psi(x)=\ln|x|$ resuelve la ecuaci\'on de Poisson de deflexi\'on s\'olo a
-menos de una constante aditiva arbitraria, as\'i que $F_{\rm raw}$
-(Ec.~\eqref{eq:Fdimless}) por s\'i sola lleva una fase absoluta,
-$w\varphi(x_+,y)$, que ninguna observable f\'isica deber\'ia depender de
-ella: s\'olo la fase \emph{relativa} entre im\'agenes, $\Delta T$, es
-f\'isica. La Ec.~\eqref{eq:Fnorm} fija esa constante restando la fase
-propia de la imagen fuerte, de modo que el merger lensado del Caso~A cae
-exactamente en el mismo instante que el no lensado
-(\code{peak\_strain\_amplification$=1.065$}, \code{report.pdf} \S2), y el
-eco de segunda imagen aparece exactamente en $t_{\rm merger}+\Delta T(y_A)$,
-sin ning\'un corrimiento adicional que explicar.
-\end{checkbox}
+El asterisco de la Ec.~\eqref{eq:Fdimless} merece una explicaci\'on, porque no
+aparece en la forma en que la integral se escribe habitualmente en la
+literatura. Su origen es una diferencia de convenci\'on en la transformada de
+Fourier, y conviene fijar la que se usa en este texto:
+\begin{equation}
+  h(f)=\int h(t)\,e^{-2\pi i ft}\,dt ,
+  \label{eq:fourier}
+\end{equation}
+que es la convenci\'on habitual en el an\'alisis de datos de ondas
+gravitacionales. La literatura de lentes, en cambio, suele adoptar el signo
+opuesto en el exponente, y con \'el la integral de la
+Ec.~\eqref{eq:Fdim} aparece sin conjugar. El punto concreto en el que esa
+convenci\'on entra en la deducci\'on es el ansatz
+$\phi=\tilde\phi\,e^{-i\omega t}$ del \S\ref{sec:helmholtz}: escribir la
+dependencia temporal con ese signo equivale a definir la transformada con el
+exponente opuesto al de la Ec.~\eqref{eq:fourier}, y la integral de Kirchhoff
+que sale de ah\'i hereda ese signo.
 
-\begin{checkbox}[title={Chequeo: $w\to0$}]
-F\'isicamente, una onda mucho m\'as larga que la escala de efecto del lente
-no deber\'ia ser lenteada en absoluto: $F(w,\vb y)\to1$ cuando $w\to0$. Esto
-no es obvio a partir de la Ec.~\eqref{eq:Fdimless} por expansi\'on de
-Taylor ingenua (la integral es s\'olo condicionalmente convergente,
-\S\ref{sec:pointlens}), pero se confirma num\'ericamente a
-$\sim5\times10^{-4}$ en $w=10^{-4}$ por
-\code{tests/test\_waveoptics.py::check\_low\_w\_limit}.
-\end{checkbox}
+La diferencia no es cosm\'etica. Por el teorema de retardo, en la
+convenci\'on~\eqref{eq:fourier} una se\~nal que llega con un retardo
+$\Delta t>0$ adquiere una fase $e^{-2\pi i f\Delta t}$, mientras que en la
+convenci\'on opuesta adquiere $e^{+2\pi i f\Delta t}$. Si se tomara la
+expresi\'on de la literatura sin conjugar y se la usara con la
+convenci\'on~\eqref{eq:fourier}, la segunda imagen del lente aparecer\'ia
+\emph{antes} que la primera, lo cual es imposible. Como $|F|$ no cambia al
+conjugar, el error ser\'ia invisible en cualquier gr\'afico de magnitud y solo
+aparecer\'ia al reconstruir la se\~nal en el dominio del tiempo.
+
+\subsection*{La fase de referencia}
+
+La constante $\phi_m(\vb y)$ de la Ec.~\eqref{eq:td_dimensionless} tampoco es
+un detalle t\'ecnico. El potencial de deflexi\'on $\psi$ resuelve una ecuaci\'on
+de Poisson, y por lo tanto est\'a definido a menos de una constante aditiva
+arbitraria. Esa constante se traslada a una fase global de $F$, que por s\'i
+misma no es observable: lo \'unico f\'isico es la fase \emph{relativa} entre
+im\'agenes, es decir, el retardo entre ellas.
+
+Hay que elegir entonces un origen de tiempos, y la elecci\'on habitual, que se
+adopta en este texto, es fijar $\phi_m(\vb y)$ de modo que el retardo m\'inimo
+sea cero, es decir, tomando como referencia la llegada de la primera imagen
+(\citealp{Takahashi2003}, su Ec.~12), es decir,
+\begin{equation}
+  \phi_m(\vb y)\;=\;-\min_{\vb x}\varphi(\vb x,\vb y) .
+  \label{eq:Fnorm_ref}
+\end{equation}
+Con esa convenci\'on, la imagen que
+llega primero no lleva ninguna fase, y lo \'unico que aparece en $F$ es el
+retardo de las dem\'as respecto de ella. La consecuencia pr\'actica es que una
+se\~nal con lente y otra sin lente quedan alineadas en el tiempo, y cualquier
+corrimiento que se observe entre ellas es f\'isico y no un artefacto de la
+elecci\'on de origen.
 
 % ======================================================================
 \chapter{El lente de masa puntual}
 \label{ch:pointlens}
 % ======================================================================
-\label{sec:pointlens}
 
-Todo lo de arriba es general (cualquier $\psi(\vb x)$). De ac\'a en
-adelante el lente es una \'unica masa puntual, $\psi(\vb x)=\ln|\vb x|$, el
-potencial de deflexi\'on cuyo gradiente $\nabla\psi=\vb x/|\vb x|^2$ da la
-ley de deflexi\'on est\'andar $1/|\vb x|$ de una masa puntual.
+Todo lo mencionado en el cap\'itulo anterior vale para un potencial de
+deflexi\'on $\psi(\vb x)$ cualquiera. Este cap\'itulo lo particulariza al
+caso m\'as simple y, para el sistema que interesa, el \'unico relevante es el
+lente de masa puntual. El resultado ser\'a una expresi\'on cerrada para $F(w,y)$, y el
+camino hasta ella pasa primero por el l\'imite de \'optica geom\'etrica, que
+adem\'as de ser m\'as intuitivo da la estructura que la soluci\'on exacta debe
+reproducir cuando $w$ es grande.
 
-\section{\'Optica geom\'etrica: im\'agenes, magnificaci\'on, retraso temporal}
+% ----------------------------------------------------------------------
+\section{Potencial de deflexi\'on de una masa puntual}
+\label{sec:psi_point}
+
+Una masa puntual tiene densidad superficial
+$\Sigma(\vb\xi)=M_L\,\delta^{2}(\vb\xi)$. Resolviendo con ella la ecuaci\'on
+de Poisson bidimensional $\nabla^{2}_{\vb x}\psi=2\Sigma/\Sigma_{cr}$, con la
+normalizaci\'on $\xi_0=R_E$ de la Ec.~\eqref{eq:scalings}, se obtiene
+\begin{equation}
+  \psi(\vb x)=\ln|\vb x| ,
+  \label{eq:psi_point}
+\end{equation}
+que es la funci\'on de Green del laplaciano en dos dimensiones
+(\citealp{Takahashi2003}, \S2.1); la cuenta est\'a en el \S\ref{ap:psipoint}.
+Su gradiente,
+\begin{equation}
+  \grad\psi=\frac{\vb x}{|\vb x|^{2}} ,
+  \label{eq:defl_point}
+\end{equation}
+es la ley de deflexi\'on $1/|\vb x|$ de una masa puntual, que en variables
+f\'isicas es el \'angulo de deflexi\'on $\alpha=4GM_L/(c^{2}b)$ usado en la
+Ec.~\eqref{eq:diffdefl}. La elecci\'on de $R_E$ como unidad de longitud es lo
+que hace que el potencial quede sin ning\'un prefactor.
+
+% ----------------------------------------------------------------------
+\section{\'Optica geom\'etrica: im\'agenes y magnificaci\'on}
 \label{sec:geo}
 
-Por simetr\'ia tomamos $\vb y=(y,0)$. Los puntos estacionarios de
-$\varphi(\vb x,\vb y)$ (principio de Fermat: las im\'agenes est\'an donde el
-retraso temporal es estacionario) restringidos al eje $x_2=0$ resuelven
+En el l\'imite $w\to\infty$ la integral de la Ec.~\eqref{eq:Fdimless} est\'a
+dominada por los puntos donde la fase es estacionaria. Esa condici\'on,
+$\grad_{\vb x}\varphi=0$, es el principio de Fermat: las im\'agenes se forman
+donde el retardo temporal es estacionario. Con
+$\varphi=\tfrac12|\vb x-\vb y|^{2}-\ln|\vb x|$ y tomando, por simetr\'ia,
+$\vb y=(y,0)$ con $y>0$, los puntos estacionarios est\'an sobre el eje
+$x_2=0$ y satisfacen la \emph{ecuaci\'on de lente}
 \begin{equation}
-  x - \frac{1}{x} = y
-  \;\;\Longrightarrow\;\;
-  x_\pm = \tfrac12\left(y\pm\sqrt{y^2+4}\right),
+  x-\frac{1}{x}=y
+  \qquad\Longrightarrow\qquad
+  x_\pm=\tfrac12\left(y\pm\sqrt{y^{2}+4}\right),
   \qquad x_+x_-=-1 .
   \label{eq:images}
 \end{equation}
-Dos im\'agenes, siempre: $x_+>1>0>x_->-1$ para $y>0$.
+Un lente de masa puntual produce siempre \emph{dos} im\'agenes, con
+$x_+>1>0>x_->-1$: una fuera del anillo de Einstein y del mismo lado que la
+fuente, y otra dentro del anillo y del lado opuesto. Cuando $y\to0$ las dos se
+funden en el anillo completo $|x|=1$, que es el radio de Einstein; cuando
+$y\to\infty$ la primera tiende a la posici\'on no deflectada, $x_+\to y$, y la
+segunda colapsa sobre el lente y se apaga.
 
-\subsection*{Magnificaci\'on}
-Para un lente axisim\'etrico el mapa de lente 2D $\vb y(\vb x)=f(x)\hat{\vb
-x}$, $f(x)\equiv x-1/x$, tiene jacobiano $\det(\partial\vb y/\partial\vb x) =
-\big(f(x)/x\big)\,f'(x)$ (el producto de los factores de estiramiento
-tangencial y radial --- una identidad est\'andar para mapas axisim\'etricos,
-p.\ ej.\ \citealp{SchneiderEhlersFalco1992}). Con $f'(x)=1+1/x^2$,
+La \emph{magnificaci\'on} de cada imagen es el inverso del jacobiano del mapa
+de lente. Para un lente axisim\'etrico el mapa tiene la forma
+$\vb y(\vb x)=g(x)\hat{\vb x}$ con $g(x)=x-1/x$, y su jacobiano se factoriza
+en un estiramiento tangencial y uno radial,
 \begin{equation}
-  \mu(x) \;=\; \frac{1}{\det(\partial\vb y/\partial\vb x)}
-  \;=\; \frac{1}{\left(1-\tfrac{1}{x^2}\right)\left(1+\tfrac{1}{x^2}\right)}
-  \;=\; \frac{x^4}{x^4-1} .
+  \det\!\pdv{\vb y}{\vb x}=\frac{g(x)}{x}\,g'(x)
+  =\left(1-\frac{1}{x^{2}}\right)\left(1+\frac{1}{x^{2}}\right)
+  =1-\frac{1}{x^{4}} ,
+  \label{eq:jacobian}
+\end{equation}
+de donde
+\begin{equation}
+  \mu(x)=\frac{1}{\det(\partial\vb y/\partial\vb x)}=\frac{x^{4}}{x^{4}-1} .
   \label{eq:magnification}
 \end{equation}
-
-\begin{checkbox}[title={Chequeo: magnificaci\'on total vs.\ Paczy\'nski (1986)}]
-La magnificaci\'on total (sin signo) $\mu_{\rm tot}(y)=|\mu(x_+)|+|\mu(x_-)|$
-construida a partir de las Ecs.~\eqref{eq:images}--\eqref{eq:magnification}
-debe igualar la f\'ormula independiente, de libro de texto, de microlensing
-$A(y)=(y^2+2)/\!\left(y\sqrt{y^2+4}\right)$ \citep{Paczynski1986}. Verificado
-a precisi\'on de punto flotante ($<3\times10^{-15}$, todos los $y$
-probados) en \code{tests/test\_waveoptics.py::
-check\_paczynski\_magnification} --- una verificaci\'on cruzada genuina, ya
-que la Ec.~\eqref{eq:magnification} se derive ac\'a a partir del jacobiano,
-no se copi\'o del paper de Paczy\'nski.
-\end{checkbox}
-
-\subsection*{Retraso temporal y el factor de amplificaci\'on de \'optica
-geom\'etrica}
-El retraso temporal (adimensional) de cada imagen es $\varphi(x_\pm,y)$, y
-el retraso de la imagen (siempre de paridad positiva, ``m\'inimo'') $x_+$
-relativo a s\'i misma es trivialmente cero, mientras que la imagen de
-punto silla $x_-$ llega m\'as tarde por
-$\Delta T(y)\equiv\varphi(x_-,y)-\varphi(x_+,y)>0$. Evaluar la
-Ec.~\eqref{eq:Fdimless} (con su barra de conjugaci\'on) por fase
-estacionaria (v\'alido cuando $w\to\infty$) suma las dos im\'agenes con
-fases de \'indice de Morse (m\'inimo: $0$; punto silla: $+\pi/2$, es decir,
-un factor global de $+i$, en la convenci\'on $h(f)=\int h(t)e^{-i2\pi
-ft}dt$ fijada en \code{wiki/conventions.md} --- una imagen que llega
-\emph{despu\'es}, con $\Delta T>0$, debe llevar fase $e^{-iw\Delta T}$ ah\'i,
-por el teorema de retraso de Fourier est\'andar), y despu\'es se aplica la
-Ec.~\eqref{eq:Fnorm} (restar la fase propia de la imagen fuerte, que es
-exactamente $\varphi(x_+,y)$, cancelando el t\'ermino correspondiente de
-$F_{\rm raw}$ por completo):
+La factorizaci\'on del jacobiano se justifica en el \S\ref{ap:jacobiano}.
+Evaluando en las dos im\'agenes de la Ec.~\eqref{eq:images} se obtiene la forma
+que se usa habitualmente,
 \begin{equation}
-  F_{\rm geo}(w,y) \;=\;
-  \sqrt{\mu(x_+)} \;+\; i\sqrt{|\mu(x_-)|}\,
-  e^{\,-iw\Delta T(y)}.
+  \mu_\pm=\frac12\pm\frac{y^{2}+2}{2y\sqrt{y^{2}+4}} ,
+  \label{eq:mupm}
+\end{equation}
+(\citealp{Takahashi2003}, su Ec.~18). La imagen $x_+$ tiene $\mu_+>1$ y
+paridad positiva: es un m\'inimo del retardo temporal. La imagen $x_-$ tiene
+$\mu_-<0$, que indica paridad invertida: es un punto silla del retardo. Su
+magnificaci\'on observable es $|\mu_-|$.
+
+Sumando las dos se obtiene la magnificaci\'on total del sistema,
+\begin{equation}
+  \mu_{\rm tot}(y)=|\mu_+|+|\mu_-|=\frac{y^{2}+2}{y\sqrt{y^{2}+4}} ,
+  \label{eq:paczynski}
+\end{equation}
+que es la curva de luz cl\'asica de microlente \citep{Paczynski1986}. Diverge
+cuando $y\to0$, que es la c\'austica de fuente puntual, y tiende a $1$ cuando
+$y\to\infty$, como debe ser.
+
+% ----------------------------------------------------------------------
+\section{Retardo entre im\'agenes y factor de amplificaci\'on geom\'etrico}
+\label{sec:fgeo}
+
+El retardo adimensional de cada imagen es $\varphi(x_\pm,y)$. Con la fase de
+referencia fijada en la primera imagen (\S\ref{sec:adimensional}), la
+$x_+$ llega por definici\'on en el instante cero y la $x_-$ llega despu\'es,
+con un retardo
+\begin{equation}
+  \Delta T(y)\;\equiv\;\varphi(x_-,y)-\varphi(x_+,y)
+  \;=\;\frac{y\sqrt{y^{2}+4}}{2}
+  +\ln\!\left(\frac{\sqrt{y^{2}+4}+y}{\sqrt{y^{2}+4}-y}\right)\;>\;0 .
+  \label{eq:deltaT}
+\end{equation}
+Este retardo es adimensional: el retardo f\'isico se obtiene multiplicando por
+$4GM_L/c^{3}$, de modo que crece linealmente con la masa del lente.
+
+Evaluar la Ec.~\eqref{eq:Fdimless} por el m\'etodo de fase estacionaria suma
+las contribuciones de las dos im\'agenes, cada una con su amplitud
+$\sqrt{|\mu|}$ y con una fase adicional que depende del tipo de punto
+estacionario. Esa fase extra, el \'indice de Morse, vale $0$ para un m\'inimo
+y $\pi/2$ para un punto silla, es decir, un factor $i$
+(\citealp{Takahashi2003}, su Ec.~15). El resultado es
+\begin{equation}
+  F_{\rm geo}(w,y)\;=\;\sqrt{\mu_+}\;+\;i\,\sqrt{|\mu_-|}\;
+  e^{-i\,w\,\Delta T(y)} ,
   \label{eq:Fgeo}
 \end{equation}
-Como se anticip\'o, la imagen fuerte no lleva fase alguna; s\'olo aparece
-$\Delta T(y)$, la cantidad f\'isica.
+que es la Ec.~18 de \citet{Takahashi2003} en la convenci\'on de Fourier
+fijada en la Ec.~\eqref{eq:fourier}. El desarrollo est\'a en el
+\S\ref{ap:fase_estacionaria}.
 
-\begin{checkbox}[title={Chequeo: l\'imite de \'optica geom\'etrica}]
-La Ec.~\eqref{eq:Fgeo} debe coincidir con la forma cerrada exacta
-(\S\ref{sec:closedform}) a $w$ grande, y el acuerdo debe \emph{mejorar} al
-crecer $w$ (es una expansi\'on asint\'otica). Verificado en
-\code{tests/test\_waveoptics.py::check\_geometric\_optics\_limit}: acuerdo
-relativo de $3\times10^{-4}$ en $w=10$, que baja a $3\times10^{-5}$ en
-$w=1000$.
-\end{checkbox}
+La estructura de la Ec.~\eqref{eq:Fgeo} es la de una interferencia de dos
+ondas: dos caminos distintos, con amplitudes distintas y un desfase que crece
+linealmente con la frecuencia. Tomando el m\'odulo al cuadrado,
+\begin{equation}
+  |F_{\rm geo}|^{2}=|\mu_+|+|\mu_-|
+  +2\sqrt{|\mu_+\mu_-|}\;\sin\!\big(w\,\Delta T(y)\big) ,
+  \label{eq:fringes}
+\end{equation}
+(\citealp{Takahashi2003}, su Ec.~21): los dos primeros t\'erminos reproducen
+la magnificaci\'on total de la \'optica geom\'etrica, Ec.~\eqref{eq:paczynski},
+y el tercero es un t\'ermino de interferencia que oscila con la frecuencia. Ese
+patr\'on de franjas, superpuesto al espectro de la se\~nal, es la firma
+observable del lente en el r\'egimen de lente est\'atico.
 
-\section{El resultado exacto: una funci\'on hipergeom\'etrica confluente}
+% ----------------------------------------------------------------------
+\section{La soluci\'on exacta}
 \label{sec:closedform}
 
-Resolver la Ec.~\eqref{eq:Fdimless} para el lente de masa puntual de manera
-exacta (originalmente \citealp{Peters1974}; \citealp{Deguchi1986}; la forma
-est\'andar citada en la literatura de lensing de GWs es
-\citealp{Takahashi2003}, en \emph{su} convenci\'on de Fourier, la opuesta a
-la de este proyecto) da, ya conjugada a la convenci\'on de
-\code{wiki/conventions.md} (Ec.~\eqref{eq:Fdimless}):
+Para un lente de masa puntual, la integral de la Ec.~\eqref{eq:Fdimless} se
+puede hacer de manera exacta, sin suponer $w$ grande. El resultado, obtenido
+originalmente por \citet{Peters1974} y \citet{Deguchi1986}, es
 \begin{equation}
-  F(w,y) \;=\; e^{\,iw\varphi(x_+,y)}\,
-  \exp\!\left[\frac{\pi w}{4} - i\frac{w}{2}\ln\frac{w}{2}\right]
-  \Gamma\!\left(1+\frac{iw}{2}\right)
-  {}_1F_1\!\left(-\frac{iw}{2},\,1;\,-\frac{iwy^2}{2}\right).
+  F(w,y)\;=\;e^{\,iw\varphi(x_+,y)}\;
+  \exp\!\left[\frac{\pi w}{4}-i\frac{w}{2}\ln\frac{w}{2}\right]\,
+  \Gamma\!\left(1+\frac{iw}{2}\right)\,
+  {}_1F_1\!\left(-\frac{iw}{2},\,1;\,-\frac{i\,w\,y^{2}}{2}\right) ,
   \label{eq:Fclosed}
 \end{equation}
-Esto es \code{src/gwlens/waveoptics.py::F\_point\_lens}: el t\'ermino
-hipergeom\'etrico, evaluado con aritm\'etica compleja de precisi\'on
-arbitraria (\code{mpmath}, ya que \code{scipy.special.hyp1f1} no acepta
-par\'ametros complejos) y conjugado como paso siguiente (\code{Gamma} y
-\code{hyp1f1} tienen coeficientes de Taylor reales, as\'i que conjugar el
-resultado final equivale a conjugar cada argumento, que es como qued\'o
-escrito ese t\'ermino arriba); despu\'es, el factor de referencia de fase
-$e^{iw\varphi(x_+,y)}$ (Ec.~\eqref{eq:Fnorm}) se aplica como paso final,
-por separado (la expresi\'on hipergeom\'etrica en s\'i, tal como aparece en
-la literatura citada, no lo incluye). En vez de confiar en ella s\'olo por
-la cita, se la chequea contra dos evaluaciones num\'ericas derivadas de
-manera independiente de la propia Ec.~\eqref{eq:Fdimless} --- y, m\'as
-importante, contra el chequeo de causalidad de la p\'agina anterior, que
-ninguna comparaci\'on entre evaluadores de $F$ pod\'ia hacer por s\'i sola.
+donde ${}_1F_1$ es la funci\'on hipergeom\'etrica confluente y $\Gamma$ la
+funci\'on gamma. Esta expresi\'on es el complejo conjugado de la Ec.~17 de
+\citet{Takahashi2003}, como exige la convenci\'on de Fourier de la
+Ec.~\eqref{eq:fourier}; el factor $e^{iw\varphi(x_+,y)}$ es la fase de
+referencia discutida en el \S\ref{sec:adimensional}, escrita aqu\'i de manera
+expl\'icita. La deducci\'on completa est\'a en el \S\ref{ap:cerrada}.
 
-\subsection*{Chequeo independiente 1: la integral 1D reducida con Bessel}
-Escribiendo $|\vb x-\vb y|^2=x^2+y^2-2xy\cos\theta$ en coordenadas polares
-en el plano del lente y usando la identidad est\'andar
-$\int_0^{2\pi}d\theta\,e^{ia\cos\theta}=2\pi J_0(a)$ (Abramowitz \& Stegun
-9.1.21) para hacer la integral angular en la Ec.~\eqref{eq:Fdimless} de
-manera anal\'itica deja una integral radial 1D,
+La Ec.~\eqref{eq:Fclosed} es la soluci\'on completa del problema. Depende solo
+de $w$ e $y$, como anticipaba el an\'alisis dimensional, y contiene tanto el
+r\'egimen de difracci\'on como el de \'optica geom\'etrica. Conviene examinar
+sus tres l\'imites, porque cada uno tiene un contenido f\'isico propio.
+
+\subsection*{Onda larga: $w\to0$}
+
+Cuando la longitud de onda es mucho mayor que la escala del lente, la onda no
+lo resuelve y pasa sin perturbarse:
 \begin{equation}
-  F(w,y) \;=\; e^{\,iw\varphi(x_+,y)}\;\overline{\left(-i\,w\,e^{\,iwy^2/2}
-  \int_0^\infty dx\;x\,J_0(wxy)\,
-  \exp\!\left[i w\left(\tfrac12 x^2-\ln x\right)\right]\right)}.
+  F(w,y)\;\longrightarrow\;1
+  \qquad\text{cuando}\qquad w\to0 ,
+  \label{eq:lowlimit}
+\end{equation}
+para cualquier $y$. Es el resultado esperado, pero no es evidente a partir de
+la Ec.~\eqref{eq:Fdimless}, porque la integral es solo condicionalmente
+convergente y una expansi\'on ingenua en potencias de $w$ no vale. El
+l\'imite se obtiene correctamente de la forma cerrada usando
+$\Gamma(1+iw/2)\to1$ y ${}_1F_1\to1$, y los dos factores exponenciales
+tendiendo tambi\'en a uno por separado, ya que $w\ln w\to0$.
+
+\subsection*{Alineaci\'on exacta: $y\to0$}
+
+En \'optica geom\'etrica, la magnificaci\'on diverge en alineaci\'on perfecta,
+Ec.~\eqref{eq:paczynski}. La soluci\'on exacta, en cambio, permanece finita
+para todo $w$:
+\begin{equation}
+  F(w,0)=e^{\,iw/2}\,
+  \exp\!\left[\frac{\pi w}{4}-i\frac{w}{2}\ln\frac{w}{2}\right]
+  \Gamma\!\left(1+\frac{iw}{2}\right) ,
+  \qquad
+  |F(w,0)|^{2}=\frac{\pi w}{1-e^{-\pi w}} ,
+  \label{eq:Fzero}
+\end{equation}
+usando ${}_1F_1(a,1;0)=1$, la fase de referencia
+$\varphi(x_+,0)=\tfrac12$, y la identidad
+$|\Gamma(1+iz)|^{2}=\pi z/\sinh(\pi z)$. La difracci\'on regulariza la
+c\'austica: la onda no puede concentrarse en un punto m\'as peque\~no que su
+propia longitud de onda. Es el an\'alogo en ondas gravitacionales de la mancha
+de Arago, el punto brillante en el centro de la sombra de un disco opaco
+\citep{Deguchi1986}.
+
+\subsection*{Onda corta: $w\to\infty$}
+
+La Ec.~\eqref{eq:Fclosed} y la expresi\'on de \'optica geom\'etrica,
+Ec.~\eqref{eq:Fgeo}, no son dos resultados independientes que coincidan a
+frecuencia alta por casualidad: son dos evaluaciones de la misma integral, la
+Ec.~\eqref{eq:Fdimless}. El \S\ref{ap:cerrada} la resuelve de manera exacta y
+el \S\ref{ap:fase_estacionaria} la eval\'ua por fase estacionaria, que es por
+construcci\'on el primer t\'ermino de su desarrollo asint\'otico en $1/w$. El
+acuerdo a $w$ grande, entonces, no hay que demostrarlo aparte; lo que hay que
+precisar es el error. El t\'ermino siguiente del desarrollo, que involucra la
+cuarta derivada de la fase en los puntos estacionarios, es menor por un factor
+$1/w$, de modo que el error relativo de la \'optica geom\'etrica decae como
+$1/w$.
+
+Eso tiene una consecuencia pr\'actica. La serie hipergeom\'etrica de la
+Ec.~\eqref{eq:Fclosed} converge cada vez m\'as lentamente a medida que crece
+su argumento $wy^{2}/2$, que es justamente el r\'egimen en el que la
+Ec.~\eqref{eq:Fgeo} es m\'as precisa. Conviene por eso evaluar la forma exacta
+a $w$ moderado y la asint\'otica a $w$ grande.
+
+% ----------------------------------------------------------------------
+\section{Forma radial equivalente}
+\label{sec:radial}
+
+Hay una tercera manera de escribir el mismo objeto, \'util cuando se lo quiere
+evaluar num\'ericamente sin recurrir a la forma cerrada. Pasando la
+Ec.~\eqref{eq:Fdimless} a coordenadas polares en el plano del lente,
+escribiendo $|\vb x-\vb y|^{2}=x^{2}+y^{2}-2xy\cos\theta$ y usando la
+representaci\'on integral de la funci\'on de Bessel de orden cero,
+\begin{equation}
+  \int_0^{2\pi}\!d\theta\;e^{\,ia\cos\theta}=2\pi J_0(a) ,
+  \label{eq:bessel_identity}
+\end{equation}
+la integral angular se hace de manera anal\'itica y queda una integral radial
+unidimensional,
+\begin{equation}
+  F(w,y)=e^{\,iw\varphi(x_+,y)}
+  \left[-i\,w\,e^{\,iwy^{2}/2}
+  \int_0^{\infty}\!dx\;x\,J_0(wxy)\,
+  \exp\!\left(i w\left[\tfrac12x^{2}-\ln x\right]\right)\right]^{\!*} ,
   \label{eq:Fradial}
 \end{equation}
-Esta integral es s\'olo condicionalmente convergente; se regulariza con la
-prescripci\'on $i\epsilon$ est\'andar (\citealp{UlmerGoodman1995}),
-$w\to w(1+i\eta)$, es decir, un factor de convergencia $e^{-\eta w x^2/2}$,
-evaluado para una secuencia de $\eta\to0$ y extrapolado. La barra denota,
-como en la Ec.~\eqref{eq:Fdimless}, conjugaci\'on (correcci\'on de signo);
-el factor $e^{iw\varphi(x_+,y)}$ que la multiplica es la misma
-normalizaci\'on de referencia de fase de la Ec.~\eqref{eq:Fnorm}.
-\code{src/gwlens/waveoptics.py::F\_radial\_1d} implementa esto (integral
-sin conjugar $\to$ conjugado $\to$ multiplicado por
-$e^{iw\varphi(x_+,y)}$), con el radio de corte y el n\'umero de
-subintervalos de cuadratura fijados autom\'aticamente a partir de $\eta$ y
-$w$ (para resolver el per\'iodo de oscilaci\'on local en vez de una grilla
-ajustada a mano).
+que es la misma reducci\'on angular que \citet{Takahashi2003} aplica en su
+Ec.~19 al lente isotermo singular, con $\psi(x)=x$ en lugar de $\ln x$. El
+desarrollo est\'a en el \S\ref{ap:radial}.
 
-\begin{checkbox}[title={Chequeo: convergencia $O(\eta)$ a la forma cerrada}]
-En $w=1,\,y=1$: el error relativo vs.\ la Ec.~\eqref{eq:Fclosed} es
-$2.6\times10^{-2}$ en $\eta=0.02$, $1.3\times10^{-2}$ en $\eta=0.01$,
-$6.5\times10^{-3}$ en $\eta=0.005$ --- cada vez que se reduce $\eta$ a la
-mitad, el error casi exactamente se reduce a la mitad tambi\'en (razones
-$1.98$, $1.99$), el escaleo $O(\eta)$ esperado de la regularizaci\'on misma.
-\code{tests/test\_waveoptics.py::check\_radial\_1d\_converges\_to\_closed\_form}.
-\end{checkbox}
+Esta integral no converge en sentido ordinario: el integrando oscila cada vez
+m\'as r\'apido sin decaer en amplitud. La manera est\'andar de tratarla es
+introducir un factor de convergencia, reemplazando $w\to w(1+i\eta)$ con
+$\eta>0$ peque\~no, lo que agrega un amortiguamiento $e^{-\eta wx^{2}/2}$, y
+tomar despu\'es el l\'imite $\eta\to0$ \citep{UlmerGoodman1995}. El error que
+introduce el corte es de orden $\eta$, de modo que evaluando para una sucesi\'on
+de valores decrecientes se puede extrapolar al resultado exacto.
 
-\subsection*{Chequeo independiente 2: cuadratura 2D por fuerza bruta}
-La Ec.~\eqref{eq:Fdimless} evaluada directamente por cuadratura 2D sobre
-una grilla cuadrada regularizada (amortiguada gaussianamente), sin
-reducci\'on angular y sin ninguna forma cerrada --- el evaluador menos
-sofisticado, m\'as de primeros principios, del proyecto. En $w=1,\,y=1$,
-$x_{\max}=25$, grilla de $1200\times1200$ puntos, $\eta=0.005$: error
-relativo $1.1\times10^{-2}$, consistente con el mismo error de
-regularizaci\'on $O(\eta)$ visto en el chequeo 1D. Funci\'on
-\code{check\_bruteforce\_2d\_agrees} en \code{test\_waveoptics.py}
-(\code{F\_bruteforce\_2d} en \code{waveoptics.py}).
+\begin{ejemplo}[title={Los dos reg\'imenes del sistema concreto}]
+Para el lente de $M_L=5\times10^{4}\,\Msun$ del
+cap\'itulo~\ref{ch:scope}, la Ec.~\eqref{eq:wdef} da
+$w=6.19\,(f/\mathrm{Hz})$. Las dos \'epocas del inspiral caen, entonces, en
+lados opuestos del problema. En la \'epoca temprana, con $f_B=0.05$~Hz, se
+obtiene $w_B=0.31$: r\'egimen de difracci\'on plena, en el que ni la
+\'optica geom\'etrica ni el l\'imite de onda larga sirven, y hay que usar la
+Ec.~\eqref{eq:Fclosed}. Evaluada en el par\'ametro de impacto m\'inimo de la
+\'orbita, $y=1.589$, da $|F|=1.18$: el lente amplifica la se\~nal un $18\%$ en
+el pico del pulso, mientras que la \'optica geom\'etrica predecir\'ia un
+$25\%$. En la \'epoca tard\'ia, en cambio, la banda
+observable va de $w=61.9$ a $f=10$~Hz hasta $w=777.6$ en la frecuencia de la
+\'ultima \'orbita estable, de modo que la Ec.~\eqref{eq:Fgeo} basta y la
+se\~nal muestra franjas de interferencia bien definidas. El retardo entre
+im\'agenes a esas masas es $\Delta t=4GM_L\Delta T(y)/c^{3}=3.43$~s para el
+par\'ametro de impacto del caso est\'atico, $y=1.589$: un retardo
+perfectamente resoluble frente a los $15$~s que dura el chirp observable.
 
-\begin{checkbox}[title={Chequeo: pico de difracci\'on del anillo de Einstein}]
-En alineaci\'on exacta ($y=0$) la \'optica geom\'etrica diverge
-($\mu(x_+{=}1)$ es singular, Ec.~\ref{eq:magnification}) --- la c\'austica
-de fuente puntual de libro de texto. El $F(w,0)$ exacto de la
-Ec.~\eqref{eq:Fclosed} permanece finito para cada $w$ probado ($1.81$,
-$3.96$, $7.93$ en $w=1,5,20$): la difracci\'on regulariza la c\'austica, el
-an\'alogo en GWs de la mancha de Arago/Poisson de la \'optica
-(\citealp{Deguchi1986}). \code{tests/test\_waveoptics.py::
-check\_einstein\_ring\_regularization}.
-\end{checkbox}
+En alineaci\'on exacta, la Ec.~\eqref{eq:Fzero} da $|F|=1.81$, $3.96$ y
+$7.93$ para $w=1$, $5$ y $20$. La \'optica geom\'etrica predecir\'ia infinito
+en los tres casos.
 
-\section{Un evaluador h\'ibrido r\'apido}
-
-La serie hipergeom\'etrica confluente de la Ec.~\eqref{eq:Fclosed} converge
-lentamente una vez que su argumento $iwy^2/2$ es grande --- exactamente el
-r\'egimen, $w$ grande, donde la Ec.~\eqref{eq:Fgeo} est\'a validada de
-manera independiente para coincidir con ella a mejor que $0.4\%$.
-\code{waveoptics.py::F\_hybrid} por lo tanto usa la Ec.~\eqref{eq:Fclosed}
-por debajo de $w=30$ y la Ec.~\eqref{eq:Fgeo} por encima (el umbral
-chequeado directamente, \code{tests/test\_waveoptics.py::
-check\_hybrid\_matches\_at\_threshold}: acuerdo del $3.1\%$ en $w=30$ a
-trav\'es de varios $y$). Esto no fue una optimizaci\'on hecha de antemano:
-evaluar la Ec.~\eqref{eq:Fclosed} directamente a trav\'es del barrido de
-frecuencia efectivamente usado en el Caso~A tom\'o $\sim150$\,s;
-\code{F\_hybrid} no necesita nada de eso (v\'ease \code{wiki/log.md}).
+En cuanto al error de la aproximaci\'on asint\'otica en la \'epoca tard\'ia,
+a $y_A=1.589$ la Ec.~\eqref{eq:Fgeo} difiere de la exacta en un
+$8\times10^{-4}$ relativo en $w=10$, y la diferencia decae como $1/w$: vale
+$1\times10^{-4}$ en $w=10^{2}$ y $1\times10^{-5}$ en $w=10^{3}$.
+\end{ejemplo}
 
 % ======================================================================
-\chapter{El triple jer\'arquico como sistema de lente}
+\chapter{Geometr\'ia del triple como sistema de lente}
 \label{ch:geometry}
 % ======================================================================
 
-\section{La \'orbita externa}
-La posici\'on de la fuente relativa al lente (efectivamente fijo) sigue una
-\'orbita kepleriana ordinaria: elementos $(a_\mathrm{out},e_\mathrm{out},
-i_\mathrm{out},\Omega_\mathrm{out},\omega_\mathrm{out})$, resuelta por el
-m\'etodo de Newton sobre la ecuaci\'on de Kepler $M=E-e\sin E$ y rotada al
-marco del observador ($z$ a lo largo de la l\'inea de visi\'on) mediante la
-secuencia est\'andar $R_z(\Omega)R_x(i)R_z(\omega)$
-(p.\ ej.\ \citealp{MurrayDermott1999}):
+Los dos cap\'itulos anteriores resolvieron el problema \'optico para una
+configuraci\'on fija, caracterizada por $w$ e $y$. Este cap\'itulo determina
+qu\'e valores toman esos dos par\'ametros cuando la fuente y el lente
+pertenecen al mismo sistema ligado, y en particular c\'omo var\'ian a lo largo
+de la \'orbita externa. Es el punto en que la geometr\'ia de un triple se
+aparta genuinamente de la de un lente cosmol\'ogico, y donde arrastrar la
+intuici\'on del caso cosmol\'ogico lleva a errores.
+
+% ----------------------------------------------------------------------
+\section{La \'orbita externa proyectada}
+\label{sec:orbita}
+
+La posici\'on de la fuente respecto del lente sigue una \'orbita kepleriana
+ordinaria, descrita por sus elementos
+$(\aout,e_\mathrm{out},i_\mathrm{out},\Omega_\mathrm{out},\omega_\mathrm{out})$.
+Para ubicar a la fuente sobre esa \'orbita en un instante dado se usan las
+tres \emph{anomal\'ias} de la mec\'anica celeste, que son tres maneras
+equivalentes de medir cu\'anto avanz\'o el cuerpo desde el pericentro. La
+\emph{anomal\'ia media} $M=2\pi t/P_\mathrm{out}$ es el \'angulo que
+habr\'ia recorrido un cuerpo ficticio de velocidad angular uniforme y el mismo
+per\'iodo, de modo que crece linealmente con el tiempo pero no corresponde a
+ninguna posici\'on real. La \emph{anomal\'ia exc\'entrica} $E$ es una
+variable auxiliar, definida sobre la circunferencia circunscrita a la elipse,
+que se obtiene de $M$ resolviendo la ecuaci\'on de Kepler $M=E-e\sin E$, que
+es trascendente y se invierte num\'ericamente. Y la \emph{anomal\'ia
+verdadera} $\nu$ es el \'angulo real entre el pericentro y la posici\'on del
+cuerpo, medido desde el foco ocupado por el lente, que junto con el radio
+orbital $r$ da la posici\'on buscada. Para una \'orbita circular las tres
+coinciden.
+
+Lo que hace falta a continuaci\'on es expresar esa posici\'on en el sistema
+del observador, con el eje $z$ a lo largo de la l\'inea de visi\'on. La
+rotaci\'on est\'andar $R_z(\Omega)R_x(i)R_z(\omega)$, donde $\Omega$, $i$ y
+$\omega$ son los elementos de la \'orbita externa
+$\Omega_\mathrm{out}$, $i_\mathrm{out}$ y $\omega_\mathrm{out}$ con el
+sub\'indice omitido para aligerar la escritura, da
+(\citealp{MurrayDermott1999}, \S2.8)
 \begin{align}
-  x_{\rm cielo} &= r\left[\cos\Omega\cos\theta - \sin\Omega\sin\theta\cos i\right],\\
-  y_{\rm cielo} &= r\left[\sin\Omega\cos\theta + \cos\Omega\sin\theta\cos i\right],\\
-  z_{\rm los} &= r\sin\theta\sin i, \qquad \theta\equiv\nu+\omega,
-  \label{eq:rotation}
+  x_{\rm cielo} &= r\left[\cos\Omega\cos\theta
+                  -\sin\Omega\sin\theta\cos i\right], \label{eq:proj_x}\\
+  y_{\rm cielo} &= r\left[\sin\Omega\cos\theta
+                  +\cos\Omega\sin\theta\cos i\right], \label{eq:proj_y}\\
+  z_{\rm los}   &= r\,\sin\theta\,\sin i ,
+  \qquad \theta\equiv\nu+\omega .
+  \label{eq:proj_z}
 \end{align}
-$r,\nu$ el radio orbital y la anomal\'ia verdadera.
+Las dos primeras componentes viven en el plano del cielo y fijan la
+separaci\'on transversal proyectada entre la fuente y el lente, que es lo que
+determina el par\'ametro de impacto. La tercera, $z_{\rm los}$, es la
+componente paralela a la l\'inea de visi\'on, y es la que determina cu\'al de
+los dos cuerpos est\'a m\'as lejos del observador.
 
-\begin{checkbox}
-El resolvedor de la ecuaci\'on de Kepler invierte a precisi\'on de m\'aquina
-para $e\in\{0,0.3,0.7,0.95\}$; una \'orbita circular da $r$ exactamente
-constante; una \'orbita de canto ($i=\pi/2$, $\Omega=\omega=0$) proyecta a
-una l\'inea ($y_{\rm cielo}\equiv0$ a $6\times10^{-17}$); una \'orbita de
-frente ($i=0$) reproduce exactamente la posici\'on en el plano orbital.
-Todo en \code{tests/test\_geometry.py}.
-\end{checkbox}
+% ----------------------------------------------------------------------
+\section{$D_{LS}$ en un sistema ligado}
+\label{sec:dls}
 
-\section{$D_{LS}$ no es lo que es en un lente de libro de texto}
-
-Este es el \'unico lugar donde la geometr\'ia de este proyecto difiere
-genuinamente del lensing cosmol\'ogico para el que se construy\'o este
-formalismo, y es f\'acil equivocarse arrastrando la intuici\'on de libro de
-texto sin examinarla. En el escenario usual, el lente y la fuente est\'an a
-distancias muy diferentes, esencialmente fijas, y $D_{LS}$ apenas var\'ia.
-Ac\'a est\'an en el \emph{mismo} sistema: el lente est\'a en $D_L$, y la
-distancia de la fuente es $D_S(t)=D_L+z_{\rm los}(t)$, con $z_{\rm los}(t)$
-de la Ec.~\eqref{eq:rotation} a la escala de UA a sub-pc de la \'orbita
-externa. Como $|z_{\rm los}|/D_L\sim2\times10^{-9}$ para los par\'ametros usados
-ac\'a, $D_S\approx D_L$ es una excelente aproximaci\'on \emph{en todos
-lados donde aparece excepto} en
+Aqu\'i aparece la diferencia esencial con el lente de libro de texto. En el
+escenario cosmol\'ogico, el lente y la fuente est\'an a distancias muy
+distintas y esencialmente fijas, y $D_{LS}$ es una distancia grande que apenas
+var\'ia. En un triple, en cambio, el lente est\'a a $D_L$ y la fuente a
 \begin{equation}
-  D_{LS}(t) = D_S(t) - D_L = z_{\rm los}(t)
+  D_S(t)=D_L+z_{\rm los}(t) ,
+  \label{eq:DS_t}
 \end{equation}
-misma, donde es toda la historia. El radio de Einstein angular,
+con $z_{\rm los}(t)$ dado por la Ec.~\eqref{eq:proj_z}, de manera que
 \begin{equation}
-  \theta_E(t)^2 = \frac{4GM_L}{c^2}\,\frac{D_{LS}(t)}{D_L D_S(t)}
-  \;\approx\; \frac{4GM_L}{c^2}\,\frac{z_{\rm los}(t)}{D_L^2},
+  D_{LS}(t)=D_S(t)-D_L=z_{\rm los}(t) .
+  \label{eq:DLS_t}
+\end{equation}
+Conviene recordar, como se estableci\'o en el \S\ref{sec:distancias}, que
+$D_{LS}$ no es la separaci\'on entre la fuente y el lente, que vale $r$ y es
+siempre positiva, sino su proyecci\'on sobre la l\'inea de visi\'on.
+
+Como $|z_{\rm los}|/D_L\sim2\times10^{-9}$ para los par\'ametros t\'ipicos de
+un triple gal\'actico, la aproximaci\'on $D_S\approx D_L$ es excelente en
+todas partes salvo, precisamente, en la Ec.~\eqref{eq:DLS_t}, donde la
+diferencia es todo el contenido. El radio de Einstein angular hereda esa
+dependencia temporal:
+\begin{equation}
+  \theta_E(t)^{2}=\frac{4GM_L}{c^{2}}\,\frac{D_{LS}(t)}{D_LD_S(t)}
+  \;\approx\;\frac{4GM_L}{c^{2}}\,\frac{z_{\rm los}(t)}{D_L^{2}} ,
   \label{eq:thetaE_t}
 \end{equation}
-es entonces \'el mismo dependiente del tiempo, y \textbf{indefinido
-cuando $z_{\rm los}(t)\le0$} --- la fuente est\'a instant\'aneamente m\'as
-cerca de la Tierra que el lente, as\'i que el lente no est\'a en absoluto
-entre el observador y la fuente, y no hay geometr\'ia de lensing para esa
-mitad de la \'orbita (no es un artefacto de aproximaci\'on: $F=1$ ah\'i por
-construcci\'on). Cuando $z_{\rm los}(t)\to0^+$, $\theta_E\to0$ y
-$y=\theta/\theta_E(t)\to\infty$ para cualquier offset transversal
-$\theta$ no nulo: el formalismo apaga el lensing suavemente y por s\'i
-mismo en el cruce de frente/atr\'as, sin necesitar ning\'un caso especial
-m\'as all\'a de excluir $z_{\rm los}\le0$.
+y con \'el el par\'ametro de impacto adimensional
+$y(t)=\theta(t)/\theta_E(t)$, donde $\theta(t)$ es la separaci\'on angular
+transversal construida con las Ecs.~\eqref{eq:proj_x} y~\eqref{eq:proj_y}.
 
-Este es exactamente el origen del lensing \emph{repetido} en un triple
-jer\'arquico: s\'olo la mitad lejana de cada \'orbita externa est\'a
-lenteada en absoluto, as\'i que una fuente que orbita peri\'odicamente
-produce pulsos de lensing peri\'odicos, una vez por per\'iodo externo, en
-vez de modulaci\'on continua (\citealp{DOrazioLoeb2020}, en el l\'imite de
-\'optica geom\'etrica; la misma estructura aparece ac\'a en \'optica de
-ondas, Caso~B, \S\ref{sec:caseB}).
+La Ec.~\eqref{eq:thetaE_t} deja de tener sentido cuando
+$z_{\rm los}(t)\le0$. La interpretaci\'on f\'isica es directa: en esa mitad de
+la \'orbita la fuente est\'a m\'as cerca del observador que el lente, el lente
+no se interpone, y no hay configuraci\'on de lente en absoluto. No es un
+artefacto de la aproximaci\'on, sino la ausencia del fen\'omeno, y
+corresponde poner $F=1$.
 
-\begin{checkbox}
-Para la \'orbita (casi de canto, $i_\mathrm{out}=87^\circ$) usada en
-\code{cases/}, casi exactamente la mitad de la \'orbita est\'a lenteada
-($49.7$--$50.0\%$ a trav\'es de muestreos independientes), y $y$ es finito
-y positivo en toda la mitad lenteada.
-\code{tests/test\_geometry.py::check\_time\_varying\_impact\_parameter}.
-\end{checkbox}
+El paso entre las dos situaciones es continuo. Cuando
+$z_{\rm los}(t)\to0^{+}$, el radio de Einstein se encoge, $\theta_E\to0$, y
+por lo tanto $y\to\infty$ para cualquier separaci\'on transversal no nula. Como
+$F\to1$ cuando $y\to\infty$, el efecto de lente se apaga suavemente por s\'i
+mismo a medida que la fuente se acerca al cruce, sin que haga falta ning\'un
+tratamiento especial m\'as all\'a de excluir la mitad con
+$z_{\rm los}\le0$.
 
+Para una \'orbita circular todo esto se re\'une en una sola expresi\'on. Las
+Ecs.~\eqref{eq:proj_x}--\eqref{eq:proj_z} dan la separaci\'on transversal
+proyectada, $\aout\sqrt{\cos^{2}\theta+\sin^{2}\theta\cos^{2}i}$, y la
+longitudinal, $\aout\sin\theta\sin i$; dividiendo la primera por
+$\theta_E(t)$ de la Ec.~\eqref{eq:thetaE_t} las distancias al observador se
+cancelan y queda
+\begin{equation}
+  y(\theta)=\sqrt{\frac{\aout\,c^{2}}{4GM_L}}\;
+  \frac{\sqrt{\cos^{2}\theta+\sin^{2}\theta\,\cos^{2}i}}
+       {\sqrt{\sin\theta\,\sin i}} ,
+  \qquad \theta=\nu+\omega ,
+  \label{eq:y_de_theta}
+\end{equation}
+v\'alida en la mitad de la \'orbita con $\sin\theta>0$. Esta es la funci\'on
+que el resto del texto usa cada vez que escribe $y(t)$. El prefactor es la
+ra\'iz del cociente entre el tama\~no de la \'orbita y el radio gravitatorio
+del lente, y por lo tanto es grande; toda la estructura del pulso est\'a en el
+factor angular, que por simetr\'ia alcanza su m\'inimo en la conjunci\'on,
+$\theta=90^{\circ}$, donde vale $\cos i/\sqrt{\sin i}$ y se anula a medida que
+la \'orbita se acerca al canto.
+
+% ----------------------------------------------------------------------
+\section{Lente repetido}
+\label{sec:repetido}
+
+De lo anterior se sigue el fen\'omeno caracter\'istico de un triple
+jer\'arquico visto como sistema de lente. Solo la mitad de cada \'orbita
+externa produce efecto de lente, y dentro de esa mitad el par\'ametro de
+impacto pasa por un m\'inimo. Una fuente que orbita peri\'odicamente produce,
+entonces, \emph{pulsos} de lente peri\'odicos, uno por per\'iodo externo, en
+lugar de una modulaci\'on continua.
+
+La amplitud de cada pulso queda fijada por el valor m\'inimo de $y$ alcanzado
+en esa \'orbita, y su forma temporal por la velocidad con que $y$ barre ese
+m\'inimo. La periodicidad es la de la \'orbita externa, de modo que una
+detecci\'on de pulsos repetidos medir\'ia $P_\mathrm{out}$ de manera directa.
+Este es el fen\'omeno que \citet{DOrazioLoeb2020} estudian en el l\'imite de
+\'optica geom\'etrica para binarias de agujeros negros en n\'ucleos
+gal\'acticos; la misma estructura aparece en \'optica de ondas, con el
+patr\'on de difracci\'on del cap\'itulo~\ref{ch:pointlens} modulando cada
+pulso.
+
+La configuraci\'on m\'as favorable es una \'orbita externa cercana a
+$i_\mathrm{out}=90^{\circ}$, es decir, casi de canto. Una \'orbita exactamente
+de canto llevar\'ia a la fuente por detr\'as del lente con $y$ m\'inimo, y
+producir\'ia el pulso m\'as intenso posible; una \'orbita de frente
+($i_\mathrm{out}=0$) tiene $z_{\rm los}\equiv0$ y no produce lente nunca.
+
+% ----------------------------------------------------------------------
+\section{Cinem\'atica de la \'orbita externa}
+\label{sec:kinematics}
+
+Todo lo anterior describe lo que el lente le hace a la onda despu\'es de que
+sale de la fuente. Pero la misma \'orbita externa mueve tambi\'en a la fuente,
+y ese movimiento se imprime sobre la se\~nal observada por v\'ias que no
+tienen nada que ver con el lente. En un triple compacto ese efecto cinem\'atico
+no es una correcci\'on peque\~na: es, con diferencia, el efecto dominante.
+
+\subsection*{Retardo de Roemer y corrimiento Doppler}
+
+La fuente se encuentra a una distancia $z_{\rm src}(t)$ del baricentro del
+triple medida sobre la l\'inea de visi\'on, obtenida de la
+Ec.~\eqref{eq:proj_z} multiplicada por la fracci\'on de masa
+$M_L/(M_L+M_b)$, ya que la Ec.~\eqref{eq:proj_z} da la separaci\'on relativa.
+El tiempo de observaci\'on y el de emisi\'on quedan entonces ligados por
+\begin{equation}
+  t_{\rm obs}=t_{\rm em}+\frac{z_{\rm src}(t_{\rm em})}{c} ,
+  \label{eq:retarded}
+\end{equation}
+y la se\~nal observada es la emitida evaluada en el tiempo retardado,
+$h_{\rm obs}(t_{\rm obs})=h_{\rm em}(t_{\rm em}(t_{\rm obs}))$.
+
+Vale la pena subrayar que esa sustituci\'on contiene \emph{todo} el efecto a
+primer orden, y que no hay ning\'un factor adicional que agregar. Derivando la
+Ec.~\eqref{eq:retarded},
+\begin{equation}
+  \dv{t_{\rm em}}{t_{\rm obs}}=\frac{1}{1+\beta_{\rm los}(t_{\rm em})},
+  \qquad
+  \beta_{\rm los}\equiv\frac{1}{c}\dv{z_{\rm src}}{t} ,
+  \label{eq:classical_doppler}
+\end{equation}
+que es exactamente el corrimiento Doppler cl\'asico. Conviene notar que
+$\beta_{\rm los}$ debe evaluarse en el tiempo de \emph{emisi\'on}, no en el de
+observaci\'on: los dos difieren en hasta $\aout/c$, y sobre ese intervalo
+$\beta$ cambia en una cantidad que resulta num\'ericamente comparable a
+$\beta^{2}$, lo que puede dar la falsa impresi\'on de que falta una
+correcci\'on de segundo orden.
+
+\subsection*{Corrimiento gravitacional y Doppler transverso}
+
+M\'as all\'a de primer orden quedan el corrimiento gravitacional en el
+potencial del lente y el Doppler transverso. Para una \'orbita circular
+geod\'esica los dos se combinan en el resultado exacto de Schwarzschild para un
+reloj en \'orbita circular le\'ido por un observador est\'atico lejano,
+$d\tau/dt=\sqrt{1-3GM_L/(rc^{2})}$, es decir,
+\begin{equation}
+  1+z_{\rm orb}=\left(1-\frac{3GM_L}{\aout c^{2}}\right)^{-1/2} ,
+  \label{eq:zorb}
+\end{equation}
+y la relaci\'on completa entre frecuencias emitida y observada se separa
+limpiamente en dos factores,
+\begin{equation}
+  f_{\rm obs}=\frac{f_{\rm em}}{\left(1+\beta_{\rm los}\right)\left(1+z_{\rm orb}\right)} ,
+  \label{eq:freq_full}
+\end{equation}
+el primero variable en el tiempo, y ya contenido en la
+Ec.~\eqref{eq:retarded}, y el segundo constante.
+
+Que el segundo factor sea constante tiene una consecuencia importante: es
+exactamente degenerado con un reescaleo de la masa de chirp y del tiempo de
+coalescencia. Un corrimiento constante no deja ninguna firma en la forma de
+onda; se traduce \'unicamente en un sesgo sistem\'atico sobre los par\'ametros
+que se infieran de ella. Para una \'orbita externa exc\'entrica dejar\'ia de
+ser constante, y habr\'ia que tratarlo expl\'icitamente.
+
+El mismo argumento alcanza a la masa del lente. En el
+\S\ref{sec:distancias} se se\~nal\'o que, por tratarse de un lente
+gal\'actico, el factor $(1+z_L)$ de la literatura cosmol\'ogica vale uno. Eso
+es cierto para el corrimiento cosmol\'ogico, pero la cinem\'atica de la
+\'orbita cumple exactamente el mismo papel: como la frecuencia adimensional
+$w$ de la Ec.~\eqref{eq:wdef} se construye con la frecuencia de la onda, y la
+frecuencia observada est\'a corrida seg\'un la Ec.~\eqref{eq:freq_full}, lo
+que el patr\'on de difracci\'on determina no es $M_L$ sino
+$M_L\,(1+\beta_{\rm los}+z_{\rm orb})$. Con los dos valores del recuadro
+siguiente, $\beta_{\rm los}^{\max}=1.65\times10^{-2}$ y
+$z_{\rm orb}=4.08\times10^{-4}$, ese corrimiento alcanza un $1.7\%$ en el peor
+caso, y su parte dominante, $\beta_{\rm los}$, se anula en la conjunci\'on, que
+es justamente la fase orbital en la que el efecto de lente es m\'aximo
+(\S\ref{sec:caseB}).
+
+\begin{ejemplo}[title={Cinem\'atica frente a lente}]
+Para el triple del cap\'itulo~\ref{ch:scope}, la velocidad orbital de la
+fuente alcanza $\beta_{\rm los}^{\max}=0.0165$ y el tiempo de cruce de la luz
+a trav\'es de la \'orbita es $\aout/c\approx907$~s. El corrimiento constante
+de la Ec.~\eqref{eq:zorb} vale $4.076\times10^{-4}$.
+
+La comparaci\'on relevante es la siguiente. Observando en la \'epoca
+temprana, con $f_B=0.05$~Hz, el retardo de Roemer modula el tiempo de llegada
+en $1810$~s de pico a pico, lo que equivale a $90.5$ ciclos de fase escritos
+sobre la se\~nal. La fase que escribe el lente a lo largo de la misma
+\'orbita, $\arg F/2\pi$, vale $0.017$ ciclos, y el tiempo de respuesta del
+lente, $4GM_L\Delta T(y)/c^{3}$, es de $3.43$~s. Los factores entre uno y otro son de $5.2\times10^{3}$
+y $5.3\times10^{2}$ respectivamente.
+
+La conclusi\'on no es una peculiaridad de esta elecci\'on de par\'ametros: en
+un triple compacto, la cinem\'atica de la \'orbita externa domina sobre la
+fase que escribe el lente por varios \'ordenes de magnitud, y es adem\'as lo
+que
+permitir\'ia identificar el sistema y predecir cu\'ando buscar el pulso de
+lente \citep{DOrazioLoeb2020}.
+
+Ahora bien, el efecto cinem\'atico es de puro \emph{timing}. La envolvente de
+amplitud evoluciona en la escala del tiempo al merger, de $240$~d, y el
+retardo la corre apenas $\sim900$~s, un cambio relativo de
+$1.2\times10^{-5}$. Las amplitudes, y con ellas todo el contenido del patr\'on
+de difracci\'on, quedan intactas.
+\end{ejemplo}
+
+% ----------------------------------------------------------------------
 \section{L\'imites de la aproximaci\'on paraxial}
 \label{sec:paraxial}
 
-\S\ref{ch:scalar} deriv\'o la Ec.~\eqref{eq:Fdim} bajo una aproximaci\'on
-paraxial (\'angulo chico) de Fresnel, que adem\'as requiere que el radio de
-Einstein f\'isico en el plano del lente, $\xi_0$, sea mucho menor que la
-distancia de propagaci\'on $D_{LS}$ misma --- una suposici\'on que es
-autom\'atica en el lensing cosmol\'ogico (donde $D_{LS}$ es una distancia
-grande y fija) pero es exactamente lo que la Ec.~\eqref{eq:thetaE_t}
-muestra que \emph{no} es autom\'atico ac\'a, ya que $D_{LS}(t)$ se reduce a
-cero dos veces por \'orbita externa. Usando $\xi_0=\sqrt{4GM_L D_{LS}/c^2}$
-(el radio de Einstein del lente puntual escrito con $D_S\approx D_L$,
-\S\ref{ch:geometry}), la condici\'on paraxial $D_{LS}\gg\xi_0$ se reduce a
+La integral de difracci\'on de la Ec.~\eqref{eq:Fdim} se dedujo en
+aproximaci\'on paraxial, que adem\'as de \'angulos peque\~nos requiere que el
+radio de Einstein lineal $\xi_0$ sea mucho menor que la distancia de
+propagaci\'on $D_{LS}$. En el lente cosmol\'ogico esa condici\'on es
+autom\'atica. En un triple no lo es, precisamente porque, seg\'un la
+Ec.~\eqref{eq:DLS_t}, $D_{LS}$ se anula dos veces por \'orbita.
+
+Sustituyendo $\xi_0=\sqrt{4GM_LD_{LS}/c^{2}}$, v\'alido con
+$D_S\approx D_L$, la condici\'on $D_{LS}\gg\xi_0$ se reduce a
 \begin{equation}
-  D_{LS}(t) \;\gg\; \frac{4GM_L}{c^2} \;=\; 2\,R_{\rm Sch}(M_L) ,
+  D_{LS}(t)\;\gg\;\frac{4GM_L}{c^{2}}=2R_{\rm Sch}(M_L) ,
   \label{eq:paraxial_condition}
 \end{equation}
-dos veces el propio radio de Schwarzschild del lente --- la \emph{misma}
-condici\'on de campo d\'ebil ya invocada en \S\ref{ch:scalar} para
-descartar el t\'ermino de acoplamiento a la curvatura en la
-Ec.~\eqref{eq:linearized}, ahora aplicada a la separaci\'on en la l\'inea de
-visi\'on en vez de al par\'ametro de impacto. Este es un respecto genuino,
-aunque acotado, en el que la geometr\'ia de este proyecto empuja m\'as
-all\'a de donde el formalismo est\'andar fue construido para operar, y vale
-la pena ser preciso sobre exactamente cu\'anto importa, en vez de
-ignorarlo o re-derivar difracci\'on no paraxial (un problema
-sustancialmente m\'as dif\'icil, evaluado abajo como no valga la pena
-ac\'a).
+es decir, dos veces el radio de Schwarzschild del lente. Es notable que se
+trate de la misma condici\'on de campo d\'ebil ya invocada en el
+\S\ref{sec:reduccion} para descartar el t\'ermino de curvatura, aplicada ahora
+a la separaci\'on longitudinal en lugar del par\'ametro de impacto.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
+\small
 \begin{tabular}{lr}
 \toprule
-cantidad & valor (este triple) \\
+Cantidad & Valor \\
 \midrule
 $R_{\rm Sch}(M_L)$ & $9.87\times10^{-4}$ UA \\
-$D_{LS}$ en el punto de lensing m\'as profundo ($y=y_{\min}$) & $1.81$ UA \\
-$D_{LS}/(2R_{\rm Sch})$ ah\'i & $919$ \\
-$\xi_0/D_{LS}$ ah\'i (chequeo directo de \'angulo paraxial) & $0.033$ \\
-tiempo por cruce con $D_{LS}\lesssim2R_{\rm Sch}$ & $60$ s \\
-esa duraci\'on como fracci\'on de $P_{\rm out}$ & $1.7\times10^{-4}$ \\
+$D_{LS}$ en el punto de mayor efecto de lente & $1.81$ UA \\
+$D_{LS}/(2R_{\rm Sch})$ en ese punto & $919$ \\
+$\xi_0/D_{LS}$ en ese punto & $0.033$ \\
+Duraci\'on del tramo con $D_{LS}\lesssim2R_{\rm Sch}$ & $60$ s \\
+Esa duraci\'on como fracci\'on de $P_\mathrm{out}$ & $1.7\times10^{-4}$ \\
 \bottomrule
 \end{tabular}
-\caption{La condici\'on paraxial, Ec.~\eqref{eq:paraxial_condition},
-evaluada para el sistema en \code{src/gwlens/system.py} por
-\code{theory/paraxial\_validity.py} (\code{theory/paraxial\_validity\_numbers.json}).}
+\caption{La condici\'on paraxial, Ec.~\eqref{eq:paraxial_condition}, evaluada
+para el triple del cap\'itulo~\ref{ch:scope}.}
 \label{tab:paraxial}
 \end{table}
 
-La Tabla~\ref{tab:paraxial} es la respuesta: en la fase orbital que
-efectivamente produce la f\'isica interesante en el Caso~B --- el punto de
-mayor cercan\'ia proyectada, $y=y_{\min}$, donde los pulsos de lensing en
-\code{cases/case\_B\_monochromatic/caseB\_repeated\_pulses.png} tienen su
-pico --- $D_{LS}$ est\'a cerca de su propio \emph{m\'aximo}
-($\sim a_\mathrm{out}\sin i_\mathrm{out}$, ya que el offset transversal
-m\'inimo y la separaci\'on m\'axima en la l\'inea de visi\'on ocurren cerca
-de la misma fase orbital para esta geometr\'ia), no de su m\'inimo, y
-excede $2R_{\rm Sch}$ por tres \'ordenes de magnitud. La aproximaci\'on
-paraxial s\'olo se vuelve marginal en una ventana del orden de $60$
-segundos alrededor de cada cruce de frente/atr\'as -- una fracci\'on
-$\sim1.7\times10^{-4}$ del per\'iodo externo de $4$ d\'ias -- y esa
-ventana \emph{ya} es la regi\'on donde $y\to\infty$ y $F\to1$ por
-construcci\'on (\S\ref{ch:geometry}), no una regi\'on de la que este
-proyecto saque ninguna conclusi\'on. Un tratamiento de difracci\'on no
-paraxial (\'angulo ancho) genuino cerca del cruce har\'ia falta para decir
-algo cuantitativo sobre esa ventana de $60$ segundos misma, y requerir\'ia
-abandonar la integral de Fresnel, Ec.~\eqref{eq:Fdim}, por una
-formulaci\'on sustancialmente m\'as involucrada -- una extensi\'on bien
-planteada pero de nivel de investigaci\'on, no intentada ac\'a. Dado que
-s\'olo refinar\'ia una porci\'on de la se\~nal que ya es despreciable y ya
-est\'a correctamente aproximada ($F\approx1$), la complejidad agregada se
-juzga que no vale la pena para el alcance de este proyecto: esta es una
-limitaci\'on declarada, chequeada y cuantificada, no una sin examinar. El
-Cap\'itulo~\ref{ch:beyond} discute qu\'e formalismo har\'ia falta para
-tratarla exactamente, y por qu\'e ese mismo formalismo tambi\'en resolver\'ia
-la pregunta relacionada de si parte de la radiaci\'on de la fuente, emitida
-hacia el lente durante la mitad ``de adelante'' de la \'orbita, puede
-retrodispersarse hacia el observador.
+La Tabla~\ref{tab:paraxial} cuantifica la situaci\'on. En la fase orbital que
+produce el pulso de lente, es decir, la de m\'inima separaci\'on transversal,
+$D_{LS}$ est\'a cerca de su propio m\'aximo, $\sim\aout\sin i_\mathrm{out}$,
+porque para esta geometr\'ia el m\'inimo transversal y el m\'aximo longitudinal
+ocurren en fases orbitales pr\'oximas. All\'i la condici\'on
+paraxial se cumple por tres \'ordenes de magnitud.
+
+La aproximaci\'on se vuelve marginal solo en una ventana de unos $60$ segundos
+alrededor de cada cruce, una fracci\'on $1.7\times10^{-4}$ del per\'iodo
+externo. Y esa ventana es, por la Ec.~\eqref{eq:thetaE_t}, exactamente la
+regi\'on en la que $y\to\infty$ y $F\to1$: no hay ning\'un efecto de lente que
+describir mal. Describir cuantitativamente esa ventana requerir\'ia abandonar
+la integral de Fresnel por una formulaci\'on de difracci\'on no paraxial, un
+problema sustancialmente m\'as dif\'icil.
+
+\subsection*{Precisi\'on global del tratamiento}
+
+Hay una segunda limitaci\'on, de naturaleza distinta, que conviene declarar
+expl\'icitamente porque no est\'a asociada a ninguna fase orbital particular:
+act\'ua en todo momento y fija la precisi\'on con la que vale todo lo
+construido hasta aqu\'i.
+
+La reducci\'on a campo escalar del \S\ref{sec:reduccion}, la ley de
+deflexi\'on de la Ec.~\eqref{eq:defl_point} y el retardo de Shapiro de la
+Ec.~\eqref{eq:shapiro} son todos el primer t\'ermino de un desarrollo en el
+par\'ametro de campo d\'ebil
+\begin{equation}
+  \epsilon\equiv\frac{GM_L}{c^{2}b}=\frac{R_{\rm Sch}}{2b} ,
+  \label{eq:epsilon}
+\end{equation}
+con $b$ el par\'ametro de impacto f\'isico del rayo. En un lente
+cosmol\'ogico $\epsilon$ vale $10^{-6}$ o menos y el orden siguiente no se
+considera nunca. En un triple la situaci\'on es distinta, y por una raz\'on
+estructural: como la fuente orbita al lente, el par\'ametro de impacto no
+puede exceder demasiado a $\aout$, mientras que el radio de Einstein de la
+Ec.~\eqref{eq:scalings} crece como $\sqrt{D_{LS}}\sim\sqrt{\aout}$. Las dos
+escalas quedan ligadas entre s\'i, y el rayo termina pasando a unas pocas
+decenas de radios gravitatorios del lente, en lugar de los millones de un
+lente cosmol\'ogico.
+
+Los t\'erminos omitidos son tres, y conviene nombrarlos por separado. El
+primero es el de segundo orden de la deflexi\'on de Schwarzschild,
+\begin{equation}
+  \alpha(b)=\frac{4GM_L}{c^{2}b}
+  \left[1+\frac{15\pi}{16}\,\epsilon+O(\epsilon^{2})\right] ,
+  \label{eq:deflection_2nd}
+\end{equation}
+que corrige la magnitud de la deflexi\'on en una fracci\'on $\epsilon$. El
+segundo es el error de la propia expansi\'on paraxial,
+Ec.~\eqref{eq:paraxial_expansion}, de orden $\alpha^{2}/4$ en el retardo
+temporal; como en la integral de difracci\'on el retardo aparece multiplicado
+por $w$, ese error se traduce en un corrimiento sistem\'atico de las franjas
+que crece con la frecuencia. Y el tercero es el de la reducci\'on a campo
+escalar del \S\ref{sec:reduccion}, de orden $(\lambda_{GW}/\mathcal{R})^{2}$
+con el radio de curvatura de la Ec.~\eqref{eq:curvature_radius}, que es tanto
+mayor cuanto m\'as larga sea la onda y por lo tanto pesa sobre todo en la
+\'epoca temprana del inspiral.
+
+Corregir los dos primeros no exige cambiar de formalismo: son t\'erminos
+adicionales en la misma funci\'on de retardo temporal $t_d(\vb\xi;\vb\eta)$
+de la Ec.~\eqref{eq:td_split}, el de segundo orden de la deflexi\'on junto con
+su correspondiente en el retardo de Shapiro, y el t\'ermino siguiente del
+desarrollo de la ra\'iz. Con ellos, la aproximaci\'on de lente delgado y la
+reducci\'on a campo escalar quedan intactas.
+
+\begin{ejemplo}[title={El presupuesto de error del triple concreto}]
+En el par\'ametro de impacto que produce el pulso de lente,
+$b=1.589\,R_E\approx96\,R_{\rm Sch}$, el par\'ametro de campo d\'ebil vale
+$\epsilon=5.2\times10^{-3}$, y los tres t\'erminos omitidos pesan:
+\begin{itemize}\itemsep2pt
+  \item deflexi\'on de segundo orden, Ec.~\eqref{eq:deflection_2nd}: un
+    $1.5\%$ sobre $\alpha$;
+  \item expansi\'on paraxial: $\alpha^{2}/4\sim10^{-4}$ en el retardo, que con
+    $w\sim800$ en el extremo superior de la banda del lente est\'atico da un
+    corrimiento de franjas de $0.1$~radianes;
+  \item reducci\'on a campo escalar:
+    $(\lambda_{GW}/\mathcal{R})^{2}=9\times10^{-4}$ en la \'epoca temprana y
+    $2\times10^{-8}$ en la tard\'ia.
+\end{itemize}
+En conjunto, el tratamiento vale al $1$--$2\%$ y no mejor, lo que alcanza para
+describir la fenomenolog\'ia del sistema pero no para afirmaciones
+cuantitativas por debajo de ese nivel. Agregando los dos primeros t\'erminos,
+el error bajar\'ia a $O(\epsilon^{2})\sim3\times10^{-5}$.
+\end{ejemplo}
+
+Lo que esos t\'erminos no pueden arreglar es el origen com\'un de las tres
+limitaciones de esta secci\'on: la ventana del cruce, la precisi\'on del
+$1$--$2\%$ y la propia reducci\'on a campo escalar son todas truncamientos a
+primer orden del campo del lente. El cap\'itulo siguiente describe el
+formalismo que no tiene ninguna de las tres, y por qu\'e no se lo emplea
+aqu\'i.
 
 % ======================================================================
-\chapter[M\'as all\'a de este proyecto]{M\'as all\'a de este proyecto: hacia un tratamiento exacto}
+\chapter{M\'as all\'a de la aproximaci\'on de campo d\'ebil}
 \label{ch:beyond}
 % ======================================================================
 
-Cada aproximaci\'on usada hasta ac\'a tiene un mismo origen: la GW se
-propaga sobre el fondo del lente en el r\'egimen de longitud de onda corta
-y campo d\'ebil, $\lambda_{GW}\ll\mathcal{R}$ y $\xi_0\ll D_{LS}$
-(\S\ref{ch:scalar}, \S\ref{sec:paraxial}). Ambas condiciones se verificaron
-num\'ericamente, no s\'olo se asumieron, y ambas se cumplen c\'omodamente
-para el sistema estudiado ac\'a ($D_{LS}/(2R_{\rm Sch})\sim900$ en el punto
-de lensing m\'as profundo, Tabla~\ref{tab:paraxial}). Esta secci\'on final
-no resuelve nada nuevo: describe qu\'e har\'ia falta para tratar el
-problema \emph{sin} esas dos aproximaciones, por qu\'e ese es un problema
-genuinamente distinto y m\'as dif\'icil, y por qu\'e no se intenta ac\'a.
+Todas las aproximaciones usadas hasta este punto tienen un mismo origen: la
+onda se propaga sobre el campo del lente en r\'egimen de longitud de onda
+corta y campo d\'ebil, $\lambda_{GW}\ll\mathcal{R}$ y $\xi_0\ll D_{LS}$. Este
+cap\'itulo describe qu\'e formalismo har\'ia falta para resolver el problema
+sin esas dos hip\'otesis, qu\'e fen\'omenos aparecer\'ian entonces, y por
+qu\'e no se los trata aqu\'i. No contiene resultados nuevos: sirve para
+delimitar con precisi\'on el alcance de lo anterior.
 
-\section{El problema general: propagaci\'on tensorial, no escalar}
+% ----------------------------------------------------------------------
+\section{Propagaci\'on tensorial}
+\label{sec:tensorial}
 
-La reducci\'on a campo escalar (\S\ref{ch:scalar}) reemplaza la
-perturbaci\'on m\'etrica $h_{\mu\nu}$, de esp\'in 2, por una \'unica
-amplitud escalar $\Phi$, v\'alida s\'olo porque el t\'ermino de
-acoplamiento a la curvatura en la Ec.~\eqref{eq:linearized} es
-subdominante. El tratamiento general, sin esa suposici\'on, resuelve la
-propia Ec.~\eqref{eq:linearized} --- una ecuaci\'on \emph{tensorial} --- como
-un problema de perturbaciones sobre la m\'etrica exacta del lente (no s\'olo
-su expansi\'on de campo d\'ebil), v\'alido a cualquier par\'ametro de
-impacto y frecuencia, no s\'olo en el r\'egimen paraxial de campo d\'ebil.
+La reducci\'on a campo escalar del \S\ref{sec:reduccion} reemplaza la
+perturbaci\'on m\'etrica $h_{\mu\nu}$, de esp\'in 2, por una \'unica amplitud
+escalar, y solo es v\'alida porque el t\'ermino de acoplamiento a la curvatura
+de la Ec.~\eqref{eq:linearized} es subdominante. El tratamiento general
+resuelve esa ecuaci\'on tensorial completa como un problema de perturbaciones
+sobre la m\'etrica exacta del lente, no sobre su desarrollo de campo d\'ebil,
+y vale a cualquier par\'ametro de impacto y frecuencia.
 
-\subsection*{Lente sin rotaci\'on: Regge--Wheeler--Zerilli}
-Para un lente de Schwarzschild (sin esp\'in, como se model\'o en todo este
-proyecto), $h_{\mu\nu}$ se descompone en arm\'onicos esf\'ericos tensoriales
-de paridad impar (axial) y par (polar). Cada multipolo se reduce a una
-ecuaci\'on de onda radial 1D tipo Schr\"odinger. Para las perturbaciones
-axiales, esta es la ecuaci\'on de Regge--Wheeler \citep{ReggeWheeler1957},
+\subsection*{Lente sin rotaci\'on}
+
+Para un lente de Schwarzschild, $h_{\mu\nu}$ se descompone en arm\'onicos
+esf\'ericos tensoriales de paridad impar, llamados axiales, y par, llamados
+polares. Cada multipolo se reduce a una ecuaci\'on de onda radial
+unidimensional de tipo Schr\"odinger. Para las perturbaciones axiales es la
+ecuaci\'on de Regge--Wheeler \citep{ReggeWheeler1957},
 \begin{equation}
-  \frac{d^2\psi}{dr_*^2} + \left[\omega^2 - V_l(r)\right]\psi = 0,
+  \dv[2]{\Psi}{r_*}+\left[\omega^{2}-V_l(r)\right]\Psi=0,
   \qquad
-  V_l(r) = \left(1-\frac{2GM_L}{c^2 r}\right)\left[\frac{l(l+1)}{r^2} -
-  \frac{6GM_L}{c^2 r^3}\right],
+  V_l(r)=\left(1-\frac{2GM_L}{c^{2}r}\right)
+  \left[\frac{l(l+1)}{r^{2}}-\frac{6GM_L}{c^{2}r^{3}}\right],
   \label{eq:reggewheeler}
 \end{equation}
-con $r_*$ la coordenada tortuga ($dr_*=dr/(1-2GM_L/(c^2r))$). Las
-perturbaciones polares obedecen la ecuaci\'on an\'aloga de Zerilli
-\citep{Zerilli1970}, con un potencial distinto pero el mismo espectro de
-transmisi\'on/reflexi\'on que la Ec.~\eqref{eq:reggewheeler} (una
-coincidencia no trivial, consecuencia de la dualidad axial-polar de
-Chandrasekhar; v\'ease \citealp{Chandrasekhar1983}). El potencial
-$V_l(r)$ tiene una barrera que llega a su m\'aximo cerca de $r=3GM_L/c^2$
---- la esfera de fotones --- exactamente donde se espera que el l\'imite de
-$\omega$ grande se conecte con las \'orbitas de fotones de la \'optica
+con $r_*$ la coordenada tortuga, definida por
+$dr_*=dr/(1-2GM_L/c^{2}r)$. Las perturbaciones polares obedecen la ecuaci\'on
+an\'aloga de Zerilli \citep{Zerilli1970}, con un potencial distinto pero
+id\'entico espectro de transmisi\'on y reflexi\'on, un resultado no trivial que
+se conoce como dualidad axial--polar \citep{Chandrasekhar1983}.
+
+El potencial $V_l(r)$ tiene una barrera cuyo m\'aximo est\'a cerca de
+$r=3GM_L/c^{2}$, la esfera de fotones, que es exactamente donde el l\'imite de
+frecuencia alta se conecta con las \'orbitas de fotones de la \'optica
 geom\'etrica.
 
-\subsection*{Lente con rotaci\'on: Teukolsky}
-Si el lente tuviera esp\'in apreciable (no modelado en absoluto ac\'a --- el
-lente se trata en todo momento como una masa puntual sin rotaci\'on), la
-generalizaci\'on de Kerr es el formalismo de Teukolsky
-\citep{Teukolsky1973}: descomponiendo la curvatura de Weyl en la base de
-Newman--Penrose, los escalares $\psi_0,\psi_4$ obedecen una ecuaci\'on
-maestra separable en una parte radial y una parte angular (arm\'onicos
-esferoidales con peso de esp\'in).
+\subsection*{Lente con rotaci\'on}
 
-\section{Qu\'e capturar\'ia esto que el tratamiento de este proyecto no puede}
+Si el lente tuviera esp\'in apreciable, la generalizaci\'on de Kerr es el
+formalismo de Teukolsky \citep{Teukolsky1973}: descomponiendo la curvatura de
+Weyl en la base de Newman--Penrose, los escalares $\psi_0$ y $\psi_4$ obedecen
+una ecuaci\'on maestra separable en una parte radial y otra angular, con
+arm\'onicos esferoidales con peso de esp\'in. En todo este texto el lente se
+trata como una masa puntual sin rotaci\'on.
 
-\begin{itemize}
-  \item \textbf{Retrodispersi\'on cerca de la esfera de fotones.} Esta es la
-  versi\'on rigurosa y cuantitativa del argumento que descarta la
-  retrodispersi\'on (``retro-lensing'') hacia el observador durante la
-  mitad ``de adelante'' de la \'orbita externa (\S\ref{sec:paraxial}): ah\'i
-  se estim\'o que la fracci\'on de \'angulo s\'olido de la radiaci\'on de la
-  fuente que pasa lo bastante cerca del lente como para retrodispersarse es
-  despreciable. $D_{LS}/(2R_{\rm Sch})\sim919$ (Tabla~\ref{tab:paraxial}) es
-  una raz\'on de distancias a lo largo de la l\'inea de visi\'on, no un
-  par\'ametro de impacto; el par\'ametro de impacto TRANSVERSO real en el
-  punto de lensing m\'as profundo es $\xi_0=R_E\approx0.060$ UA $\approx61\,
-  R_{\rm Sch}$ (de $\xi_0/D_{LS}=0.033$ en la misma tabla). La barrera de
-  potencial de la Ec.~\eqref{eq:reggewheeler} s\'olo importa para
-  par\'ametros de impacto de pocos $R_{\rm Sch}$ (la esfera de fotones est\'a
-  en $1.5\,R_{\rm Sch}$), un poco m\'as de un orden de magnitud por debajo
-  de eso. M\'as riguroso a\'un: la fracci\'on de \'angulo s\'olido en s\'i, no la raz\'on de
-  longitudes, es $\sim(b_c/D_{LS})^2/4\approx5\times10^{-7}$ ($b_c\sim
-  3\sqrt3\,GM_L/c^2$ el par\'ametro de impacto cr\'itico de la esfera de
-  fotones) --- much\'isimo m\'as peque\~na, y la que efectivamente acota lo
-  que la frase de arriba afirma acotar. El coeficiente de reflexi\'on exacto
-  de la Ec.~\eqref{eq:reggewheeler} dar\'ia un n\'umero real para la
-  fracci\'on retrodispersada en vez de esta estimaci\'on geom\'etrica, pero
-  no se espera que cambie la conclusi\'on cualitativa: retro-lensing es
-  despreciable ac\'a.
-  \item \textbf{Factores de graybody / absorci\'on parcial}, si el lente
-  tiene un horizonte de eventos --- ausentes por completo de la integral
-  de difracci\'on de este proyecto, que conserva el flujo total de manera
-  exacta (una idealizaci\'on de vac\'io puro).
-  \item \textbf{``Repique'' (ringing) de modos cuasinormales del propio
-  lente} cuando un paquete de ondas pasa cerca de \'el --- distinto del
-  ringdown del remanente de la propia binaria fuente (Cap\'itulo~\ref{ch:waveform}). El
-  formalismo de lente delgado usado en este proyecto no tiene ning\'un
-  mecanismo para producir un ``eco'' retrasado del lente, ni siquiera en
-  principio.
-  \item \textbf{Mezcla de polarizaci\'on m\'as all\'a del orden dominante}
-  --- \S\ref{ch:scalar} argument\'o que esto es despreciable por el factor
-  $(\lambda_{GW}/\mathcal{R})^2$; el tratamiento tensorial completo dar\'ia
-  el valor exacto de esa mezcla en vez de s\'olo acotar su orden.
-\end{itemize}
+% ----------------------------------------------------------------------
+\section{Fen\'omenos ausentes del tratamiento escalar}
+\label{sec:ausentes}
 
-\section{Por qu\'e queda fuera del alcance ac\'a}
+El formalismo completo capturar\'ia varios efectos que el tratamiento de lente
+delgado no puede producir ni siquiera en principio.
 
-Resolver num\'ericamente la ecuaci\'on de Regge--Wheeler/Zerilli (o la de
-Teukolsky) para un problema astrof\'isico de dispersi\'on de ondas es, en
-s\'i mismo, un \'area bien establecida pero sustancial de la teor\'ia de
-perturbaciones de agujeros negros --- un proyecto de investigaci\'on
-leg\'itimo por derecho propio, muy por fuera del alcance de un proyecto de
-un curso de una semana. El r\'egimen de par\'ametros efectivamente usado
-ac\'a ($D_{LS}/(2R_{\rm Sch})\sim900$ en el punto relevante,
-Tabla~\ref{tab:paraxial}) justifica firmemente la aproximaci\'on de campo
-d\'ebil/paraxial para todo lo que este proyecto efectivamente reporta, as\'i
-que el formalismo m\'as simple no es s\'olo conveniente sino demostrablemente
-adecuado para el r\'egimen estudiado --- el tratamiento general s\'olo
-har\'ia falta para empujar hacia el r\'egimen del que este proyecto se
-mantiene expl\'icitamente afuera.
+\paragraph{Retrodispersi\'on cerca de la esfera de fotones.} Parte de la
+radiaci\'on emitida hacia el lente podr\'ia, en principio, ser dispersada de
+vuelta hacia el observador. La barrera de potencial de la
+Ec.~\eqref{eq:reggewheeler} solo es relevante para par\'ametros de impacto de
+pocos radios de Schwarzschild, con el par\'ametro de impacto cr\'itico de la
+esfera de fotones en $b_c=3\sqrt{3}\,GM_L/c^{2}$. La fracci\'on de \'angulo
+s\'olido de la radiaci\'on de la fuente que pasa tan cerca es
+$\sim(b_c/D_{LS})^{2}/4$, del orden de $5\times10^{-7}$ para el sistema
+considerado. El coeficiente de reflexi\'on exacto de la
+Ec.~\eqref{eq:reggewheeler} dar\'ia el valor preciso en lugar de esta
+estimaci\'on geom\'etrica, pero no cambiar\'ia la conclusi\'on.
+
+\paragraph{Absorci\'on parcial.} Si el lente tiene horizonte de eventos, parte
+del flujo incidente lo atraviesa y no vuelve. La integral de difracci\'on de
+la Ec.~\eqref{eq:Fdim} conserva el flujo total de manera exacta, de modo que
+describe una idealizaci\'on de vac\'io puro sin ning\'un canal de absorci\'on.
+
+\paragraph{Modos cuasinormales del lente.} Un paquete de ondas que pasa cerca
+del lente puede excitar sus modos cuasinormales, produciendo un eco retrasado
+con frecuencias propias del lente \citep{BertiCardosoWill2006}. Es un
+fen\'omeno distinto del ringdown del remanente de la binaria fuente, y el
+formalismo de lente delgado no tiene ning\'un mecanismo para generarlo.
+
+\paragraph{Mezcla de polarizaciones.} El \S\ref{sec:reduccion} mostr\'o que es
+de orden $(\lambda_{GW}/\mathcal{R})^{2}$; el tratamiento tensorial dar\'ia su
+valor exacto en lugar de una cota.
+
+% ----------------------------------------------------------------------
+\section{Alcance}
+\label{sec:alcance}
+
+Resolver num\'ericamente la ecuaci\'on de Regge--Wheeler, la de Zerilli o la
+de Teukolsky para un problema de dispersi\'on astrof\'isico es un \'area
+establecida de la teor\'ia de perturbaciones de agujeros negros, y un problema
+sustancialmente m\'as dif\'icil que el tratado en este texto. El r\'egimen de
+par\'ametros de un triple gal\'actico, con
+$D_{LS}/(2R_{\rm Sch})\sim10^{3}$ en el punto de mayor efecto de lente
+(Tabla~\ref{tab:paraxial}), justifica ampliamente la aproximaci\'on de campo
+d\'ebil y paraxial. El formalismo completo solo har\'ia falta para empujar el
+problema hacia un r\'egimen del que este texto se mantiene expl\'icitamente
+afuera.
 
 % ======================================================================
 \chapter{La binaria interna como fuente}
 \label{ch:waveform}
 % ======================================================================
 
-La forma de onda no lenteada, en el Caso~A (Cap\'itulo~\ref{ch:regimes}),
-usa dos generadores posibles, en orden de preferencia.
+Los cap\'itulos anteriores trataron la propagaci\'on de la onda y dieron por
+dada la se\~nal emitida. Este cap\'itulo construye esa se\~nal: la forma de
+onda de una binaria compacta en inspiral cuasi-circular. Aparece aqu\'i, y no
+antes, porque nada de la teor\'ia de lentes depende de ella: el factor $F$ se
+aplica a cualquier $h(f)$.
 
-\section{El generador preferido: IMRPhenomD}
+% ----------------------------------------------------------------------
+\section{Inspiral cuasi-circular y masa de chirp}
+\label{sec:chirp}
 
-\code{src/gwlens/imr\_waveform.py} intenta primero \code{pycbc}
-\citep{PyCBC}, que env\'uelve LALSimulation, con el aproximante
-\textbf{IMRPhenomD} \citep{Khan2016} --- un modelo fenomenol\'ogico
-calibrado contra relatividad num\'erica, exactamente lo que usan los
-pipelines de b\'usqueda y estimaci\'on de par\'ametros de LIGO/Virgo. A
-diferencia de un desarrollo post-newtoniano puro, IMRPhenomD cubre el
-inspiral, el merger \emph{y el ringdown} de manera continua, sin diverger
-nunca: la amplitud crece, satura en el merger, y decae exponencialmente en
-el ringdown, con la frecuencia y el tiempo de decaimiento fijados por la
-masa y el esp\'in del agujero negro remanente. No se reimplementa ac\'a
---- se usa la librer\'ia tal cual, precisamente para \emph{evitar} el
-riesgo de reproducir de memoria docenas de coeficientes de ajuste
-calibrados contra relatividad num\'erica sin una referencia contra la cual
-verificarlos (el mismo criterio, aplicado en la otra direcci\'on, que
-llev\'o a truncar \code{taylorf2.py} en 2PN en la Secci\'on~\ref{sec:taylorf2}
-de abajo).
+Una binaria de masas $m_1$ y $m_2$ en \'orbita circular de radio $a$ tiene un
+momento cuadrupolar variable, y por lo tanto radia. La f\'ormula del
+cuadrupolo da la potencia emitida \citep{PetersMathews1963}
+\begin{equation}
+  P=\frac{32}{5}\frac{G}{c^{5}}\,\mu^{2}a^{4}\omega^{6},
+  \qquad \mu\equiv\frac{m_1m_2}{M_b} ,
+  \label{eq:quadpower}
+\end{equation}
+con $\omega$ la frecuencia angular orbital. La energ\'ia de la \'orbita es
+$E=-GM_b\mu/(2a)$, de modo que la p\'erdida de energ\'ia se traduce en una
+disminuci\'on de $a$. Combinando ambas con la tercera ley de Kepler y
+escribiendo el resultado en t\'erminos de la frecuencia de la onda
+gravitacional $f=\omega/\pi$, que es el doble de la orbital, se obtiene
+\begin{equation}
+  \dv{f}{t}=\frac{96}{5}\,\pi^{8/3}
+  \left(\frac{G\mathcal{M}}{c^{3}}\right)^{5/3} f^{11/3} ,
+  \label{eq:chirprate}
+\end{equation}
+donde toda la dependencia con las masas ha quedado reunida en una \'unica
+combinaci\'on, la \emph{masa de chirp}
+\begin{equation}
+  \mathcal{M}=\left(\mu^{3}M_b^{2}\right)^{1/5}
+  =\frac{(m_1m_2)^{3/5}}{(m_1+m_2)^{1/5}} ,
+  \label{eq:chirpmass_def}
+\end{equation}
+que es la Ec.~\eqref{eq:chirpmass} anticipada en el
+cap\'itulo~\ref{ch:scope}. La deducci\'on est\'a en el \S\ref{ap:chirp}. El
+hecho de que las dos masas entren solo a trav\'es de $\mathcal{M}$ a orden
+dominante es lo que hace de esta combinaci\'on el par\'ametro mejor medido de
+una se\~nal de inspiral.
 
-\begin{choicebox}
-\code{pycbc}/\code{lalsuite} no se instala en un tiempo razonable en
-Windows nativo (la resoluci\'on de dependencias de \code{lalsuite} se
-cuelga indefinidamente). S\'i se instala limpio con un simple \code{pip
-install pycbc} en Linux/macOS, incluyendo WSL2 --- as\'i se generaron
-los resultados del Caso~A efectivamente comprometidos en este
-repositorio. V\'ease \code{README.md} para el camino de reproducci\'on
-exacto en cada plataforma; \code{wiki/log.md} para el intento fallido en
-Windows nativo.
-\end{choicebox}
+Integrando la Ec.~\eqref{eq:chirprate} desde una frecuencia $f$ hasta la
+divergencia formal se obtiene el tiempo que le queda a la binaria hasta la
+coalescencia,
+\begin{equation}
+  \tau(f)=\frac{5}{256}
+  \left(\frac{G\mathcal{M}}{c^{3}}\right)^{-5/3}
+  \left(\pi f\right)^{-8/3} ,
+  \label{eq:time_to_merger}
+\end{equation}
+una escala que decrece muy r\'apido con la frecuencia y que es la que separa
+los dos reg\'imenes del cap\'itulo~\ref{ch:regimes}.
 
-\begin{checkbox}[title={Alineaci\'on temporal del merger}]
-La forma de onda en frecuencia que devuelve \code{pycbc} no viene
-alineada a un tiempo de merger conveniente para este proyecto (un
-\code{irfft} directo pondr\'ia el pico cerca del borde de la ventana de la
-FFT, con la mayor parte del inspiral envuelto al otro extremo). Se aplica
-un corrimiento temporal expl\'icito en el dominio de la frecuencia,
-$H(f)\to H(f)\,e^{-i2\pi f\Delta t}$ (consistente con la convenci\'on de
-\code{wiki/conventions.md}: un corrimiento a tiempos m\'as tardes,
-$\Delta t>0$, lleva este signo), con $\Delta t$ el tiempo de merger
-buscado menos el que \code{pycbc} entrega. Verificado a que el pico cae a
-menos de $0.003$\,s del objetivo y lejos del borde de la ventana,
-\code{tests/test\_imr\_waveform.py::check\_pycbc\_merger\_time\_alignment}.
-\end{checkbox}
+La aproximaci\'on de inspiral adiab\'atico deja de valer cuando la separaci\'on
+se acerca a la \'ultima \'orbita circular estable (ISCO). Para una binaria de masa
+total $M_b$ eso ocurre en $a=6GM_b/c^{2}$, que corresponde a una frecuencia de
+onda gravitacional
+\begin{equation}
+  f_{\rm ISCO}=\frac{c^{3}}{6^{3/2}\pi G M_b}
+  \simeq 4.4\;\mathrm{kHz}\,\frac{\Msun}{M_b} .
+  \label{eq:fisco}
+\end{equation}
 
-\section{El generador de respaldo: TaylorF2 a 2PN}
+% ----------------------------------------------------------------------
+\section{La forma de onda en el dominio de la frecuencia}
 \label{sec:taylorf2}
 
-Si \code{pycbc} no est\'a disponible (Windows nativo sin WSL), el mismo
-script cae autom\'aticamente en \code{src/gwlens/taylorf2.py}: la
-aproximaci\'on post-newtoniana restringida en el dominio de la frecuencia,
-por fase estacionaria (SPA) --- la forma funcional est\'andar usada para
-la porci\'on de inspiral de los bancos de templates de b\'usqueda reales
-de LIGO/Virgo, aunque sin merger ni ringdown, y cortada a mano en
-$f_\mathrm{isco}$ (donde la propia aproximaci\'on post-newtoniana deja de
-ser v\'alida). La fase SPA es
+Para aplicar el factor de amplificaci\'on hace falta la se\~nal en el dominio
+de la frecuencia. Como la frecuencia instant\'anea crece de manera mon\'otona
+y lenta, cada frecuencia se emite en un instante bien definido y la
+transformada de Fourier se puede evaluar por el m\'etodo de fase estacionaria,
+el mismo que se us\'o en el \S\ref{sec:fgeo} para la integral de difracci\'on.
+El resultado tiene la forma
 \begin{equation}
-  \Psi(f) = -\left[2\pi f t_c - \phi_c - \frac{\pi}{4}
-  + \frac{3}{128\,\eta\,v^5}\Big(1 + \phi_2 v^2 + \phi_3 v^3 + \phi_4 v^4\Big)\right],
+  h(f)=A\,f^{-7/6}\,e^{-i\Psi(f)},
+  \qquad
+  A\propto\frac{\mathcal{M}^{5/6}}{D_S} ,
+  \label{eq:spa_form}
+\end{equation}
+con una fase que se conoce como desarrollo post-newtoniano. A segundo orden
+post-newtoniano,
+\begin{equation}
+  \Psi(f)=2\pi ft_c-\phi_c-\frac{\pi}{4}
+  +\frac{3}{128\,\eta\,v^{5}}
+  \left(1+\phi_2v^{2}+\phi_3v^{3}+\phi_4v^{4}\right) ,
   \label{eq:taylorf2phase}
 \end{equation}
-$v=(\pi M f)^{1/3}$, $\eta=m_1m_2/M^2$, con los coeficientes 1PN, 1.5PN y
-2PN est\'andar (\citealp{BuonannoIyerOchsnerPanSathyaprakash2009}):
-$\phi_2=3715/756+55\eta/9$, $\phi_3=-16\pi$,
-$\phi_4=15293365/508032+27145\eta/504+3085\eta^2/72$. Truncada en 2PN, no
-en el orden completo 3.5PN de los bancos de templates reales: los
-coeficientes de 2.5PN a 3.5PN involucran suficientes t\'erminos
-racionales/logar\'itmicos adicionales como para que reproducirlos de
-memoria, sin una implementaci\'on de referencia contra la cual verificar
-los coeficientes, se juzgue un riesgo real de error silencioso --- una
-elecci\'on de alcance declarada, no un descuido.
+donde $v=(\pi G M_b f/c^{3})^{1/3}$ es la velocidad orbital caracter\'istica,
+$\eta=m_1m_2/M_b^{2}$ es la raz\'on de masas sim\'etrica, $t_c$ y $\phi_c$ son
+el tiempo y la fase de coalescencia, y los coeficientes son
+(\citealp{BuonannoIyerOchsnerPanSathyaprakash2009}, su Ec.~3.18)
+\begin{equation}
+  \phi_2=\frac{3715}{756}+\frac{55}{9}\eta,
+  \qquad
+  \phi_3=-16\pi,
+  \qquad
+  \phi_4=\frac{15293365}{508032}+\frac{27145}{504}\eta+\frac{3085}{72}\eta^{2} .
+  \label{eq:pn_coeffs}
+\end{equation}
+El t\'ermino dominante, el $1$ del par\'entesis, reproduce la
+Ec.~\eqref{eq:chirprate}: es el inspiral newtoniano, y los dem\'as son
+correcciones relativistas sucesivas. El signo global del exponente en la
+Ec.~\eqref{eq:spa_form} depende de la convenci\'on de Fourier, y aqu\'i
+corresponde a la fijada en la Ec.~\eqref{eq:fourier}.
 
-\begin{checkbox}[title={El signo global de $\Psi(f)$}]
-El signo que aparece afuera del corchete en la Ec.~\eqref{eq:taylorf2phase}
-\textbf{no} es el signo que aparece en la mayor\'ia de los enunciados de
-esta f\'ormula en la literatura (que asumen la convenci\'on de Fourier
-opuesta, $h(f)=\int h(t)e^{+2\pi ift}dt$); se re-deriv\'o directamente de
-la condici\'on de fase estacionaria aplicada a la convenci\'on de este
-proyecto (\code{wiki/conventions.md}). Chequeo: el pico reconstruido cae en
-$t_c$ (a menos de $0.2\%$) y, cr\'iticamente, no se mueve al cambiar la
-cantidad de zero-padding usada antes de la IFFT (chequeado en $2\times$,
-$4\times$, $8\times$: tiempo de pico id\'entico a precisi\'on de m\'aquina
-en los tres) --- el signo equivocado s\'i mueve el pico con el padding, la
-firma de que la potencia se est\'a enviando al extremo equivocado de la
-ventana peri\'odica de la IFFT.
-\code{tests/test\_taylorf2.py::check\_ifft\_reconstructs\_chirp\_at\_tc}.
-\end{checkbox}
+Este desarrollo describe solo la fase de inspiral, y deja de ser v\'alido
+cerca de $f_{\rm ISCO}$.
 
-En ambos generadores, la amplitud no reclama ninguna calibraci\'on
-absoluta de strain (los prefactores de inclinaci\'on/polarizaci\'on quedan
-plegados en una constante de orden $1$) --- s\'olo las amplitudes
-relativas y el factor de amplificaci\'on de lensing son afirmaciones
-f\'isicas en este proyecto.
+% ----------------------------------------------------------------------
+\section{Inspiral, merger y ringdown}
+\label{sec:imr}
+
+Para cubrir la se\~nal completa, incluidos el merger y el ringdown, hacen falta
+modelos calibrados contra relatividad num\'erica. Los modelos
+fenomenol\'ogicos de la familia IMRPhenom \citep{Khan2016} construyen una
+expresi\'on en el dominio de la frecuencia por tramos: un inspiral
+post-newtoniano extendido, una regi\'on intermedia ajustada, y un ringdown
+dominado por el modo cuasinormal fundamental del agujero negro remanente, cuya
+frecuencia y tiempo de decaimiento quedan fijados por la masa y el esp\'in
+finales \citep{BertiCardosoWill2006}. La amplitud crece durante el inspiral,
+satura en el merger y decae exponencialmente despu\'es, sin divergir en ning\'un
+punto.
+
+Para los fines de este texto, la diferencia entre uno y otro modelo es
+irrelevante: el factor de amplificaci\'on $F(f)$ multiplica a $h(f)$ sea cual
+sea su origen, y todo lo que el lente hace depende de $F$ y no de la forma de
+onda.
 
 % ======================================================================
-\chapter{Junt\'andolo todo: dos reg\'imenes}
+\chapter{Los dos reg\'imenes}
 \label{ch:regimes}
 % ======================================================================
 
-\section{Lente est\'atico (Caso A)}
-El lente queda congelado durante todo el chirp cuando la duraci\'on del
-merger es mucho menor que el per\'iodo externo,
-$\tau(f_{\rm inicio})\ll P_{\rm out}$. Para los par\'ametros en
-\code{system.py} ($f_{\rm inicio}=10$\,Hz, $P_{\rm out}=4$\,d):
-$\tau=15.2$\,s, una fracci\'on $4.4\times10^{-5}$ de $P_{\rm out}$ ---
-est\'atico a una precisi\'on extremadamente alta (funci\'on
-\code{check\_static\_lens\_regime} en \code{test\_system.py}). El lensing
-es entonces una \'unica multiplicaci\'on en el dominio de la frecuencia,
-$h_{\rm lensado}(f)=F(f,y_A)\,h_{\rm no\ lensado}(f)$, aplicada v\'ia
-FFT/IFFT en Case~A (funci\'on \code{apply\_lensing} en su \code{run.py}),
-con $h_{\rm no\ lensado}(f)$ del Cap\'itulo~\ref{ch:waveform}.
+Este cap\'itulo re\'une todos los elementos anteriores. El
+cap\'itulo~\ref{ch:pointlens} dio $F(w,y)$ para una configuraci\'on fija; el
+cap\'itulo~\ref{ch:geometry} dio $y(t)$ a lo largo de la \'orbita; el
+cap\'itulo~\ref{ch:waveform} dio $h(f)$. Falta decir c\'omo se combinan, y la
+respuesta depende de cu\'al de las dos escalas de tiempo del sistema
+(\S\ref{sec:regimenes}) domina.
 
-\section{Cuasi-monocrom\'atico, lente en movimiento (Caso B)}
-\label{sec:caseB}
-Por el contrario, el lente efectivamente se mueve cuando la observaci\'on
-abarca varios per\'iodos externos mientras la frecuencia de la GW misma
-apenas evoluciona: $\tau(f_B)\gg T_{\rm obs}\gg P_{\rm out}$. Para
-$f_B=0.05$\,Hz, $T_{\rm obs}=6P_{\rm out}$ (24\,d): $\tau=240.7$\,d
-($60.2$ per\'iodos externos restantes), y la deriva fraccional de
-frecuencia sobre $T_{\rm obs}$ es del $4.0\%$ (funci\'on
-\code{check\_quasi\_monochromatic\_regime} en \code{test\_system.py}).
+% ----------------------------------------------------------------------
+\section{Lente est\'atico}
+\label{sec:caseA}
 
-\subsection*{Por qu\'e $F(w_B,y(t))$ instant\'aneo (adiab\'atico) es la
-prescripci\'on correcta}
-La multiplicaci\'on en el dominio de la frecuencia de la
-Ec.~\eqref{eq:Fdim} asume una configuraci\'on de lente \emph{fija}; no
-aplica directamente cuando $y$ mismo es funci\'on del tiempo. La
-separaci\'on de escalas ac\'a es enorme: $y(t)$ var\'ia en la escala
-temporal orbital externa ($P_{\rm out}\sim4$ d\'ias $=3.456\times10^5$\,s),
-mientras que la GW misma oscila en una escala temporal
-$1/f_B\sim20$\,s --- $P_{\rm out}/(1/f_B)\approx1.7\times10^4$, cuatro
-\'ordenes de magnitud m\'as r\'apido. Pero la comparaci\'on realmente
-relevante no es con el per\'iodo de la GW sino con el tiempo de
-\emph{respuesta} del propio lente, el retraso entre im\'agenes
-$\Delta T(y_A)=3.43$\,s (Ec.~\eqref{eq:images}, evaluado al $y$ del
-Caso~A por concretitud): sobre ese intervalo $y(t)$ cambia en una
-fracci\'on $\Delta T/P_{\rm out}\approx10^{-5}$ de su rango --- au\'n m\'as
-peque\~na, y la comparaci\'on correcta, ya que es el tiempo que el lente
-tarda en producir su respuesta (las dos im\'agenes), no el per\'iodo de
-oscilaci\'on de la onda en s\'i, lo que debe ser lento comparado con \'el
-para que la aproximaci\'on cuasi-est\'atica valga. Para la onda, la
-configuraci\'on del lente es,
-a excelente aproximaci\'on, constante durante cualquier ciclo de GW (y
-durante muchos ciclos consecutivos). Esta es la aproximaci\'on
-adiab\'atica/cuasi-est\'atica est\'andar: en cada instante, se aplica el
-factor de amplificaci\'on que el lente \emph{producir\'ia} para una fuente
-est\'atica en el $y(t)$ de ese instante,
+Cuando la observaci\'on dura mucho menos que el per\'iodo orbital externo,
 \begin{equation}
-  z_{\rm lensado}(t) \;=\; F\!\big(w_B,\,y(t)\big)\;z_{\rm no\ lensado}(t),
-  \qquad z(t)\equiv h(t)\,e^{i\phi(t)}\ \text{(se\~nal anal\'itica)},
+  \tau(f_{\rm ini})\ll P_\mathrm{out} ,
+  \label{eq:static_condition}
+\end{equation}
+con $\tau$ dado por la Ec.~\eqref{eq:time_to_merger}, el lente permanece
+congelado en un \'unico par\'ametro de impacto $y$ durante toda la se\~nal. El
+efecto de lente es entonces una simple multiplicaci\'on en el dominio de la
+frecuencia,
+\begin{equation}
+  h_L(f)=F\big(w(f),y\big)\,h(f) ,
+  \label{eq:caseA}
+\end{equation}
+con $w(f)$ de la Ec.~\eqref{eq:wdef}. Como $w$ crece linealmente con $f$
+mientras el chirp barre la banda, una sola se\~nal recorre un tramo
+considerable del eje $w$, y el patr\'on de franjas de la
+Ec.~\eqref{eq:fringes} queda impreso sobre el espectro. En el dominio del
+tiempo, el mismo resultado se ve como la se\~nal original seguida de una copia
+m\'as d\'ebil, retrasada en $\Delta t=4GM_L\Delta T(y)/c^{3}$: el eco de la
+segunda imagen.
+
+% ----------------------------------------------------------------------
+\section{Lente en movimiento}
+\label{sec:caseB}
+
+En el l\'imite opuesto, la observaci\'on abarca varios per\'iodos externos
+mientras la frecuencia apenas evoluciona,
+\begin{equation}
+  \tau(f)\;\gg\;T_\mathrm{obs}\;\gg\;P_\mathrm{out} .
+  \label{eq:qm_condition}
+\end{equation}
+Ahora $y$ depende del tiempo y la Ec.~\eqref{eq:caseA} no se puede aplicar tal
+cual, porque la integral de difracci\'on se dedujo suponiendo una
+configuraci\'on fija.
+
+Lo que salva la situaci\'on es una separaci\'on de escalas. Para que la
+prescripci\'on instant\'anea valga, la configuraci\'on del lente debe cambiar
+poco durante el tiempo que el lente tarda en \emph{responder}. Ese tiempo de
+respuesta no es el per\'iodo de la onda sino la dispersi\'on de retardos que
+contribuyen de manera coherente al campo en el observador, que es lo que tarda
+en formarse el patr\'on completo. Su escala es el retardo caracter\'istico del
+lente, $t_{\rm resp}\sim4GM_L/c^{3}$, que en el l\'imite de \'optica
+geom\'etrica se vuelve el retardo entre im\'agenes pero existe igual cuando no
+hay im\'agenes que separar. La condici\'on es entonces
+\begin{equation}
+  t_{\rm resp}\;\ll\;\left|\dv{\ln y}{t}\right|^{-1}\sim P_\mathrm{out} ,
+  \label{eq:adiabatic_condition}
+\end{equation}
+y cuando se cumple vale la aproximaci\'on adiab\'atica: en cada instante se
+aplica el factor de amplificaci\'on que el lente producir\'ia para una fuente
+est\'atica en el $y$ de ese instante,
+\begin{equation}
+  z_L(t)=F\big(w_B,\,y(t)\big)\;z(t),
+  \qquad
+  z(t)\equiv h(t)\,e^{i\phi(t)} ,
   \label{eq:adiabatic}
 \end{equation}
-usada en \code{cases/case\_B\_monochromatic/run.py}. Este es el \'unico
-lugar donde los dos casos de este proyecto usan maquinaria num\'erica
-genuinamente distinta (convoluci\'on por FFT para el Caso A,
-multiplicaci\'on directa en el dominio del tiempo para el Caso B), y la
-raz\'on es este argumento de escalas temporales, no una diferencia en la
-f\'isica subyacente.
+donde $z$ es la se\~nal anal\'itica asociada a $h$. El resultado es una
+modulaci\'on de amplitud con el per\'iodo de la \'orbita externa, es decir, los
+pulsos de lente repetidos del \S\ref{sec:repetido}.
 
-\section{Un detector idealizado}
-Ambos casos se detienen en una vista de detector idealizada e
-ilustrativa: la envolvente de se\~nal anal\'itica (transformada de
-Hilbert) de $h_{\rm lensado}(t)$ vs.\ $h_{\rm no\ lensado}(t)$, sin curva
-de ruido, sin patr\'on de antena, y sin filtrado adaptado (matched
-filtering). Esta es una elecci\'on de alcance deliberada
-(\code{wiki/conventions.md}): el punto de este proyecto es la f\'isica de
-lensing en \'optica de ondas y su visualizaci\'on, no un estudio de
-pipeline de detecci\'on, y las figuras son expl\'icitas sobre esta omisi\'on
-en su propia cara.
+Conviene cerrar con la advertencia del \S\ref{sec:kinematics}. Todo lo
+anterior describe lo que el lente le hace a la onda, pero la misma \'orbita
+imprime sobre la se\~nal una modulaci\'on de Roemer y Doppler que es varios
+\'ordenes de magnitud mayor. Los pulsos de lente son reales y contienen la
+informaci\'on sobre la masa del lente, pero no son el efecto m\'as grande que
+la \'orbita externa produce sobre la se\~nal.
+
+Los dos efectos, sin embargo, no se estorban, porque no ocurren en la misma
+fase orbital. La posici\'on de la fuente a lo largo de la \'orbita externa
+queda dada por el \'angulo $\nu+\omega$ introducido en el
+\S\ref{sec:orbita}, donde $\nu$ es la anomal\'ia verdadera, que crece a lo
+largo del per\'iodo, y $\omega$ es el argumento del pericentro, que es
+constante y solo fija el origen desde el que se mide. Para una \'orbita
+circular, la separaci\'on paralela a la l\'inea de visi\'on es proporcional a
+$\sin(\nu+\omega)$, mientras que la velocidad radial de la fuente lo es a
+$\cos(\nu+\omega)$: ambas est\'an en cuadratura. El pulso de lente alcanza su m\'aximo en la conjunci\'on, cuando
+la fuente pasa exactamente por detr\'as del lente, y es justo ah\'i donde la
+velocidad radial se anula y el corrimiento Doppler pasa por cero. Los extremos
+del Doppler, a su vez, caen un cuarto de per\'iodo antes y despu\'es, donde
+$D_{LS}=0$ y no hay efecto de lente en absoluto. Que la cinem\'atica domine en
+amplitud no impide, entonces, separar ambos efectos: se distinguen por la fase
+orbital en que aparecen.
+
+% ======================================================================
+\appendix
+\chapter{Deducciones}
+\label{ap:deducciones}
+% ======================================================================
+
+Este ap\'endice desarrolla paso a paso las cuentas que en el cuerpo del texto
+se enunciaron con su resultado. Cada secci\'on est\'a enlazada desde la
+ecuaci\'on correspondiente. Se supone el mismo nivel de partida que en el
+resto del texto: relatividad general a nivel de perturbaciones y an\'alisis de
+Fourier.
+
+% ----------------------------------------------------------------------
+\section{Ecuaci\'on de propagaci\'on sobre un fondo curvo}
+\label{ap:linearized}
+
+Se parte de las ecuaciones de Einstein en vac\'io, $R_{\mu\nu}=0$, y de la
+separaci\'on $g_{\mu\nu}=\bar g_{\mu\nu}+h_{\mu\nu}$ con
+$|h_{\mu\nu}|\ll1$, donde el fondo $\bar g_{\mu\nu}$ satisface a su vez
+$\bar R_{\mu\nu}=0$ fuera del lente.
+
+La variaci\'on del tensor de Ricci a primer orden en $h_{\mu\nu}$ es
+\begin{equation}
+  \delta R_{\mu\nu}=-\tfrac12\bar\nabla^{\alpha}\bar\nabla_{\alpha}h_{\mu\nu}
+  -\tfrac12\bar\nabla_{\mu}\bar\nabla_{\nu}h
+  +\bar\nabla_{\alpha}\bar\nabla_{(\mu}h^{\alpha}_{\ \nu)} ,
+  \label{eq:deltaRicci}
+\end{equation}
+con $h\equiv h^{\alpha}_{\ \alpha}$ y par\'entesis de simetrizaci\'on. Se
+imponen ahora las condiciones de gauge de la Ec.~\eqref{eq:gauge}: traza nula,
+$h=0$, que elimina el segundo t\'ermino, y condici\'on de Lorenz sobre el
+fondo, $\bar\nabla_{\alpha}h^{\alpha}_{\ \nu}=0$.
+
+El tercer t\'ermino no se anula pese a la condici\'on de Lorenz, porque las
+derivadas covariantes no conmutan. Intercambi\'andolas,
+\begin{equation}
+  \bar\nabla_{\alpha}\bar\nabla_{\mu}h^{\alpha}_{\ \nu}
+  =\bar\nabla_{\mu}\underbrace{\bar\nabla_{\alpha}h^{\alpha}_{\ \nu}}_{=0}
+  +\left[\bar\nabla_{\alpha},\bar\nabla_{\mu}\right]h^{\alpha}_{\ \nu}
+  =\bar R_{\alpha\mu}{}^{\alpha}{}_{\beta}h^{\beta}_{\ \nu}
+  +\bar R_{\alpha\mu\nu}{}^{\beta}h^{\alpha}_{\ \beta} .
+  \label{eq:commutator}
+\end{equation}
+El primer t\'ermino del miembro derecho contiene el tensor de Ricci del fondo,
+que se anula en vac\'io. Queda solo el segundo, y sustituyendo en la
+Ec.~\eqref{eq:deltaRicci} con $\delta R_{\mu\nu}=0$,
+\begin{equation}
+  h_{\mu\nu;\alpha}^{\qquad;\alpha}+2\bar R_{\alpha\mu\beta\nu}h^{\alpha\beta}=0 ,
+\end{equation}
+que es la Ec.~\eqref{eq:linearized}. La estructura del resultado merece
+subrayarse: el t\'ermino de curvatura no proviene de ninguna aproximaci\'on
+sino de la no conmutatividad de las derivadas covariantes, es decir, del
+hecho mismo de que el fondo sea curvo.
+
+% ----------------------------------------------------------------------
+\section{De la ecuaci\'on de onda escalar a la de Helmholtz}
+\label{ap:helmholtz}
+
+Se parte de la Ec.~\eqref{eq:scalar_wave} y de la m\'etrica de campo
+d\'ebil~\eqref{eq:weakfield}. Con $x^{0}=ct$, sus componentes son
+$\bar g_{00}=-(1+2U/c^{2})$ y $\bar g_{ij}=(1-2U/c^{2})\delta_{ij}$, de donde,
+a primer orden en $U/c^{2}$,
+\begin{equation}
+  \bar g^{00}=-\frac{1}{1+2U/c^{2}}\simeq-\left(1-\frac{2U}{c^{2}}\right),
+  \qquad
+  \bar g^{ij}=\frac{\delta^{ij}}{1-2U/c^{2}}
+  \simeq\left(1+\frac{2U}{c^{2}}\right)\delta^{ij} ,
+  \label{eq:inverse_metric}
+\end{equation}
+y el determinante es
+\begin{equation}
+  \sqrt{-\bar g}=\left(1+\frac{2U}{c^{2}}\right)^{1/2}
+  \left(1-\frac{2U}{c^{2}}\right)^{3/2}\simeq1-\frac{2U}{c^{2}} .
+  \label{eq:sqrtg}
+\end{equation}
+Sustituyendo en la Ec.~\eqref{eq:scalar_wave}, y usando
+$\partial_0=c^{-1}\partial_t$, la parte temporal y la espacial quedan
+\begin{equation}
+  \frac{1}{c^{2}}\partial_t\!\left[\left(1-\frac{2U}{c^{2}}\right)
+  \left(-\left(1-\frac{2U}{c^{2}}\right)\right)\partial_t\phi\right]
+  +\partial_i\!\left[\left(1-\frac{2U}{c^{2}}\right)
+  \left(1+\frac{2U}{c^{2}}\right)\delta^{ij}\partial_j\phi\right]=0 .
+  \label{eq:helmholtz_step}
+\end{equation}
+El primer corchete vale $-(1-4U/c^{2})$ a primer orden y el segundo vale $1$,
+ya que $(1-2U/c^{2})(1+2U/c^{2})=1-4U^{2}/c^{4}$ y el t\'ermino cuadr\'atico se
+descarta. El potencial es est\'atico, de modo que sale de la derivada
+temporal, y queda
+\begin{equation}
+  -\frac{1}{c^{2}}\left(1-\frac{4U}{c^{2}}\right)\partial_t^{2}\phi
+  +\nabla^{2}\phi=0 .
+\end{equation}
+Escribiendo $\phi=\tilde\phi(\vb r)\,e^{-i\omega t}$ se tiene
+$\partial_t^{2}\phi=-\omega^{2}\phi$, y por lo tanto
+\begin{equation}
+  \nabla^{2}\tilde\phi
+  +\frac{\omega^{2}}{c^{2}}\left(1-\frac{4U}{c^{2}}\right)\tilde\phi=0
+  \qquad\Longrightarrow\qquad
+  \left(\nabla^{2}+\frac{\omega^{2}}{c^{2}}\right)\tilde\phi
+  =\frac{4\omega^{2}}{c^{4}}U\tilde\phi ,
+\end{equation}
+que es la Ec.~\eqref{eq:helmholtz}. El factor $4$ es la suma de dos
+contribuciones iguales, una del $g_{00}$ y otra del $g_{ij}$; es el mismo
+factor $2$ de m\'as que aparece en la deflexi\'on de la luz por la relatividad
+general frente al c\'alculo newtoniano.
+
+% ----------------------------------------------------------------------
+\section{Integral de difracci\'on de Fresnel--Kirchhoff}
+\label{ap:fresnel}
+
+La Ec.~\eqref{eq:helmholtz} se resuelve en tres etapas: propagaci\'on libre de
+la fuente al plano del lente, acci\'on del lente, y propagaci\'on libre del
+plano del lente al observador.
+
+El \'unico ingrediente que se toma de la \'optica ondulatoria cl\'asica sin
+demostrarlo es el teorema integral de Kirchhoff, que conviene enunciar. Si
+$\tilde\phi$ satisface la ecuaci\'on de Helmholtz
+$(\nabla^{2}+k^{2})\tilde\phi=0$ en un volumen $V$ libre de fuentes, limitado
+por una superficie cerrada $S$, entonces el valor del campo en cualquier punto
+interior $P$ queda determinado por los valores de $\tilde\phi$ y de su
+derivada normal sobre esa superficie,
+\begin{equation}
+  \tilde\phi(P)=\frac{1}{4\pi}\oint_S\left[
+  \frac{e^{\,ikr}}{r}\;\pdv{\tilde\phi}{n}
+  -\tilde\phi\;\pdv{n}\!\left(\frac{e^{\,ikr}}{r}\right)\right]dS ,
+  \label{eq:kirchhoff_theorem}
+\end{equation}
+con $r$ la distancia entre el elemento de superficie y el punto $P$, y
+$\partial/\partial n$ la derivada en la direcci\'on de la normal saliente. La
+funci\'on $e^{ikr}/r$ es la soluci\'on de onda saliente de la ecuaci\'on de
+Helmholtz para una fuente puntual, normalizada de modo que
+$(\nabla^{2}+k^{2})\,e^{ikr}/r=-4\pi\,\delta^{3}$, que es lo que fija el
+prefactor $1/4\pi$ y el orden de los dos t\'erminos del corchete; el signo del
+exponente corresponde a la dependencia temporal $e^{-i\omega t}$ adoptada en el
+\S\ref{sec:helmholtz}.
+
+Su contenido f\'isico es el principio de Huygens en forma precisa: cada
+elemento de la superficie se comporta como una fuente secundaria, y el campo en
+el interior es la superposici\'on coherente de todas ellas. Lo que sigue es
+aplicarlo a la geometr\'ia de dos planos de la Figura~\ref{fig:lensgeom}.
+
+\paragraph{Propagaci\'on libre.} En ausencia de potencial, la soluci\'on de la
+ecuaci\'on de Helmholtz que se propaga hacia adelante entre dos planos
+separados una distancia $D$ es, por la Ec.~\eqref{eq:kirchhoff_theorem},
+\begin{equation}
+  \tilde\phi(\vb\xi_2)=\frac{-i}{\lambda D}\int d^{2}\vb\xi_1\;
+  \tilde\phi(\vb\xi_1)\,e^{\,ik\,\ell(\vb\xi_1,\vb\xi_2)},
+  \qquad
+  \ell=\sqrt{D^{2}+|\vb\xi_2-\vb\xi_1|^{2}} ,
+  \label{eq:kirchhoff}
+\end{equation}
+con $k=2\pi/\lambda=\omega/c$. La aproximaci\'on paraxial consiste en
+desarrollar la ra\'iz para $|\vb\xi_2-\vb\xi_1|\ll D$,
+\begin{equation}
+  \ell\simeq D+\frac{|\vb\xi_2-\vb\xi_1|^{2}}{2D} ,
+  \label{eq:paraxial_expansion}
+\end{equation}
+que es leg\'itima porque todos los \'angulos del problema son much\'isimo
+menores que uno. El t\'ermino cuadr\'atico es el que produce la difracci\'on de
+Fresnel.
+
+\paragraph{Acci\'on del lente.} Al atravesar el plano del lente, la onda
+acumula el retardo de Shapiro, que por la Ec.~\eqref{eq:refractive_index} es
+la integral del exceso de \'indice de refracci\'on a lo largo del camino,
+\begin{equation}
+  \Delta t_{\rm Shapiro}(\vb\xi)=-\frac{2}{c^{3}}\int U\,dz .
+  \label{eq:shapiro}
+\end{equation}
+El efecto del lente es, entonces, multiplicar la onda por el factor de fase
+$e^{\,2\pi i f\Delta t_{\rm Shapiro}}$. Esta es la esencia de la aproximaci\'on
+de lente delgado: la deflexi\'on no se sigue paso a paso, sino que se
+concentra en un \'unico cambio de fase sobre un plano.
+
+\paragraph{Composici\'on.} Encadenando las tres etapas, el campo en el
+observador resulta una integral sobre el plano del lente cuyo integrando lleva
+la fase total acumulada,
+\begin{equation}
+  \tilde\phi^{L}\propto\int d^{2}\vb\xi\;
+  \exp\!\left[\,2\pi i\,f\left(
+  \frac{|\vb\xi|^{2}}{2c\,D_L}
+  +\frac{|\vb\xi-\vb\eta|^{2}}{2c\,D_{LS}}
+  -\frac{|\vb\eta|^{2}}{2c\,D_S}
+  +\Delta t_{\rm Shapiro}(\vb\xi)\right)\right] .
+  \label{eq:composicion}
+\end{equation}
+Los dos primeros t\'erminos son los excesos de camino de los dos tramos de la
+trayectoria quebrada, dados por la Ec.~\eqref{eq:paraxial_expansion}, y el
+tercero resta el camino recto que la onda seguir\'ia sin lente, que es el que
+fija el origen de los retardos. Completando cuadrados y usando
+$D_S=D_L+D_{LS}$, los tres se combinan exactamente en el t\'ermino
+geom\'etrico de la Ec.~\eqref{eq:td_split}, con el prefactor
+$D_S/(2c\,D_LD_{LS})$; conviene notar que es el t\'ermino de referencia el que
+produce el factor $D_L/D_S$ que acompa\~na a $\vb\eta$ en aquella expresi\'on.
+Normalizando por el campo que llegar\'ia sin lente, que es la misma integral
+con $U=0$, los prefactores se cancelan salvo el factor
+$D_Sf/(i\,c\,D_LD_{LS})$, y se obtiene la Ec.~\eqref{eq:Fdim}.
+
+% ----------------------------------------------------------------------
+\section{Forma adimensional}
+\label{ap:adimensional}
+
+Partiendo de la Ec.~\eqref{eq:Fdim} y usando los escaleos de la
+Ec.~\eqref{eq:scalings}, el elemento de \'area es
+$d^{2}\vb\xi=\xi_0^{2}\,d^{2}\vb x$ y el retardo temporal se escribe como en
+la Ec.~\eqref{eq:td_dimensionless}. Sustituyendo,
+\begin{equation}
+  F=\frac{D_S}{c\,D_LD_{LS}}\frac{f}{i}\,\xi_0^{2}
+  \int d^{2}\vb x\;
+  \exp\!\left[2\pi i f\frac{\xi_0^{2}D_S}{c\,D_LD_{LS}}
+  \Big(\varphi(\vb x,\vb y)+\phi_m\Big)\right] .
+  \label{eq:adim_step}
+\end{equation}
+Aparece dos veces la misma combinaci\'on,
+$\xi_0^{2}D_S/(c\,D_LD_{LS})$. Sustituyendo en ella el radio de Einstein de la
+Ec.~\eqref{eq:scalings},
+\begin{equation}
+  \frac{\xi_0^{2}D_S}{c\,D_LD_{LS}}
+  =\frac{4GM_L}{c^{3}}\frac{D_LD_{LS}}{D_S}\cdot\frac{D_S}{D_LD_{LS}}
+  =\frac{4GM_L}{c^{3}} ,
+  \label{eq:combinacion}
+\end{equation}
+de modo que las tres distancias desaparecen por completo y queda un tiempo,
+que es el retardo de Shapiro caracter\'istico del lente. Esa es la raz\'on
+profunda para normalizar con el radio de Einstein y no con cualquier otra
+longitud. Definiendo
+$w\equiv2\pi f\cdot4GM_L/c^{3}=8\pi GM_Lf/c^{3}$, que es la
+Ec.~\eqref{eq:wdef}, el prefactor queda $w/(2\pi i)$ y se obtiene la
+Ec.~\eqref{eq:Fdimless}, a la que resta aplicar la conjugaci\'on discutida en
+el \S\ref{sec:adimensional}.
+
+% ----------------------------------------------------------------------
+\section{El potencial de deflexi\'on de una masa puntual}
+\label{ap:psipoint}
+
+El potencial adimensional satisface
+$\nabla^{2}_{\vb x}\psi=2\Sigma/\Sigma_{cr}$ con
+$\Sigma(\vb\xi)=M_L\delta^{2}(\vb\xi)$ y
+$\Sigma_{cr}=D_Sc^{2}/(4\pi GD_LD_{LS})$. Pasando la delta a la variable
+adimensional, $\delta^{2}(\vb\xi)=\delta^{2}(\vb x)/\xi_0^{2}$, el miembro
+derecho es
+\begin{equation}
+  \frac{2M_L}{\Sigma_{cr}\,\xi_0^{2}}\,\delta^{2}(\vb x) .
+  \label{eq:poisson_rhs}
+\end{equation}
+Por otro lado, la funci\'on de Green del laplaciano bidimensional cumple
+$\nabla^{2}_{\vb x}\ln|\vb x|=2\pi\delta^{2}(\vb x)$. Ambas expresiones
+coinciden, y por lo tanto $\psi=\ln|\vb x|$ sin ning\'un prefactor, si y solo
+si
+\begin{equation}
+  \frac{2M_L}{\Sigma_{cr}\xi_0^{2}}=2\pi
+  \qquad\Longleftrightarrow\qquad
+  \xi_0^{2}=\frac{M_L}{\pi\Sigma_{cr}}
+  =\frac{4GM_L}{c^{2}}\frac{D_LD_{LS}}{D_S} ,
+  \label{eq:xi0_derivation}
+\end{equation}
+que es exactamente el radio de Einstein de la Ec.~\eqref{eq:scalings}. La
+normalizaci\'on elegida en el \S\ref{sec:adimensional} no era, entonces, una
+convenci\'on arbitraria: es la \'unica que vuelve unitario el potencial de
+deflexi\'on de una masa puntual.
+
+% ----------------------------------------------------------------------
+\section{Jacobiano de un mapa de lente axisim\'etrico}
+\label{ap:jacobiano}
+
+Para un mapa de la forma $\vb y=g(x)\hat{\vb x}$, con $x=|\vb x|$, conviene
+usar coordenadas polares. Un desplazamiento radial $dx$ se transforma en
+$g'(x)\,dx$, y un desplazamiento tangencial $x\,d\theta$ se transforma en
+$g(x)\,d\theta$. El elemento de \'area se transforma entonces como
+\begin{equation}
+  dA_y=g'(x)\,dx\cdot g(x)\,d\theta
+  =\frac{g(x)\,g'(x)}{x}\;\big(dx\cdot x\,d\theta\big)
+  =\frac{g(x)g'(x)}{x}\,dA_x ,
+  \label{eq:area_transform}
+\end{equation}
+de donde el jacobiano es el producto de los factores de estiramiento radial y
+tangencial, $\det(\partial\vb y/\partial\vb x)=g(x)g'(x)/x$. Con
+$g(x)=x-1/x$ se tiene $g(x)/x=1-1/x^{2}$ y $g'(x)=1+1/x^{2}$, lo que da la
+Ec.~\eqref{eq:jacobian}. El signo negativo del jacobiano para $|x|<1$ indica
+que la imagen tiene paridad invertida.
+
+% ----------------------------------------------------------------------
+\section{Fase estacionaria y \'optica geom\'etrica}
+\label{ap:fase_estacionaria}
+
+Para $w$ grande, la integral de la Ec.~\eqref{eq:Fdimless} se eval\'ua por el
+m\'etodo de fase estacionaria en dos dimensiones. Alrededor de un punto
+estacionario $\vb x_j$, se desarrolla la fase hasta segundo orden,
+\begin{equation}
+  \varphi(\vb x)\simeq\varphi(\vb x_j)
+  +\tfrac12\left(\vb x-\vb x_j\right)^{T}
+  \mathbf{H}_j\left(\vb x-\vb x_j\right),
+  \qquad
+  \left(\mathbf{H}_j\right)_{ab}=\left.\pdv{\varphi}{x_a}{x_b}\right|_{\vb x_j} ,
+  \label{eq:hessian}
+\end{equation}
+y la integral gaussiana resultante da
+\begin{equation}
+  \int d^{2}\vb x\;e^{\,iw\varphi}
+  \simeq\sum_j\frac{2\pi}{w}
+  \frac{1}{\sqrt{\left|\det\mathbf{H}_j\right|}}\,
+  e^{\,iw\varphi(\vb x_j)}\,e^{\,i\pi\sigma_j/4} ,
+  \label{eq:stationary_phase}
+\end{equation}
+donde $\sigma_j$ es la signatura del hessiano, es decir, la diferencia entre
+el n\'umero de autovalores positivos y negativos. Vale $+2$ en un m\'inimo,
+$0$ en un punto silla y $-2$ en un m\'aximo, de modo que la fase adicional es
+$+\pi/2$, $0$ y $-\pi/2$ respectivamente. El prefactor $w/2\pi i$ de la
+Ec.~\eqref{eq:Fdimless} aporta adem\'as un factor $1/i=e^{-i\pi/2}$ com\'un a
+todas las im\'agenes, que corre las tres fases en $-\pi/2$ y las lleva a $0$,
+$-\pi/2$ y $-\pi$, que es la forma en que se las escribe habitualmente.
+
+El hessiano de $\varphi$ es precisamente la matriz jacobiana del mapa de
+lente, de manera que $\det\mathbf{H}_j=1/\mu_j$ y
+$|\det\mathbf{H}_j|^{-1/2}=|\mu_j|^{1/2}$. Sustituyendo en la
+Ec.~\eqref{eq:Fdimless}, el prefactor $w/2\pi i$ cancela el $2\pi/w$ y
+tambi\'en el factor $i$, y queda
+\begin{equation}
+  F=\left[\sum_j\left|\mu_j\right|^{1/2}
+  e^{\,iw\varphi(\vb x_j)}\,e^{-i\pi n_j}\right]^{*},
+  \qquad n_j=0,\tfrac12,1 ,
+  \label{eq:morse}
+\end{equation}
+para m\'inimo, punto silla y m\'aximo, que es la Ec.~15 de
+\citet{Takahashi2003}. Para el lente de masa puntual hay solo dos im\'agenes,
+un m\'inimo y un punto silla. Midiendo las fases respecto de la primera, como
+fija la Ec.~\eqref{eq:Fnorm_ref}, la contribuci\'on del m\'inimo queda sin
+fase y la del punto silla lleva $e^{-iw\Delta T}$ y un factor $i$, de donde
+resulta la Ec.~\eqref{eq:Fgeo}.
+
+% ----------------------------------------------------------------------
+\section{Reducci\'on a una integral radial}
+\label{ap:radial}
+
+En coordenadas polares en el plano del lente, con $\vb y=(y,0)$, se tiene
+$|\vb x-\vb y|^{2}=x^{2}+y^{2}-2xy\cos\theta$, de modo que la fase de la
+Ec.~\eqref{eq:Fdimless} se separa en una parte que depende solo de $x$ y otra
+que contiene todo el \'angulo,
+\begin{equation}
+  \varphi=\tfrac12x^{2}+\tfrac12y^{2}-xy\cos\theta-\ln x .
+  \label{eq:polar_phase}
+\end{equation}
+La integral angular es entonces
+\begin{equation}
+  \int_0^{2\pi}d\theta\;e^{-i\,w\,xy\cos\theta}=2\pi J_0(wxy) ,
+  \label{eq:angular_integral}
+\end{equation}
+usando la representaci\'on integral de la funci\'on de Bessel de orden cero,
+v\'alida para cualquier argumento real o complejo. Sustituyendo y recordando
+que el elemento de \'area en polares es $x\,dx\,d\theta$, la
+Ec.~\eqref{eq:Fdimless} se reduce a la Ec.~\eqref{eq:Fradial}.
+
+La integral radial restante no converge en sentido ordinario: para $x$ grande
+la fase crece como $wx^{2}/2$ y el integrando oscila indefinidamente sin
+decaer. La regularizaci\'on habitual consiste en dar a $w$ una peque\~na parte
+imaginaria, $w\to w(1+i\eta)$, lo que introduce un amortiguamiento gaussiano
+$e^{-\eta wx^{2}/2}$ que vuelve la integral absolutamente convergente
+\citep{UlmerGoodman1995}. El resultado depende de $\eta$ a primer orden, de
+manera que se eval\'ua para una sucesi\'on decreciente y se extrapola a
+$\eta=0$.
+
+% ----------------------------------------------------------------------
+\section{La forma cerrada del lente de masa puntual}
+\label{ap:cerrada}
+
+Esta es la deducci\'on de la Ec.~\eqref{eq:Fclosed}, el resultado central del
+cap\'itulo~\ref{ch:pointlens}. El punto de partida es la forma radial de la
+Ec.~\eqref{eq:Fradial}, que ya tiene hecha la integral angular, y la
+observaci\'on de que el potencial de deflexi\'on entra como una potencia,
+$e^{-iw\ln x}=x^{-iw}$, de modo que la integral radial es
+\begin{equation}
+  I=\int_0^{\infty}dx\;x^{1-iw}\,J_0(wxy)\,e^{-\alpha x^{2}},
+  \qquad
+  \alpha\equiv\frac{w}{2}\left(\eta-i\right) ,
+  \label{eq:radial_power}
+\end{equation}
+donde $\eta$ es la regularizaci\'on del \S\ref{sec:radial}: sustituir
+$w\to w(1+i\eta)$ en el factor oscilante equivale a darle a $\alpha$ la parte
+real $\eta w/2>0$. Eso no solo vuelve la integral absolutamente convergente:
+tambi\'en fija sin ambig\"uedad la rama de las potencias complejas que
+aparecen enseguida.
+
+\paragraph{Una integral auxiliar.} Hace falta el resultado
+\begin{equation}
+  \int_0^{\infty}dx\;x^{\mu-1}e^{-\alpha x^{2}}J_0(\beta x)
+  =\frac{\Gamma(\mu/2)}{2\,\alpha^{\mu/2}}\;
+  {}_1F_1\!\left(\frac{\mu}{2};\,1;\,-\frac{\beta^{2}}{4\alpha}\right) ,
+  \label{eq:weber_sonine}
+\end{equation}
+v\'alido para $\Re\,\alpha>0$ y $\Re\,\mu>0$, que se obtiene en tres pasos.
+Primero se desarrolla la funci\'on de Bessel en su serie,
+\begin{equation}
+  J_0(\beta x)=\sum_{k=0}^{\infty}\frac{(-1)^{k}}{(k!)^{2}}
+  \left(\frac{\beta x}{2}\right)^{2k} .
+\end{equation}
+Despu\'es se integra t\'ermino a t\'ermino con la integral gaussiana
+generalizada
+\begin{equation}
+  \int_0^{\infty}dx\;x^{\mu+2k-1}e^{-\alpha x^{2}}
+  =\frac{\Gamma(\mu/2+k)}{2\,\alpha^{\mu/2+k}} ,
+\end{equation}
+que se comprueba con el cambio de variable $u=\alpha x^{2}$. Y por \'ultimo se
+reconoce la serie que queda: usando $\Gamma(\mu/2+k)=\Gamma(\mu/2)\,(\mu/2)_k$
+con $(a)_k$ el s\'imbolo de Pochhammer, y $(1)_k=k!$, la suma es
+\begin{equation}
+  \frac{\Gamma(\mu/2)}{2\alpha^{\mu/2}}\sum_{k=0}^{\infty}
+  \frac{(\mu/2)_k}{(k!)^{2}}\left(-\frac{\beta^{2}}{4\alpha}\right)^{k} ,
+\end{equation}
+que es exactamente la serie de la funci\'on hipergeom\'etrica confluente,
+${}_1F_1(a;1;z)=\sum_k (a)_k z^{k}/(k!)^{2}$.
+
+\paragraph{Aplicaci\'on.} Con $\mu=2-iw$ y $\beta=wy$, la
+Ec.~\eqref{eq:weber_sonine} da
+\begin{equation}
+  I=\frac{\Gamma\!\left(1-\frac{iw}{2}\right)}{2\,\alpha^{1-iw/2}}\;
+  {}_1F_1\!\left(1-\frac{iw}{2};\,1;\,-\frac{w^{2}y^{2}}{4\alpha}\right) .
+\end{equation}
+Tomando ahora $\eta\to0$, de modo que $\alpha=(w/2)\,e^{-i\pi/2}$, el
+argumento de la hipergeom\'etrica se reduce a $-iwy^{2}/2$ y la potencia del
+denominador se separa en m\'odulo y fase,
+\begin{equation}
+  \alpha^{1-iw/2}
+  =\left(\frac{w}{2}\right)^{1-iw/2}e^{-i\pi/2}\,e^{-\pi w/4} ,
+  \label{eq:branch}
+\end{equation}
+donde el factor $e^{-\pi w/4}$, que es el que despu\'es hace crecer a $F$ con
+$w$, proviene de elevar una fase imaginaria pura a un exponente imaginario
+puro. Conviene adem\'as aplicar la transformaci\'on de Kummer,
+${}_1F_1(a;1;z)=e^{z}\,{}_1F_1(1-a;1;-z)$, para llevar el primer par\'ametro a
+la forma en que se lo escribe habitualmente:
+\begin{equation}
+  {}_1F_1\!\left(1-\frac{iw}{2};1;-\frac{iwy^{2}}{2}\right)
+  =e^{-iwy^{2}/2}\;
+  {}_1F_1\!\left(\frac{iw}{2};1;\frac{iwy^{2}}{2}\right) .
+\end{equation}
+
+\paragraph{Reuni\'on.} Sustituyendo todo en
+$F_{\rm raw}=-i\,w\,e^{iwy^{2}/2}\,I$, que es el contenido del corchete de la
+Ec.~\eqref{eq:Fradial}, la exponencial de Kummer cancela la del prefactor, el
+producto $-i\,e^{i\pi/2}$ vale $1$ y el cociente $w/(2\cdot w/2)$ tambi\'en,
+de modo que queda
+\begin{equation}
+  F_{\rm raw}(w,y)=e^{\pi w/4}\;e^{\,i\frac{w}{2}\ln\frac{w}{2}}\;
+  \Gamma\!\left(1-\frac{iw}{2}\right)\;
+  {}_1F_1\!\left(\frac{iw}{2};\,1;\,\frac{iwy^{2}}{2}\right) ,
+  \label{eq:Fraw_closed}
+\end{equation}
+que es la Ec.~17 de \citet{Takahashi2003} despojada de su factor de fase de
+referencia. Conjugando, como pide la convenci\'on de Fourier del
+\S\ref{sec:adimensional}, y multiplicando por $e^{iw\varphi(x_+,y)}$ se obtiene
+la Ec.~\eqref{eq:Fclosed}.
+
+\paragraph{Por qu\'e una hipergeom\'etrica confluente.} La aparici\'on de esta
+funci\'on en particular no es un accidente del c\'alculo. La
+Ec.~\eqref{eq:helmholtz} con el potencial $U=-GM_L/r$ tiene exactamente la
+forma de la ecuaci\'on de Schr\"odinger para la dispersi\'on de una part\'icula
+cargada por un potencial de Coulomb, con el papel del par\'ametro de
+Sommerfeld jugado por $w/2$ \citep{Deguchi1986}. La ${}_1F_1$ de la
+Ec.~\eqref{eq:Fclosed} es la misma que aparece en la amplitud de Rutherford, y
+el t\'ermino $\tfrac{w}{2}\ln\tfrac{w}{2}$ de la fase es el an\'alogo de la
+fase logar\'itmica de Coulomb, que tambi\'en all\'i proviene del alcance
+infinito del potencial $1/r$.
+
+% ----------------------------------------------------------------------
+\section{Masa de chirp y tiempo hasta la coalescencia}
+\label{ap:chirp}
+
+Se parte de una binaria circular de masas $m_1$ y $m_2$, separaci\'on $a$ y
+frecuencia angular orbital $\omega=\sqrt{GM_b/a^{3}}$. Su energ\'ia es
+\begin{equation}
+  E=-\frac{GM_b\mu}{2a} ,
+  \label{eq:orbital_energy}
+\end{equation}
+y la potencia radiada, por la f\'ormula del cuadrupolo, es la
+Ec.~\eqref{eq:quadpower}. Usando Kepler para eliminar $\omega$,
+\begin{equation}
+  P=\frac{32}{5}\frac{G^{4}}{c^{5}}\frac{m_1^{2}m_2^{2}M_b}{a^{5}} .
+  \label{eq:power_a}
+\end{equation}
+Igualando $dE/dt=-P$ y derivando la Ec.~\eqref{eq:orbital_energy},
+\begin{equation}
+  \dv{a}{t}=-\frac{64}{5}\frac{G^{3}m_1m_2M_b}{c^{5}a^{3}} ,
+  \label{eq:dadt}
+\end{equation}
+que es el resultado de \citet{Peters1964} para \'orbitas circulares. Para
+pasar a la frecuencia de la onda gravitacional, que es el doble de la orbital,
+$f=\omega/\pi$, se usa $a=(GM_b)^{1/3}(\pi f)^{-2/3}$ y por lo tanto
+$df/dt=-\tfrac32(f/a)\,da/dt$. Sustituyendo,
+\begin{equation}
+  \dv{f}{t}=\frac{96}{5}\,\pi^{8/3}
+  \left(\frac{G}{c^{3}}\right)^{5/3}
+  \left(m_1m_2M_b^{-1/3}\right)^{5/3}\!\!\cdot f^{11/3} ,
+  \label{eq:chirprate_raw}
+\end{equation}
+y basta observar que
+$m_1m_2M_b^{-1/3}=\left[(m_1m_2)^{3/5}M_b^{-1/5}\right]^{5/3}
+=\mathcal{M}^{5/3}$
+para obtener la Ec.~\eqref{eq:chirprate}. Esta es la raz\'on de que la masa de
+chirp sea la combinaci\'on que aparece: es la \'unica que sobrevive al
+reagrupar los exponentes.
+
+Separando variables en la Ec.~\eqref{eq:chirprate} e integrando desde $f$ hasta
+frecuencia infinita,
+\begin{equation}
+  \tau=\int_f^{\infty}\frac{df'}{\dot f}
+  =\frac{5}{256}\pi^{-8/3}
+  \left(\frac{G\mathcal{M}}{c^{3}}\right)^{-5/3}f^{-8/3} ,
+  \label{eq:tau_integral}
+\end{equation}
+que es la Ec.~\eqref{eq:time_to_merger}. La integral converge pese al
+l\'imite superior infinito porque $\dot f$ crece m\'as r\'apido que $f$; en la
+pr\'actica el desarrollo deja de valer bastante antes, cerca de
+$f_{\rm ISCO}$, pero la contribuci\'on de ese tramo final al tiempo total es
+peque\~na.
 
 % ======================================================================
 \renewcommand{\bibname}{Referencias}
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
 \addcontentsline{toc}{chapter}{Referencias}
+
+% ======================================================================
+\vfill
+\noindent\textcolor{black!35}{\rule{\textwidth}{0.4pt}}\\[0.8em]
+{\footnotesize\itshape\color{black!55}\noindent
+Este texto fue redactado \'integramente por un agente de inteligencia
+artificial, Claude Opus 5 de Anthropic, a lo largo de sucesivas iteraciones de
+revisi\'on humana: cada cap\'itulo se escribi\'o, se anot\'o a mano sobre el
+PDF y se reescribi\'o tantas veces como hizo falta. Las deducciones se
+verificaron num\'ericamente y las citas se cotejaron contra los trabajos
+originales. Los errores que hayan sobrevivido a ese ida y vuelta son, como
+corresponde, responsabilidad compartida.\par}
 
 \end{document}

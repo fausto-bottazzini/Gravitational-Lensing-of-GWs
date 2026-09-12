@@ -1,39 +1,85 @@
-# theory.tex outline
+# `theory/` — guía de la carpeta
 
-A textbook-chapter-style derivation, matching the numbering used in
-`report/report.tex`'s references back into it. Sections map 1:1 onto
-`wiki/conventions.md`.
+## Qué es `theory.tex`
 
-1. **Setup and scope.** The physical picture (hierarchical triple, source =
-   inner binary, lens = outer body), the hierarchy `a_in<<a_out`, why
-   cosmological redshift is dropped, the two epochs.
-2. **From the wave equation to a scalar field.** Linearized GW propagation on
-   a weak-field lens background; each polarization amplitude obeys the same
-   scalar wave (Helmholtz) equation; statement (with reference, not full
-   proof) that lensing does not mix polarizations here. This is the
-   "reaching scalar field" milestone the user asked for explicitly.
-3. **The diffraction integral.** Kirchhoff/Fresnel diffraction from the
-   Helmholtz equation, thin-lens approximation, the dimensionless (w,y,x)
-   reduction, definition of F(w,y).
-4. **Point-mass lens.** Fermat potential, image positions, magnifications
-   (Jacobian derivation), time delay; geometric-optics limit as a
-   stationary-phase evaluation of the same integral (Morse-index argument);
-   the closed-form confluent-hypergeometric F(w,y); the Bessel-reduced 1D
-   integral; three-way numerical cross-check (mirrors tests/test_waveoptics.py,
-   with the actual numbers and the sign-error story from wiki/log.md as a
-   worked "how do you actually verify this" example).
-5. **The hierarchical triple as a lens system.** Outer Keplerian orbit,
-   rotation into the observer frame, the D_LS(t)=z_los(t) subtlety and the
-   front/back "repeated lensing" split (derivation, not just code comments).
-6. **The inner binary as a source.** Leading-order quadrupole chirp,
-   restricted amplitude, why full PN is out of scope.
-7. **Putting it together: two regimes.** Static-lens vs quasi-monochromatic
-   conditions derived from the timescale hierarchy; how Case A and Case B in
-   `cases/` instantiate them.
-8. **What a detector would see.** The idealized simple-detector model used
-   in `src/gwlens/detector.py` and its limitations, stated explicitly.
+Un texto autocontenido, escrito como libro de texto breve y no como informe,
+sobre lente gravitacional de ondas gravitacionales en régimen de óptica de
+ondas, especializado en el caso en que la fuente y el lente pertenecen al mismo
+triple jerárquico.
 
-References (BibTeX in theory/refs.bib, shared with report/report.tex):
-Takahashi & Nakamura 2003; Deguchi & Watson 1986; Peters 1964; Peters &
-Mathews 1963; Paczynski 1986; Schneider, Ehlers & Falco 1992; D'Orazio &
-Loeb 2020; Ulmer & Goodman 1995; Maggiore "Gravitational Waves" Vol. 1.
+La dependencia con el resto del proyecto va en un solo sentido: `report/` cita
+a este texto, y este texto se lee sin `report/`. No contiene rutas del
+repositorio, nombres de tests ni narrativa de implementación; los valores
+numéricos concretos aparecen únicamente en recuadros `ejemplo`, separados del
+hilo teórico.
+
+## Estructura
+
+Siete capítulos, un apéndice de deducciones y un prefacio. 41 páginas.
+
+| | Capítulo | Contenido |
+|---|---|---|
+| 1 | Triples jerárquicos como sistemas de lente | Anatomía y notación del sistema; la condición de jerarquía desglosada en sus cuatro exigencias físicas (estabilidad de Mardling–Aarseth, radio de Hill, Kozai–Lidov y su supresión relativista, estacionariedad de la órbita externa); la binaria interna como fuente puntual; qué cambia en las distancias cuando el lente no es cosmológico; los dos regímenes temporales; las escalas del problema |
+| 2 | De la ecuación de onda a la integral de difracción | Propagación de una GW sobre fondo curvo; reducción a campo escalar en el límite de longitud de onda corta; ecuación de Helmholtz e índice de refracción; lente delgado e integral de Fresnel–Kirchhoff; forma adimensional en $(w,y)$, convención de Fourier y fase de referencia |
+| 3 | El lente de masa puntual | Potencial $\psi=\ln\lvert x\rvert$; óptica geométrica (ecuación de lente, magnificaciones, Paczyński); retardo entre imágenes y $F_\text{geo}$ con índice de Morse; solución exacta hipergeométrica y sus tres límites; forma radial equivalente con Bessel |
+| 4 | Geometría del triple como sistema de lente | Órbita externa proyectada; $D_{LS}$ como proyección sobre la línea de visión y el radio de Einstein dependiente del tiempo; lente repetido; cinemática (Roemer, Doppler, corrimiento orbital); límites de la aproximación paraxial y precisión global del tratamiento |
+| 5 | Más allá de la aproximación de campo débil | Propagación tensorial (Regge–Wheeler, Zerilli, Teukolsky); fenómenos que el tratamiento escalar no puede producir; por qué queda fuera de alcance |
+| 6 | La binaria interna como fuente | Inspiral cuasi-circular y masa de chirp; forma de onda en frecuencia por fase estacionaria (TaylorF2 a 2PN); modelos IMR |
+| 7 | Los dos regímenes | Lente estático (multiplicación en frecuencia) y lente en movimiento (aproximación adiabática); cuadratura entre el pulso de lente y la modulación Doppler |
+| A | Deducciones | Diez deducciones paso a paso: ecuación de propagación sobre fondo curvo; Helmholtz; Fresnel–Kirchhoff; forma adimensional; $\psi$ de una masa puntual; jacobiano axisimétrico; fase estacionaria; reducción radial; la forma cerrada del lente puntual; masa de chirp |
+
+Convención de enlaces: cada resultado enunciado en el cuerpo remite a su
+deducción completa en el apéndice, y cada sección del apéndice está referenciada
+desde la ecuación correspondiente. Ese es el mecanismo que permite que el cuerpo
+se lea corrido sin perder las cuentas.
+
+## Convenciones fijadas en el texto
+
+- Signatura $(-,+,+,+)$.
+- $G$ y $c$ explícitas en todas las fórmulas, salvo el capítulo 2 y el
+  apéndice A.1–A.2, donde se usa $c=1$ y se avisa en el lugar.
+- $f$ es siempre la frecuencia de la onda gravitacional, el doble de la orbital.
+- Transformada de Fourier con $h(f)=\int h(t)\,e^{-2\pi ift}\,dt$. La literatura
+  de lentes suele usar el signo opuesto, y por eso las expresiones de $F$
+  aparecen conjugadas respecto de las de Takahashi & Nakamura (2003).
+- Notación: $h(f)$ sin lente, $h_L(f)=F(f)h(f)$ a la salida del lente,
+  $F(w,y)$ factor de amplificación, $w=8\pi GM_Lf/c^3$ frecuencia adimensional,
+  $y$ parámetro de impacto en unidades del radio de Einstein.
+
+## Bibliografía
+
+`refs.bib` es compartido con `report/report.tex` (que lo incluye como
+`../theory/refs`). Los PDF están en `bibliography/`. Las citas indican la
+ecuación o sección exacta del trabajo citado cuando se toma de él un resultado
+concreto; las tres referencias que son libros (Schneider, Ehlers & Falco;
+Murray & Dermott; Chandrasekhar) no están descargadas.
+
+## Archivos
+
+| Archivo | Para qué |
+|---|---|
+| `theory.tex` | fuente del documento |
+| `theory.pdf` | documento compilado, que es lo que se entrega |
+| `refs.bib` | bibliografía, compartida con `report/` |
+| `paraxial_validity.py` | genera los números del Cuadro 4.1 (validez paraxial) a partir de `src/gwlens/system.py`; lo corre `reproduce.sh` |
+| `paraxial_validity_numbers.json` | salida del script anterior, que es lo que el Cuadro 4.1 transcribe |
+| `OUTLINE.md` | este archivo |
+
+Los archivos auxiliares de LaTeX (`.aux`, `.log`, `.out`, `.toc`, `.bbl`,
+`.blg`) no forman parte del repositorio y se regeneran al compilar.
+
+## Compilación
+
+Tres pasadas de `pdflatex` con `bibtex` entre la primera y la segunda, que es lo
+que hace `reproduce.sh`:
+
+```sh
+cd theory
+pdflatex -interaction=nonstopmode theory.tex
+bibtex theory
+pdflatex -interaction=nonstopmode theory.tex
+pdflatex -interaction=nonstopmode theory.tex
+```
+
+Requiere `newtx`, `babel-spanish`, `microtype`, `titlesec`, `fancyhdr`,
+`tcolorbox`, `tikz`, `physics`, `siunitx` y `natbib`.

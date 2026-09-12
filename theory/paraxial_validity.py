@@ -1,5 +1,5 @@
-"""Quantifies where the paraxial/thin-lens approximation (theory.tex Sec.
-4.3, Eq. paraxial_condition) is actually being pushed for THIS system.
+"""Quantifies where the paraxial/thin-lens approximation (theory.pdf Sec.
+4.5, Eq. paraxial_condition) is actually being pushed for THIS system.
 
 D_LS(t) >> 2*R_Sch(M_L) is required for the Fresnel/paraxial diffraction
 integral (the derivation behind F(w,y)) to be valid. D_LS(t) shrinks to
