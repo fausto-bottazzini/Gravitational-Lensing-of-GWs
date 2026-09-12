@@ -1,8 +1,8 @@
 """Case B -- quasi-monochromatic source, moving lens.
 
 Same triple as Case A (src/gwlens/system.py), earlier in the SAME inner
-binary's inspiral: f=F_B_HZ=0.05 Hz, changing by only ~4% over the
-T_OBS_B_S=6-outer-period (24 d) observation window used here (checked in
+binary's inspiral: f=F_B_HZ=0.05 Hz, changing by only ~2% over the
+T_OBS_B_S=3-outer-period (12 d) observation window used here (checked in
 tests/test_system.py::check_quasi_monochromatic_regime). Over that window
 the outer orbit is NOT frozen: the impact parameter y(t) sweeps through the
 diffraction pattern derived in Case A, producing periodic amplification
@@ -246,9 +246,7 @@ def main():
     # plus a one-period zoom: the diffraction ringing flanking each pulse is
     # genuine (not aliasing -- re-checked on a 40x finer grid, agrees
     # point-for-point) but is compressed into a few pixels at the full
-    # 24-day width and was not actually visible in a single-panel version of
-    # this figure despite RESULTS.md/report.tex describing it as such; an
-    # independent review caught this, see wiki/log.md.
+    # 12-day width, so it needs its own panel to be visible at all.
     abs_F2 = np.abs(F_t) ** 2
     fig, axes = plt.subplots(2, 1, figsize=(8, 6.0))
     axes[0].plot(t / 86400.0, abs_F2, color="#c0392b", lw=0.8)
@@ -392,16 +390,22 @@ def main():
     axes[1].plot(t_fine - t_pulse, z_l_fine.real, color="#2b6cb0", lw=0.7, alpha=0.85, label="con lente")
     axes[1].set_xlabel(f"$t$ − {t_pulse/86400:.3f} d  [s]")
     axes[1].set_ylabel("$h(t)$ [unidades arbitrarias]")
-    # NOT a zoom on the pulse's own shape -- that shape (the sinc-like
-    # diffraction ringing envelope) lives on a ~day timescale and is shown
-    # in caseB_repeated_pulses.png instead. This +-200s window is far
-    # narrower than that, chosen only to resolve individual 20s-period
-    # carrier cycles at the instant of peak amplification, so the
-    # lensed/unlensed dephasing is visible cycle-by-cycle (an earlier
-    # version of this title implied it showed the pulse shape itself,
-    # which it cannot at this timescale -- caught by eye).
-    axes[1].set_title("Ampliación: ciclos de la portadora en el instante de pico del pulso\n"
-                       "(desfasaje entre con y sin lente, no la forma del pulso en sí)",
+    # What this panel shows is the AMPLITUDE difference, |F|=1.177, i.e. 17.7%
+    # taller crests. It does NOT show a dephasing: both curves are evaluated
+    # at the same retarded time t_em, so the Roemer delay is common to them,
+    # and all that is left between them is F itself -- whose phase at the
+    # pulse peak is arg F = 0.0176 rad = 1.01 deg, a shift of 0.056 s on a
+    # 20 s carrier, under a tenth of a pixel here. An earlier title claimed
+    # the dephasing was visible cycle-by-cycle; it is not, and at this
+    # observing baseline it is not even above the leading-order waveform's
+    # own truncation error (see system.T_OBS_B_S).
+    # Nor is it a zoom on the pulse SHAPE: that (the sinc-like diffraction
+    # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.
+    # This +-200 s window exists only to resolve individual 20 s carrier
+    # cycles at the instant of peak amplification.
+    axes[1].set_title("Ampliación: ciclos de la portadora en el pico del pulso\n"
+                       "(amplificación en amplitud, $|F|=1.177$; el desfase, "
+                       "$\\arg F=1.0^\\circ$, es invisible a esta escala)",
                        fontsize=10)
     # Same headroom fix as the panel above -- this one is a dense sinusoid
     # filling the whole frame, so ANY fixed corner covers real peaks
@@ -500,7 +504,7 @@ def main():
             "lensed": lensed_traj.tolist(),
         },
     }
-    # envelope + pulses: subsample the full 6-period arrays to ~900 points
+    # envelope + pulses: subsample the full 3-period arrays to ~900 points
     stride = max(1, n_samples // 900)
     anim["envelope"] = {
         "t_days": (t[::stride] / 86400.0).tolist(),

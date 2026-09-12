@@ -1,15 +1,17 @@
 claims:
   - id: quasi_monochromatic_regime
     statement: >
-      Over the 24-day (6 outer period) observation, f drifts by only 4.0%
-      while 60.2 outer periods remain before merger.
+      Over the 12-day (3 outer period) observation, f drifts by only 1.9%
+      while 60.2 outer periods remain before merger. Three periods is the
+      fewest that shows the lensing repeating; a longer baseline would only
+      accumulate more of the phase the leading-order waveform omits.
     evidence:
       - run.py::main
       - tests/test_system.py::check_quasi_monochromatic_regime
     numbers: [fractional_freq_drift, n_outer_periods_observed, f_start_Hz, f_end_Hz]
   - id: half_orbit_unlensed
     statement: >
-      Exactly half the outer orbit (49.97%) is unlensed (source in front of
+      Exactly half the outer orbit (49.94%) is unlensed (source in front of
       the lens, D_LS<0), with y formally diverging at each front/back
       crossing.
     evidence:
@@ -22,8 +24,9 @@ claims:
       Case A's y_A (1.589) to 4 significant figures -- both are an argmin
       search over the SAME underlying function
       (geometry.impact_parameter_of_time), called separately in each case
-      script at different grid resolutions (2000 samples/period in Case B,
-      3600 in Case A). The agreement is a statement about grid resolution,
+      script at different grid resolutions (600 samples per outer period in
+      Case B, 2000 in Case A). The agreement is a statement about grid
+      resolution,
       not an independent confirmation of the geometry itself (corrected
       after an independent review; a previous version of this claim called
       the search code "independent").
@@ -34,8 +37,8 @@ claims:
     numbers: [min_y_during_observation]
   - id: repeated_lensing_pulses
     statement: >
-      |F(w_B,y(t))|^2 shows six periodic amplification pulses, one per
-      outer period, peaking at 1.385, with diffraction ringing visible on
+      |F(w_B,y(t))|^2 shows three periodic amplification pulses, one per
+      outer period, peaking at 1.384, with diffraction ringing visible on
       each side; averaged over the full observation the amplification is
       close to unity (RMS 1.003) because most of the orbit is unlensed or
       only mildly amplified.
@@ -52,11 +55,8 @@ claims:
       (light-travel-time) modulation of 1810 s peak-to-peak = 90.5 GW cycles
       of phase at f_B. That is 5206x the phase the lens itself writes
       (arg F/2pi, 0.0174 cycles) and 527x the image time delay Delta_T=3.43 s
-      at the pulse. The Doppler frequency swing (0.0035 Hz) also exceeds the
-      whole intrinsic chirp drift across the observation (0.0020 Hz).
-      Added 2026-09-07; before that this case modelled only the lensing and
-      described it as the outer orbit's signature, understating the orbit's
-      actual imprint by two to three orders of magnitude.
+      at the pulse. The Doppler frequency swing (0.0025 Hz) also exceeds the
+      whole intrinsic chirp drift across the observation (0.00097 Hz).
     evidence:
       - src/gwlens/doppler.py::roemer_delay
       - src/gwlens/doppler.py::emission_time
@@ -73,10 +73,10 @@ claims:
       Doppler is applied by evaluating the waveform at the retarded emission
       time and multiplying by nothing else -- licensed by the identity
       dt_em/dt_obs = 1/(1+beta_los), verified to 5.5e-11. Being pure timing,
-      it changes the strain envelope by only 1.2e-5, so every amplitude
+      it changes the strain envelope by only 1.1e-5, so every amplitude
       result in this case (pulse heights, <|F|^2>, RMS amplification, all
       diffraction figures) is unchanged by its addition; the waveform PHASE
-      changes by 93.8 cycles. The remaining second-order and gravitational
+      changes by 91.9 cycles. The remaining second-order and gravitational
       piece is exactly constant for a circular orbit
       ((1-3GM_L/(a c^2))^(-1/2) - 1 = 4.08e-4), hence exactly degenerate
       with the chirp mass: reported as an M_chirp bias, deliberately not
@@ -90,14 +90,14 @@ claims:
               doppler_phase_ptp_cycles_vs_static, orbital_redshift_factor_minus_1]
   - id: fixed_w_approximation_quantified
     statement: >
-      F is evaluated at the fixed nominal w_B, with neither the 4% intrinsic
+      F is evaluated at the fixed nominal w_B, with neither the 1.9% intrinsic
       drift nor the Doppler shift fed back into it -- the same omission
       D'Orazio & Loeb (2020) make, for the same reason (lensing only happens
       where the line-of-sight velocity crosses zero, which for this
       near-edge-on circular orbit is exactly the pulse's orbital phase).
       Quantified rather than left as that argument: evaluating F at the true
       instantaneous observed frequency changes |F| by 1.0e-4 at the pulse,
-      but by up to 6.4e-3 at the worst point of the lensed half, far from the
+      but by up to 3.5e-3 at the worst point of the lensed half, far from the
       pulse where |F| sits on a steep fringe flank at a value near 1 that
       carries no weight in any result quoted. Both numbers reported; quoting
       only the first would overclaim.
@@ -121,7 +121,7 @@ figures:
     supports: [doppler_dominates_the_lensing]
   - file: caseB_repeated_pulses.png
     produced_by: run.py::main
-    shows: "|F(w_B,y(t))|^2 over the full 6-period observation."
+    shows: "|F(w_B,y(t))|^2 over the full 3-period observation."
     from_scratch: The F(t) evaluation via F_hybrid at each sampled y(t).
     from_library: matplotlib.
     supports: [repeated_lensing_pulses]
@@ -137,10 +137,13 @@ figures:
     produced_by: run.py::main
     shows: >
       Idealized detector strain envelope over the full observation, and a
-      fine-time-grid zoom on carrier cycles at one pulse's peak instant
-      (dephasing between lensed/unlensed, NOT the pulse's own sinc-like
-      ringing shape, which lives on a much longer ~day timescale and is
-      shown in caseB_repeated_pulses.png instead).
+      fine-time-grid zoom on carrier cycles at one pulse's peak instant.
+      The zoom shows the AMPLITUDE difference, |F|=1.177: crests 17.7%
+      taller. It does not show a dephasing -- both curves share the same
+      retarded time, so the Roemer delay cancels between them and only F
+      is left, whose phase there is 1.01 deg, invisible at any plottable
+      resolution. Nor is it the pulse's own sinc-like ringing shape, which
+      lives on a ~day timescale and is caseB_repeated_pulses.png.
     from_scratch: The dedicated fine time grid (dt=0.1s) for the zoom panel, built separately from the coarse envelope grid after the first version aliased using the coarse grid directly (see wiki/log.md).
     from_library: numpy, matplotlib.
     supports: [repeated_lensing_pulses]

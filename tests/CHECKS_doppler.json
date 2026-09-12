@@ -13,7 +13,7 @@
   },
   "envelope_unaffected_by_roemer": {
     "passed": true,
-    "message": "max fractional change in the strain envelope from the Roemer delay = 1.20e-05 (tol 1e-3)"
+    "message": "max fractional change in the strain envelope from the Roemer delay = 1.14e-05 (tol 1e-3)"
   },
   "case_A_roemer_is_negligible": {
     "passed": true,

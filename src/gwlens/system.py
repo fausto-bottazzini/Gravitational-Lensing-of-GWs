@@ -10,6 +10,18 @@ import numpy as np
 from . import units, chirp, geometry, waveoptics
 
 # --- inner binary (the GW source) ---------------------------------------
+# 20 + 15 Msun: a stellar-mass black-hole binary, fixed by what the PAIR of
+# epochs needs rather than by either one alone.
+#   * Mtot = 35 sets f_isco = 125.6 Hz, so Case A's whole band sits inside a
+#     ground-based detector's, and the chirp from 10 Hz lasts 15.2 s.
+#   * Mchirp = 15.05 then sets Case B's clock: 240.6 d from 0.05 Hz to
+#     merger, long enough that a several-period window is a small fraction
+#     of it. That ratio, not the frequency itself, is what makes the
+#     quasi-monochromatic treatment legitimate.
+#   * q = 4/3 is unequal enough not to be the symmetric special case, and
+#     close enough to 1 that higher harmonics stay negligible and the (2,2)
+#     mode alone is the waveform.
+# Not chosen for astrophysical typicality, same as the lens mass below.
 M1_MSUN = 20.0
 M2_MSUN = 15.0
 MTOT_MSUN = M1_MSUN + M2_MSUN
@@ -50,7 +62,17 @@ A_OUT_AU = A_OUT_M / units.AU_SI
 # --- the two epochs on the SAME inspiral track ----------------------------
 F_A_START_HZ = 10.0   # Case A ("chirp"): observation starts here, ends near merger
 F_B_HZ = 0.05          # Case B ("quasi-monochromatic"): fixed observing frequency
-T_OBS_B_S = 6.0 * P_OUT_S  # Case B observing baseline: 6 outer periods
+# Case B observing baseline: THREE outer periods (12 d), not more. Three is
+# the smallest number that shows the lensing is repeated rather than a
+# one-off. Longer is not better: the baseline is what limits how far the
+# leading-order (quadrupole) waveform Case B uses can be trusted, since the
+# phase a 0PN model omits accumulates with the window while the phase the
+# lens writes (arg F = 0.018 rad at the pulse peak) does not. Even at three
+# periods the former is several times the latter, which is why Case B is an
+# AMPLITUDE result -- |F| is untouched by phase truncation. The frequency
+# drift is the clean proxy and is checked in
+# tests/test_system.py::check_quasi_monochromatic_regime.
+T_OBS_B_S = 3.0 * P_OUT_S
 
 
 def inner_separation_m(f_gw_hz, m1_msun, m2_msun):

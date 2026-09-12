@@ -13,7 +13,7 @@
   },
   "quasi_monochromatic_regime": {
     "passed": true,
-    "message": "60.2 outer periods before merger (observing 6 of them); fractional freq drift over the observing baseline = 4.02e-02 (require merger>>observing window, drift<5%)"
+    "message": "60.2 outer periods before merger (observing 3 of them); fractional freq drift over the observing baseline = 1.94e-02 (require merger>>observing window, drift<5%)"
   },
   "wave_optics_regime_nontrivial": {
     "passed": true,
@@ -22,5 +22,9 @@
   "adiabatic_approximation_where_it_is_applied": {
     "passed": true,
     "message": "t_resp = 4GM_L/c^3 = 0.985 s; where |F|>1.01, min |dln y/dt|^-1 / t_resp = 5845x at 8e3 samples and 5844x at 2e4 (require >100x, and agreement to 5% between the two so the number is the system's and not the grid's)"
+  },
+  "deflection_is_weak_where_the_rays_pass": {
+    "passed": true,
+    "message": "closest any ray comes is the Einstein ring, xi_0 = 121 r_g (require >50); second-order deflection is 2.43% there (the y->0 bound, require <5%) and 1.17% at the y actually used, y_min=1.589 -> x_+=2.072"
   }
 }

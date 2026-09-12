@@ -7,18 +7,32 @@ inspiral: f=0.05 Hz instead of the chirp's 10-125.6 Hz.
 
 ## Regime
 
-Over the **6-outer-period (24 d)** observation used here, the GW frequency
-drifts by only **4.0%** (0.0500 -> 0.0520 Hz) while there are **60.2** outer
+Over the **3-outer-period (12 d)** observation used here, the GW frequency
+drifts by only **1.9%** (0.0500 -> 0.0510 Hz) while there are **60.2** outer
 periods left before merger — quasi-monochromatic, confirmed in
 `tests/test_system.py::check_quasi_monochromatic_regime`. Unlike Case A, the
 lens genuinely **moves**: y(t) sweeps through the diffraction pattern once
 per 4-day outer period.
 
+Three periods, not more, and the reason is the waveform rather than the
+lens. Three is the fewest that shows the lensing is *repeated* rather than
+a one-off. Beyond that the baseline only costs: Case B's waveform is the
+leading-order quadrupole one (`chirp.restricted_pn_amplitude_td` for the
+envelope, `chirp.freq_of_time` for the phase), and the phase a 0PN model
+omits accumulates with the window while the phase the lens writes does not.
+At f_B the source is at v/c = 0.030, so the 1PN correction is only 5.8e-3
+of the leading term — but over 52 000 carrier cycles even that is large
+compared with `arg F` = 0.018 rad. **This is why Case B is an amplitude
+result.** |F| is untouched by phase truncation, so every number and figure
+below that concerns amplitude stands on its own; the lensing *phase* is
+reported (it is what makes the Doppler comparison below meaningful) but is
+not claimed to be recoverable at this waveform accuracy.
+
 w_B = **0.309** throughout (fixed — only y(t) varies) — solidly in the
 diffraction-dominated regime (`F_hybrid` never switches away from the exact
 closed form here; `w_geo_threshold=30`).
 
-Holding w fixed is an approximation: neither the 4% intrinsic drift nor the
+Holding w fixed is an approximation: neither the 1.9% intrinsic drift nor the
 Doppler shift is fed back into F. D'Orazio & Loeb (2020) make the same
 omission and give the reason — lensing only happens where the line-of-sight
 velocity crosses zero, which for this near-edge-on circular orbit is exactly
@@ -27,7 +41,7 @@ minimum precisely where F matters most. That is an argument, not a number,
 so here are the numbers, and there are two: evaluating F at the true
 instantaneous *observed* frequency instead of at w_B changes |F| by
 `abs_F_relerr_from_fixed_w_at_pulse` = **1.0e-4** at the pulse (the argument
-holds), but by up to `abs_F_relerr_from_fixed_w_max` = **6.4e-3** at the
+holds), but by up to `abs_F_relerr_from_fixed_w_max` = **3.5e-3** at the
 worst point of the lensed half — far from the pulse, where |F| sits on the
 steep flank of a diffraction fringe, on a value close to 1 that carries no
 weight in any result quoted here. Quoting only the first would have been the
@@ -36,7 +50,7 @@ overclaim the argument invites.
 ## Repeated lensing
 
 Exactly **half** the orbit is lensed at all (`fraction_of_time_lensed
-=0.4997`): the source spends the other half in front of the lens
+=0.4994`): the source spends the other half in front of the lens
 (`D_LS<0`, `geometry.impact_parameter_of_time`) where there is no lensing
 geometry and F=1 by construction, not approximation; the impact parameter
 formally diverges (`y->infinity`) exactly at each front/back crossing,
@@ -48,18 +62,18 @@ y_A to 4 significant figures — not a coincidence: both are the same
 geometric minimum of the same (circular, e_out=0) outer orbit, found by an
 `argmin` search over `geometry.impact_parameter_of_time` in each case
 script's `main()` (same underlying function both times, so this is a
-statement about grid resolution -- 2000 samples/period here vs. 3600 in
-Case A -- not an independent confirmation of the geometry itself; a
+statement about grid resolution -- 600 samples per outer period here vs.
+2000 in Case A -- not an independent confirmation of the geometry itself; a
 previous version of this paragraph overstated it as "independently-written"
 search code, corrected after an independent review). Kept here as an
 internal consistency check between the two cases' scripts.
 
 `caseB_repeated_pulses.png` shows the resulting **periodic amplification
-pulses**, one per 4-day outer period, `|F|²` peaking at **1.385**
+pulses**, one per 4-day outer period, `|F|²` peaking at **1.384**
 (`max_abs_F²`, from `max_abs_F=1.177`) with visible diffraction ringing on
 each side of the main peak — the same ring structure as Case A's Figure 3,
 just swept through in time instead of shown as a static map. Averaged over
-the whole 24-day observation, `<|F|²>=1.006` and the RMS amplitude
+the whole 12-day observation, `<|F|²>=1.006` and the RMS amplitude
 amplification is **1.003**: close to unity, because the lensed half and the
 completely-unlensed half (F=1) roughly average out — most of the
 observation is spent either unlensed or only mildly amplified, with sharp
@@ -67,11 +81,8 @@ but brief peaks.
 
 ## The outer orbit's *other* imprint — and it is the larger one
 
-This section corrects the headline this case used to carry. Until
-2026-09-07 this script modelled only what the outer orbit does *optically*
-— sweep y(t) through the diffraction pattern — and described that as the
-outer orbit's signature on the waveform. It is not; it is the smaller half
-of the answer.
+Sweeping y(t) through the diffraction pattern is only half of what the
+outer orbit does to the waveform, and it is the smaller half.
 
 The same orbit also carries the source along the line of sight, at
 `beta_los_max` = **0.0165**, with a light-crossing time `a_out/c`. The
@@ -98,8 +109,8 @@ this case follows for repeated lensing, models the Doppler boost alongside
 it (their Appendix A) rather than either one alone.
 
 The Doppler swing in observed frequency, `doppler_freq_swing_Hz` =
-**0.0035 Hz**, is itself larger than the entire intrinsic chirp drift across
-the 24-day observation (`intrinsic_freq_drift_Hz` = **0.0020 Hz**).
+**0.0025 Hz**, is itself larger than the entire intrinsic chirp drift across
+the 12-day observation (`intrinsic_freq_drift_Hz` = **0.00097 Hz**).
 
 **How it is applied, and what it does not change.** The waveform is
 evaluated at the retarded emission time solved from
@@ -113,13 +124,13 @@ Doppler factor is multiplied in anywhere, which is checked to 5.5e-11 in
 Because it is pure *timing*, it leaves the strain **envelope** alone: the
 envelope evolves on the 240-day time-to-merger scale and the delay only
 reshuffles it by ~900 s, for a fractional change of
-`doppler_envelope_max_fractional_change` = **1.2e-5**. Every amplitude
+`doppler_envelope_max_fractional_change` = **1.1e-5**. Every amplitude
 result in this file — the pulse heights, `<|F|²>`, the RMS amplification,
 every diffraction figure — is therefore numerically unchanged by adding
 Doppler, and demonstrably so rather than by assumption
 (`tests/test_doppler.py::check_envelope_unaffected_by_roemer`). What *is*
 changed is the waveform's phase, by
-`doppler_phase_ptp_cycles_vs_static` = **93.8 cycles** measured directly
+`doppler_phase_ptp_cycles_vs_static` = **91.9 cycles** measured directly
 against the same waveform built without the substitution.
 
 **What is deliberately not applied.** Everything beyond first order is,
@@ -142,11 +153,18 @@ halves — this is the "extended, in-space" pattern and the trajectory a real
 triple would trace through it, in one figure.
 
 `caseB_detector_view.png` is the idealized-detector view asked for: top
-panel, the strain envelope over the full 24-day observation, showing six
+panel, the strain envelope over the full 12-day observation, showing three
 clean amplification pulses riding on the slowly-drifting quasi-monochromatic
 carrier; bottom panel, a dedicated fine time grid (dt=0.1 s, since the
-coarse 3600-point grid used for the envelope — 576 s spacing — wildly
-undersamples the 20 s carrier period; using it directly for a "raw
-waveform" panel was an aliasing bug caught by eye and fixed, see
-wiki/log.md) zoomed on one pulse peak, where the lensed and unlensed
-waveforms visibly dephase over just a few carrier cycles.
+1800-point grid used for the envelope — 576 s spacing — wildly undersamples
+the 20 s carrier period and plotting a raw waveform from it aliases)
+zoomed on one pulse peak.
+
+What that bottom panel shows is the **amplitude** difference: crests 17.7%
+taller with the lens than without. It does *not* show a dephasing, and an
+earlier version of this file claimed it did. Both curves are evaluated at
+the same retarded time, so the 90-cycle Roemer delay is common to them and
+cancels; all that is left between them is F, whose phase at the pulse peak
+is `arg F` = 0.0176 rad = **1.01°**, a shift of 0.056 s on a 20 s carrier —
+under a tenth of a pixel at this figure's resolution, and below the
+leading-order waveform's own truncation error besides.

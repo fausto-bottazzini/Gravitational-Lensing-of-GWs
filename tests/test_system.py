@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import numpy as np
 from gwlens import system, chirp, geometry as geo, units
+from gwlens import waveoptics as wo
 
 
 def check_hierarchy():
@@ -151,10 +152,9 @@ def check_quasi_monochromatic_regime():
     tau_B = chirp.time_to_merger(system.F_B_HZ, system.MCHIRP_MSUN)
     n_periods_to_merger = tau_B / system.P_OUT_S
     # fractional frequency drift over the ACTUAL Case B observing baseline
-    # (system.T_OBS_B_S = 6 outer periods), not over the full remaining
-    # time to merger -- an earlier version of this check used tau_B/2 and
-    # failed because f formally diverges as t->t_c regardless of how the
-    # observing window is chosen (see wiki/log.md).
+    # (system.T_OBS_B_S = 3 outer periods), not over the full remaining
+    # time to merger: f formally diverges as t -> t_c whatever the window,
+    # so a drift measured to merger would say nothing about the window.
     f_start = chirp.freq_of_time(np.array([0.0]), tau_B, system.MCHIRP_MSUN)[0]
     f_end = chirp.freq_of_time(np.array([system.T_OBS_B_S]), tau_B, system.MCHIRP_MSUN)[0]
     drift = abs(f_end - f_start) / f_start
@@ -234,6 +234,45 @@ def check_adiabatic_approximation_where_it_is_applied():
                 f"between the two so the number is the system's and not the grid's)")
 
 
+def check_deflection_is_weak_where_the_rays_pass():
+    """theory.pdf's optics chapter is built to first order in U/c^2 -- the
+    Helmholtz equation, the refractive index, and the deflection
+    alpha = 4 G M_L/(c^2 b) all drop O(U^2). The text says the expansion
+    parameter is small, which is the right thing for a textbook to say;
+    whether it is small for THESE numbers is a statement about this repo's
+    system, and belongs here (and in report/, not in theory/).
+
+    The subtlety worth recording: the ray does NOT pass at the source offset
+    y*xi_0. It passes at the IMAGE position, x_+- * xi_0, and as y -> 0 the
+    two images go to the Einstein ring |x| = 1. So the closest approach of
+    any ray is xi_0 itself, for any y whatsoever -- small y does not push
+    the problem into the strong field. What is left is a fixed fractional
+    correction, the second-order Schwarzschild deflection:
+
+        alpha_2/alpha_1 = (15 pi/16) * (G M_L / c^2 b).
+
+    At the Einstein ring (the y -> 0 worst case) that is 2.4%; at the y this
+    project actually uses it is 1.2%, since the strong image sits out at
+    x_+ = 2.07. It scales as M_L^(-1/3) at fixed outer period, so a heavier
+    lens would be worse."""
+    r_g = units.msun_to_meters(system.M_LENS_MSUN)          # G M_L / c^2
+    i_out = np.deg2rad(system.I_OUT_DEG)
+    D_LS = system.A_OUT_M * np.sin(i_out)                   # at conjunction
+    xi_0 = np.sqrt(4.0 * r_g * D_LS)          # Einstein radius, LENS plane
+
+    y_min = np.sqrt(system.A_OUT_M / (4.0 * r_g)) * np.cos(i_out) / np.sqrt(np.sin(i_out))
+    x_plus, _ = wo.image_positions(y_min)
+
+    worst = (15.0 * np.pi / 16.0) * (r_g / xi_0)            # y -> 0
+    used = (15.0 * np.pi / 16.0) * (r_g / (x_plus * xi_0))  # y = y_min
+
+    ok = worst < 0.05 and xi_0 / r_g > 50.0
+    return ok, (f"closest any ray comes is the Einstein ring, xi_0 = {xi_0/r_g:.0f} r_g "
+                f"(require >50); second-order deflection is {100*worst:.2f}% there "
+                f"(the y->0 bound, require <5%) and {100*used:.2f}% at the y actually "
+                f"used, y_min={y_min:.3f} -> x_+={x_plus:.3f}")
+
+
 CHECKS = [
     ("hierarchy", check_hierarchy),
     ("outer_orbit_is_static_over_the_observation", check_outer_orbit_is_static_over_the_observation),
@@ -242,6 +281,8 @@ CHECKS = [
     ("wave_optics_regime_nontrivial", check_wave_optics_regime_nontrivial),
     ("adiabatic_approximation_where_it_is_applied",
      check_adiabatic_approximation_where_it_is_applied),
+    ("deflection_is_weak_where_the_rays_pass",
+     check_deflection_is_weak_where_the_rays_pass),
 ]
 
 
