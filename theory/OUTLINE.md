@@ -49,10 +49,13 @@ se lea corrido sin perder las cuentas.
 ## Bibliografía
 
 `refs.bib` es compartido con `report/report.tex` (que lo incluye como
-`../theory/refs`). Los PDF están en `bibliography/`. Las citas indican la
-ecuación o sección exacta del trabajo citado cuando se toma de él un resultado
-concreto; las tres referencias que son libros (Schneider, Ehlers & Falco;
-Murray & Dermott; Chandrasekhar) no están descargadas.
+`../theory/refs`). Los PDF no están versionados, porque son artículos con
+copyright de sus revistas: `bibliography/README.md` lista el DOI de cada uno
+y el enlace a arXiv de los ocho que tienen preprint libre, que es lo que hace
+falta para descargarlos. Las citas indican la ecuación o sección exacta del
+trabajo citado cuando se toma de él un resultado concreto; las cuatro
+referencias que son libros (Maggiore; Schneider, Ehlers & Falco; Murray &
+Dermott; Chandrasekhar) se citan por capítulo y sección.
 
 ## Archivos
 

@@ -11,3 +11,6 @@ __pycache__/
 checks/independent_review/
 *.bbl
 *.blg
+
+# Bibliography PDFs: copyrighted, kept locally only -- see bibliography/README.md
+bibliography/*.pdf

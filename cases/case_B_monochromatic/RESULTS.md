@@ -93,7 +93,7 @@ beside it, and an inset at 3392× so the lensing phase is still shown
 resolved (its diffraction ringing around each pulse) rather than only shown
 to be invisible. This is not a defect of the lensing calculation — it is
 what a hierarchical triple actually looks like, and it is why
-[D'Orazio & Loeb (2020)](../../bibliography/DOrazioLoeb2020.pdf), the paper
+[D'Orazio & Loeb (2020)](https://arxiv.org/abs/1910.02966), the paper
 this case follows for repeated lensing, models the Doppler boost alongside
 it (their Appendix A) rather than either one alone.
 
