@@ -5,6 +5,14 @@ f_isco in ~15 s: 4.4e-5 of the outer orbital period, so the lens is frozen
 at a single impact parameter y_A for the whole observation (checked in
 tests/test_system.py::check_static_lens_regime).
 
+The source is frozen too, kinematically -- but that is a separate statement
+and it is checked separately, not folded into the one above. The outer orbit
+also Doppler-shifts the source, and in Case B that effect dominates
+everything the lens does; here it does not, for the quantitative reasons
+computed in `main()` below (mean_beta_los_over_chirp,
+roemer_residual_phase_at_fisco_rad, orbital_redshift_factor_minus_1 in
+provenance/numbers.json). See src/gwlens/doppler.py and wiki/log.md.
+
 Produces (in this directory, all from THIS script, nothing hand-edited):
     numbers -> provenance/numbers.json
     figures -> *.png
@@ -28,6 +36,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
 from gwlens import system, chirp, imr_waveform, waveoptics as wo, geometry as geo, units
+from gwlens import doppler as dp
 
 OUT = HERE
 NUMBERS = {}
@@ -162,6 +171,49 @@ def main():
     log("y_A_outer_orbit_phase_fraction", float(t_scan[idx_min] / system.P_OUT_S))
     log("lensed_at_merger_phase", bool(lensed_scan[idx_min]))
 
+    # --- why this case can treat the source as kinematically static --------
+    # The outer orbit moves the source along the line of sight at
+    # beta_los ~ 1.6e-2, which in Case B (src/gwlens/doppler.py) dominates
+    # everything the lens does. Here it does not, and the reason is
+    # quantitative, not hand-waved -- so it is computed, not asserted:
+    #
+    #  * The merger is placed at the orbital phase of closest approach
+    #    (t/P_out = 0.25, chosen just above for the LENSING, not for this),
+    #    which is exactly where the line-of-sight velocity crosses zero.
+    #  * Over a 15 s window out of a 4-day orbit, a constant delay and a
+    #    constant slope in the delay are anyway EXACTLY degenerate with t_c
+    #    and with the chirp mass -- unmeasurable in a single event. Only the
+    #    curvature (the line-of-sight acceleration) is non-degenerate.
+    #  * That residual is `roemer_residual_ptp_s` below: ~9e-6 s, i.e.
+    #    ~0.007 rad of phase at the highest in-band frequency.
+    #
+    # It is therefore NOT applied to the waveform. Applying it would mean
+    # resampling h(t) onto a retarded time grid, and the cubic-interpolation
+    # error of that resampling would itself exceed the 0.007 rad it was meant
+    # to model -- machinery that adds numerical noise in place of a physical
+    # effect smaller than the noise. Reported instead; the check behind it is
+    # tests/test_doppler.py::check_case_A_roemer_is_negligible.
+    orb = dict(a_out_m=system.A_OUT_M, e_out=system.E_OUT,
+               period_out=system.P_OUT_S, i_out=np.deg2rad(system.I_OUT_DEG),
+               Omega_out=system.OMEGA_OUT, omega_out=system.LITTLE_OMEGA_OUT,
+               t_peri=system.T_PERI_OUT, M_lens_msun=system.M_LENS_MSUN,
+               M_binary_msun=system.MTOT_MSUN)
+    tau_chirp = chirp.time_to_merger(system.F_A_START_HZ, system.MCHIRP_MSUN)
+    t_window = np.linspace(t_scan[idx_min] - tau_chirp, t_scan[idx_min], 4001)
+    roemer_res, roemer_slope, _ = dp.roemer_residual(t_window, **orb)
+    # the best-fit slope over the window, i.e. the MEAN beta_los across the
+    # chirp -- not the instantaneous value, which is exactly zero at t/P=0.25
+    log("mean_beta_los_over_chirp", float(roemer_slope))
+    log("roemer_residual_ptp_s", float(np.ptp(roemer_res)))
+    log("roemer_residual_phase_at_fisco_rad",
+        float(2.0 * np.pi * system.F_ISCO_HZ * np.ptp(roemer_res)))
+    # The one kinematic effect that is NOT small -- and is also not a waveform
+    # feature: constant for a circular orbit, hence exactly degenerate with
+    # the chirp mass. A 4.1e-4 bias on any M_chirp inferred from this signal,
+    # not something visible in any figure here.
+    log("orbital_redshift_factor_minus_1",
+        float(dp.orbital_redshift_factor(system.A_OUT_M, system.M_LENS_MSUN) - 1.0))
+
     freqs, H_unlensed, fs, D_eff_mpc, n_pad = build_waveform_fd()
     log("D_eff_Mpc", D_eff_mpc)
     H_lensed, F = apply_lensing(freqs, H_unlensed, y_A)
@@ -180,6 +232,21 @@ def main():
     F_at_isco = wo.F_hybrid(w_isco, y_A)
     log("abs_F_at_f_start", float(abs(F_at_start)))
     log("abs_F_at_f_isco", float(abs(F_at_isco)))
+
+    # How good the geometric-optics evaluator actually is AT THIS y -- the
+    # approximation the whole case rests on, since F_hybrid is above
+    # w_geo_threshold across the entire band. Quoted here at y_A rather than
+    # as the worst case over y, because `check_hybrid_matches_at_threshold`'s
+    # 3.1% is set entirely by y=0.3, where the two images sit close together
+    # and highly magnified and stationary phase is at its weakest -- a y
+    # nothing in this project evaluates.
+    for label, w_val in (("f_start", w_start), ("f_isco", w_isco)):
+        exact = wo.F_point_lens(w_val, y_A)
+        log(f"geo_vs_exact_relerr_at_{label}",
+            float(abs(exact - wo.F_geometric_optics(w_val, y_A)) / abs(exact)))
+    log("geo_vs_exact_relerr_at_threshold_w30",
+        float(abs(wo.F_point_lens(30.0, y_A) - wo.F_geometric_optics(30.0, y_A))
+              / abs(wo.F_point_lens(30.0, y_A))))
 
     band_mask = (freqs >= system.F_A_START_HZ) & (freqs <= system.F_ISCO_HZ)
     abs_F_band = np.abs(F[band_mask])
@@ -207,9 +274,32 @@ def main():
     rms_unlensed = np.sqrt(np.mean(h_unlensed ** 2))
     log("rms_strain_amplification", float(rms_lensed / rms_unlensed))
 
+    # ...and that rms is not a free number: it has a closed-form prediction,
+    # which makes it the one end-to-end validation of this entire pipeline
+    # (waveform generator, F evaluator, the FFT convention, the reference
+    # phase, the window) against an independent textbook result.
+    #   By Parseval, (rms_lensed/rms_unlensed)^2 is the |H(f)|^2-weighted mean
+    #   of |F(f)|^2 across the band. In the geometric-optics regime -- which
+    #   the whole in-band F is here, w = 62 to 778 --
+    #       |F|^2 = mu_+ + |mu_-| + 2 sqrt(mu_+ |mu_-|) sin(2 pi f Delta_T),
+    #   and the oscillating term averages away over the ~400 fringes in the
+    #   band, leaving exactly mu_+ + |mu_-|: the Paczynski (1986) TOTAL
+    #   magnification A(y), already implemented independently in
+    #   waveoptics.total_magnification_paczynski and separately checked
+    #   against the image sum in tests/test_waveoptics.py. So
+    #       rms_strain_amplification = sqrt(A(y_A)),
+    #   with no free parameter and nothing fitted. The residual below is the
+    #   finite-fringe-count sampling of that average, not a modelling error.
+    A_paczynski = float(wo.total_magnification_paczynski(y_A))
+    log("total_magnification_paczynski", A_paczynski)
+    log("rms_amplification_predicted", float(np.sqrt(A_paczynski)))
+    log("rms_amplification_relerr",
+        float(abs(NUMBERS["rms_strain_amplification"] - np.sqrt(A_paczynski))
+              / np.sqrt(A_paczynski)))
+
     # ---- Genuine second-image echo: locate it empirically, don't assume --
     # F(w,y) is referenced to the strong image's own arrival (waveoptics.py
-    # module docstring, "REFERENCE-PHASE NORMALIZATION FIX"), so the naive
+    # module docstring, under "Reference phase"), so the naive
     # prediction "echo at t_peak_unlensed + image_time_delay" should now be
     # exact -- search near it and report how well it lines up, rather than
     # assume: this is the more honest, and more easily reproduced, check.
@@ -284,34 +374,34 @@ def main():
     fig, axes = plt.subplots(3, 1, figsize=(7, 9.2))
     axes[0].axhspan(sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus,
                      color="#2b6cb0", alpha=0.25,
-                     label=r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$ (exact envelope)")
+                     label=r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$ (envolvente exacta)")
     axes[0].axhline(sqrt_mu_plus, color="#2b6cb0", lw=1.0, ls="--",
-                     label=r"$\sqrt{\mu_+}$ (strong-image-only value)")
+                     label=r"$\sqrt{\mu_+}$ (sólo la imagen fuerte)")
     axes[0].axvspan(f_zoom_lo, f_zoom_hi, color="gold", alpha=0.3)
     axes[0].set_ylabel(r"$|F(f)|$")
-    axes[0].set_xlabel("f [Hz]")
+    axes[0].set_xlabel("$f$ [Hz]")
     axes[0].set_xlim(system.F_A_START_HZ, system.F_ISCO_HZ)
     axes[0].legend(fontsize=7, loc="lower right")
-    axes[0].set_title("Case A: amplification factor across the whole chirp\n"
-                       f"(static lens, $y={y_A:.3f}$; band is exactly this width at every f; zoom below)",
+    axes[0].set_title("Caso A: factor de amplificación a lo largo de todo el chirp\n"
+                       f"(lente estático, $y={y_A:.3f}$; la banda tiene exactamente este ancho a toda $f$; ampliación abajo)",
                        fontsize=10)
     axes[1].plot(freqs[zmask], np.abs(F[zmask]), lw=1.0, color="#2b6cb0")
     axes[1].set_ylabel(r"$|F(f)|$")
-    axes[1].set_xlabel("f [Hz]")
-    axes[1].set_title(f"Zoom: {f_zoom_lo:.0f}-{f_zoom_hi:.0f} Hz (fringe period "
-                       f"{fringe_period_hz:.2f} Hz, the same anywhere in the band)")
+    axes[1].set_xlabel("$f$ [Hz]")
+    axes[1].set_title(f"Ampliación: {f_zoom_lo:.0f}–{f_zoom_hi:.0f} Hz (período de las franjas: "
+                       f"{fringe_period_hz:.2f} Hz, idéntico en cualquier punto de la banda)")
     axes[2].plot(freqs[zmask], np.angle(F[zmask]), lw=1.0, color="#c05621")
     axes[2].set_ylabel(r"$\arg F(f)$ [rad]")
-    axes[2].set_xlabel("f [Hz]")
+    axes[2].set_xlabel("$f$ [Hz]")
     # F traces a circle of radius sqrt(mu_-) centered on sqrt(mu_+) in the
     # complex plane as w*DeltaT sweeps 2*pi per fringe (the strong image is
     # the fixed reference, weak image the rotating arm) -- since mu_- < mu_+
     # here, that circle does not enclose the origin, so arg F oscillates
     # (bounded, not a full 2*pi wrap) once per fringe, in phase with |F|
     # above.
-    axes[2].set_title("Same zoom: phase -- bounded oscillation in phase with each fringe above")
+    axes[2].set_title("Misma ampliación: la fase — oscilación acotada, en fase con cada franja de arriba")
     fig.tight_layout()
-    fig.savefig(OUT / "caseA_F_of_f.png", dpi=170)
+    fig.savefig(OUT / "caseA_F_of_f.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     # ---- Figure 2: lensed vs unlensed time-domain strain -----------------
@@ -319,7 +409,7 @@ def main():
     # second-image echo), a merger/ringdown zoom, and a dedicated echo zoom
     # -- the echo is the unambiguous causality signature (a second, weaker,
     # LATER copy of the signal). With F referenced to the strong image's own
-    # arrival (waveoptics.py, "REFERENCE-PHASE NORMALIZATION FIX"), the
+    # arrival (waveoptics.py, "Reference phase"), the
     # lensed merger now peaks at (to within a sample of) the SAME time as
     # the unlensed one -- see wiki/log.md for the earlier, incorrect version
     # of this story, where an un-subtracted reference phase looked like a
@@ -328,13 +418,20 @@ def main():
     fig, axes = plt.subplots(3, 1, figsize=(8, 9.0))
     t_hi = min(t[-1], echo_t + 1.0)
     view = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_hi)
-    axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888", label="unlensed")
-    axes[0].plot(t[view], h_lensed[view], lw=0.5, color="#2b6cb0", label="lensed", alpha=0.85)
-    axes[0].set_xlabel(f"t [s] (merger at t={t_peak:.2f} s)")
-    axes[0].set_ylabel("h(t) [arb. units]")
+    axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888", label="sin lente")
+    axes[0].plot(t[view], h_lensed[view], lw=0.5, color="#2b6cb0", label="con lente", alpha=0.85)
+    axes[0].set_xlabel(f"$t$ [s] (merger en $t={t_peak:.2f}$ s)")
+    axes[0].set_ylabel("$h(t)$ [unidades arbitrarias]")
     axes[0].axvspan(t_peak - 0.05, t_peak + 0.3, color="gold", alpha=0.3)
     axes[0].axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.3)
-    axes[0].set_title(f"Case A: lensed vs. unlensed waveform\n({NUMBERS['waveform_source']})", fontsize=10)
+    # Only the model identity, not the full provenance string: everything
+    # after the " -- " is an English descriptor that belongs in numbers.json
+    # and RESULTS.md, not in a figure inside a Spanish document. Splitting
+    # rather than hardcoding keeps the TaylorF2 fallback distinguishable
+    # here too, without maintaining a second, translated copy of a label
+    # whose authoritative version is `waveform_source`.
+    axes[0].set_title(f"Caso A: forma de onda con lente frente a sin lente\n"
+                       f"{NUMBERS['waveform_source'].split(' -- ')[0]}", fontsize=10)
     axes[0].legend(loc="upper left", fontsize=8)
 
     # window wide enough to comfortably contain BOTH the unlensed peak (at
@@ -343,25 +440,29 @@ def main():
     # so its extremum can be offset from the unlensed one (an earlier,
     # narrower window here missed it; see wiki/log.md)
     zoom = (t > t_peak - 0.05) & (t < t_peak + 0.3)
-    axes[1].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.0, color="#888888", label="unlensed")
-    axes[1].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.0, color="#2b6cb0", alpha=0.85, label="lensed")
-    axes[1].set_xlabel("t - t_merger [s]")
-    axes[1].set_ylabel("h(t) [arb. units]")
-    axes[1].set_title("Zoom: merger and ringdown (gold band above)", fontsize=10)
+    axes[1].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.0, color="#888888", label="sin lente")
+    axes[1].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.0, color="#2b6cb0", alpha=0.85, label="con lente")
+    axes[1].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
+    axes[1].set_ylabel("$h(t)$ [unidades arbitrarias]")
+    axes[1].set_title("Ampliación: merger y ringdown (banda dorada de arriba)", fontsize=10)
     axes[1].legend(loc="upper right", fontsize=8)
 
     echo_zoom = (t > echo_t - 0.3) & (t < echo_t + 0.3)
-    axes[2].plot(t[echo_zoom] - t_peak, h_unlensed[echo_zoom], lw=1.0, color="#888888", label="unlensed (should be ~0: signal already ended)")
-    axes[2].plot(t[echo_zoom] - t_peak, h_lensed[echo_zoom], lw=1.0, color="#2ca02c", alpha=0.9, label="lensed (the echo)")
-    axes[2].set_xlabel("t - t_merger [s]")
-    axes[2].set_ylabel("h(t) [arb. units]")
+    axes[2].plot(t[echo_zoom] - t_peak, h_unlensed[echo_zoom], lw=1.0, color="#888888", label="sin lente (debería ser ~0: la señal ya terminó)")
+    axes[2].plot(t[echo_zoom] - t_peak, h_lensed[echo_zoom], lw=1.0, color="#2ca02c", alpha=0.9, label="con lente (el eco)")
+    axes[2].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
+    axes[2].set_ylabel("$h(t)$ [unidades arbitrarias]")
+    # Broken over two lines: as one line this title is wider than the axes,
+    # and with bbox_inches="tight" that widens the whole saved figure to fit
+    # it, leaving the three panels floating in a band of white space.
     axes[2].set_title(
-        f"Zoom: the second-image echo, observed at t_merger+{echo_t - t_peak:.2f} s "
-        f"(geometric-optics prediction: +{NUMBERS['image_time_delay_seconds']:.2f} s; "
-        f"green band above) -- the causality check made visible", fontsize=10)
+        f"Ampliación: el eco de la segunda imagen, en $t_\\mathrm{{merger}}$"
+        f"+{echo_t - t_peak:.2f} s (banda verde de arriba)\n"
+        f"predicción de óptica geométrica: +{NUMBERS['image_time_delay_seconds']:.2f} s "
+        f"— la verificación de causalidad, hecha visible", fontsize=10)
     axes[2].legend(loc="upper right", fontsize=8)
     fig.tight_layout()
-    fig.savefig(OUT / "caseA_strain_time.png", dpi=170)
+    fig.savefig(OUT / "caseA_strain_time.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     # ---- Figure 3: extended diffraction/interference pattern in y-plane -
@@ -379,19 +480,27 @@ def main():
 
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.4))
 
-    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=3.0, n_grid=481)
+    # n_grid=1201, not 481: the fringe period in y shrinks with radius (it is
+    # 2*pi/(w * dDeltaT/dy), = 0.050 at y=0.3 but 0.028 at y=3), so 481 points
+    # across the 6-wide axis gave dy=0.0125 -- only 2.2 samples per fringe on
+    # the OUTER rings, below what is needed to render them without moire.
+    # 1201 gives dy=0.005, ~5.6 samples per fringe there. `n_radial` was
+    # already fine (dr=0.0011, ~26 per fringe); this was the display grid
+    # only, the same distinction the docstring above records.
+    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=3.0, n_grid=1201)
     im0 = axes[0].pcolormesh(axis0, axis0y, mag2_0, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_0.min(), 1e-3), vmax=mag2_0.max()))
-    axes[0].set_title(f"start of band, f={system.F_A_START_HZ} Hz, w={w_start:.1f}", fontsize=9)
-    cb0 = fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    axes[0].set_title(f"inicio de banda, $f={system.F_A_START_HZ}$ Hz, $w={w_start:.1f}$", fontsize=9)
+    cb0 = fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
     cb0.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
     axis1, axis1y, mag2_1 = make_ring_pattern(
         w_isco, n_grid=500, center=(y_A, 0.0), half_width=0.15, n_radial=6000)
     im1 = axes[1].pcolormesh(axis1, axis1y, mag2_1, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_1.min(), 1e-3), vmax=mag2_1.max()))
-    axes[1].set_title(f"near merger, f=f_isco, w={w_isco:.1f}\n(zoomed to |Δy|<0.15 near the source)", fontsize=9)
-    cb1 = fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (log scale)")
+    axes[1].set_title(f"cerca del merger, $f=f_\\mathrm{{isco}}$, $w={w_isco:.1f}$\n"
+                       r"(ampliado a $|\Delta y|<0.15$ en torno a la fuente)", fontsize=9)
+    cb1 = fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
     cb1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
     for ax in axes:
@@ -402,12 +511,18 @@ def main():
     # A wider, single-line-per-row suptitle was getting clipped at both
     # edges of this fairly narrow figure; shortened and set explicitly
     # inside the axes bounding box (independent review, see wiki/log.md).
-    fig.suptitle("Case A: amplification pattern on the source plane\n"
-                 "(axisymmetric rings; central spot = Einstein-ring "
-                 fr"diffraction spike; source at $y_A={y_A:.3f}$, marked)",
+    fig.suptitle("Caso A: patrón de amplificación en el plano de la fuente\n"
+                 "(anillos axisimétricos; el punto central es el pico de difracción "
+                 fr"del anillo de Einstein; la fuente está en $y_A={y_A:.3f}$, marcada)",
                  fontsize=10)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.90))
-    fig.savefig(OUT / "caseA_diffraction_pattern.png", dpi=170)
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.93))
+    # bbox_inches="tight": with set_aspect("equal") the axes are resized AFTER
+    # tight_layout has computed positions, so the x-axis label ended up drawn
+    # below the figure canvas and was cut off in the committed PNG (both
+    # panels lost their "$y_1$"). Cropping to the actual artist extents at
+    # save time is the fix that cannot silently regress the next time this
+    # figure's geometry changes.
+    fig.savefig(OUT / "caseA_diffraction_pattern.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     # ---- Figure 4: simple idealized detector view -------------------------
@@ -417,18 +532,18 @@ def main():
     # -- clear on a log axis, easy to under-sell on a linear one.
     fig, ax = plt.subplots(figsize=(8, 3.6))
     # same window as Figure 2's overview panel above -- identical expression, reused rather than rebuilt
-    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="unlensed envelope")
-    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="lensed envelope")
+    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="envolvente sin lente")
+    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="envolvente con lente")
     ax.axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.25,
-               label=f"observed echo (t_merger+{echo_t - t_peak:.2f} s)")
+               label=f"eco observado ($t_\\mathrm{{merger}}$+{echo_t - t_peak:.2f} s)")
     ax.set_yscale("log")
-    ax.set_xlabel("t [s]")
-    ax.set_ylabel("strain envelope [arb. units, log scale]")
-    ax.set_title("Case A: idealized detector view (strain envelope, no noise/antenna pattern)\n"
-                 "note the second, weaker peak: the second-image echo", fontsize=10)
+    ax.set_xlabel("$t$ [s]")
+    ax.set_ylabel("envolvente del strain [unidades arbitrarias, escala log.]")
+    ax.set_title("Caso A: vista de detector idealizada (envolvente del strain; sin ruido ni patrón de antena)\n"
+                 "obsérvese el segundo pico, más débil: el eco de la segunda imagen", fontsize=10)
     ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
-    fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170)
+    fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     # ---- Animation data for report/report.html (JSON, reduced resolution) -

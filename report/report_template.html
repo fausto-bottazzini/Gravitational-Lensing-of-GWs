@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lente Gravitacional de GWs en un Triple Jerárquico — Resultados</title>
+<title>Lente Gravitacional de Ondas Gravitacionales en un Sistema Triple Jerárquico — Resultados</title>
 <style>
   :root {
     --ink: #1a1a1a; --sub: #555; --rule: #ddd; --accent: #b5651d;
@@ -108,14 +108,14 @@
 <div class="wrap">
 
 <header class="title">
-  <h1>Lente Gravitacional en Óptica de Ondas de Ondas Gravitacionales<br>en un Sistema Triple Jerárquico</h1>
-  <div class="subtitle">Resultados — versión interactiva</div>
+  <h1>Lente Gravitacional de Ondas Gravitacionales<br>en un Sistema Triple Jerárquico</h1>
+  <div class="subtitle">Tratamiento en óptica de ondas — resultados, versión interactiva</div>
   <div class="byline">Trabajo final — Gravitational Waves and AI-Assisted Research · Septiembre 2026</div>
 </header>
 
 <div class="abstract">
   <span class="label">Resumen</span>
-  <p>Calculamos cómo una onda gravitacional (GW) de una binaria compacta es lenteada, en óptica
+  <p>Calculamos cómo una onda gravitacional (GW) de una binaria compacta es lensada, en óptica
   de ondas, por un tercer cuerpo del mismo sistema triple jerárquico — el mismo triple en dos
   épocas de su inspiral: un chirp tardío (lente congelado) y una fase temprana
   cuasi-monocromática (el lente se mueve, y produce pulsos de lensing repetidos). Esta página es
@@ -159,7 +159,7 @@ muchísimo más rápido que la órbita externa (4 días), así que el lente qued
       <canvas id="canvasA-wave" width="640" height="280"></canvas>
     </div>
     <div class="viz-panel">
-      <h4>F(f), zoom de 3 Hz — el marcador sigue la frecuencia instantánea</h4>
+      <h4>F(f), ampliación de 3 Hz — el marcador sigue la frecuencia instantánea</h4>
       <canvas id="canvasA-fringe" width="640" height="280"></canvas>
     </div>
   </div>
@@ -177,7 +177,7 @@ muchísimo más rápido que la órbita externa (4 días), así que el lente qued
   <figcaption><b>El patrón de difracción extendido</b> en el plano de la fuente: anillos
   concéntricos alrededor del lente, con un pico brillante central (el anillo de Einstein,
   regularizado por difracción — donde la óptica geométrica diverge). Izquierda: al inicio de la
-  banda (w=61.9). Derecha: cerca del merger (w=777.6), con zoom — mismos anillos, tan juntos que
+  banda (w=61.9). Derecha: cerca del merger (w=777.6), ampliado — mismos anillos, tan juntos que
   parecen franjas rectas.</figcaption>
 </figure>
 
@@ -226,21 +226,51 @@ amplificación repetidos.</p>
   <div class="viz-readout" id="readoutB">cargando…</div>
 </div>
 
-<p>Exactamente la mitad de la órbita resulta <b>no lenteada</b>: cuando la fuente está delante
+<p>Exactamente la mitad de la órbita resulta <b>no lensada</b>: cuando la fuente está delante
 del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
 F=1 por construcción, y se ve arriba como el marcador saliendo del patrón (cian/gris) durante
 la mitad "de adelante" de cada vuelta. Esto es exactamente el origen de los pulsos periódicos:
 "lensing repetido", el análogo en óptica de ondas de lo que D'Orazio &amp; Loeb (2020)
 encontraron en óptica geométrica.</p>
 
+<h3>La órbita externa hace dos cosas, y el lensing es la más chica</h3>
+<p>Todo lo anterior es lo que la órbita externa hace <i>ópticamente</i>. Pero la misma órbita
+también arrastra a la fuente a lo largo de la línea de visión, a β<sub>los</sub>=0.0165, y el
+retardo de Roemer que eso produce es de <b>1810 s pico a pico</b>: a f<sub>B</sub>, unos
+<b>90.5 ciclos</b> de GW de fase escritos sobre la forma de onda. La fase que escribe el lente
+mismo, arg F/2π, vale <b>0.017 ciclos</b>. Un factor <b>5206×</b>.</p>
+
+<figure>
+  <img src="../cases/case_B_monochromatic/caseB_doppler_vs_lensing.png"
+       alt="Roemer/Doppler vs lensing, en ciclos de GW">
+  <figcaption>Las dos huellas de la <i>misma</i> órbita externa, en la unidad en que la forma de
+  onda está escrita. La curva de lensing sobre el eje cero no es una falla de renderizado: es el
+  resultado. El recuadro la muestra resuelta, a 3392× de ampliación vertical.</figcaption>
+</figure>
+
+<p>No es un defecto del cálculo de lensing — es cómo se ve realmente un triple jerárquico, y es
+por eso que D'Orazio &amp; Loeb (2020), el mismo trabajo que este caso sigue para el lensing
+repetido, modelan el Doppler <i>junto</i> con él (su Apéndice A). Hasta el 2026-09-07 este
+proyecto modelaba sólo el lensing y lo presentaba como <i>la</i> firma de la órbita externa;
+eso subestimaba la huella real de la órbita en dos o tres órdenes de magnitud. El Doppler se
+aplica evaluando la forma de onda en el tiempo de emisión retardado, y por ser puro
+<i>timing</i> deja la envolvente intacta a 1.2×10<sup>−5</sup>: todos los resultados de amplitud
+de arriba quedan sin cambio, de manera demostrada (las tres figuras de patrón regeneradas
+quedaron byte a byte idénticas).</p>
+
 <h2 id="junto">Lo que los dos casos muestran juntos</h2>
 <ul>
   <li><b>Caso A:</b> un patrón de difracción congelado, barrido en <i>frecuencia</i> por el
   propio chirp — franjas de interferencia densas, acercándose al límite de óptica geométrica.</li>
   <li><b>Caso B:</b> el mismo tipo de patrón, a frecuencia fija, barrido en <i>tiempo</i> por el
-  movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lenteada.</li>
+  movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lensada.</li>
   <li><b>Ambos:</b> el lensing no es sólo "más brillante" — F es complejo, y su fase deja una
   marca real y verificable en la forma de onda.</li>
+  <li><b>Y la misma razón de escalas decide algo más</b>, que no es óptica sino cinemática:
+  cuánto de la <i>velocidad</i> de la fuente entra en la ventana de observación. En el Caso A,
+  15 s de una órbita de 4 días, casi todo es degenerado con t<sub>c</sub> y con la masa de chirp,
+  y lo que queda vale 0.0068 rad. En el Caso B, 6 períodos completos, nada es degenerado y el
+  mismo efecto vale 90 ciclos. La misma órbita, la misma velocidad.</li>
 </ul>
 
 <h2 id="alcance">Alcance y limitaciones</h2>
@@ -254,6 +284,13 @@ encontraron en óptica geométrica.</p>
   <li>Detector idealizado: sin ruido, patrón de antena, ni filtrado adaptado.</li>
   <li>La aproximación de lente delgado/paraxial se empuja cerca de cada cruce del Caso B —
   cuantificado (ventana de ~60 s de 4 días) y mostrado que no afecta nada reportado.</li>
+  <li>La cinemática de la fuente se trata a primer orden en β<sub>los</sub>. Lo que queda más
+  allá (corrimiento gravitacional + Doppler transverso) es exactamente constante para una órbita
+  circular, 4.08×10<sup>−4</sup>, y por lo tanto exactamente degenerado con la masa de chirp: se
+  reporta como sesgo sobre 𝓜, no se aplica.</li>
+  <li>El Doppler entra en la forma de onda pero no en F, que se evalúa al w<sub>B</sub> nominal
+  fijo. Cuantificado: 1.0×10<sup>−4</sup> de error en |F| en el pulso, hasta
+  6.4×10<sup>−3</sup> en el peor punto de la mitad lensada.</li>
 </ul>
 </div>
 

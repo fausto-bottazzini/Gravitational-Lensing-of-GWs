@@ -24,7 +24,7 @@ about *reproducing* those two documents, not about the physics itself.
 |---|---|
 | `report/` | the results: `report.html` (interactive, presentation-style) and `report.pdf` (full detail), the two documents this project is presented from. `report_template.html` + `build_report.py` generate `report.html` by inlining `cases/*/caseX_animation_data.json` |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
-| `src/gwlens/` | the physics library: wave optics, orbits, the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
+| `src/gwlens/` | the physics library: wave optics (`waveoptics.py`), orbits (`geometry.py`), the source's line-of-sight kinematics (`doppler.py`), the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
 | `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |
 | `cases/case_B_monochromatic/` | the moving-lens case: script, figures, `RESULTS.md`, `provenance/` |
 | `tests/` | every correctness check referenced from `theory.tex` and the case `RESULTS.md` files |
@@ -48,7 +48,13 @@ lens, a 4-day, near-edge-on outer orbit), at two epochs of its inspiral:
   through the same diffraction pattern once per period, producing periodic
   "repeated lensing" amplification pulses — and exactly half of each orbit
   turns out to be unlensed entirely (the source is in front of the lens,
-  not behind it).
+  not behind it). It also shows the thing that is *bigger* than the
+  lensing: the same orbit moves the source along the line of sight at
+  v/c=0.0165, and the resulting Roemer/Doppler modulation writes 90 GW
+  cycles of phase against the lens's 0.017 — a factor of 5206. The pulses
+  are real and correctly computed; they are simply not the largest thing
+  the outer orbit does, which is a distinction this project got wrong until
+  late and now states in both directions.
 
 Each `RESULTS.md` states every number with a pointer to the function that
 produced it and the check behind it; nothing there is asserted without both.

@@ -46,6 +46,69 @@ claims:
       - run.py::main (rms/peak amplification computation)
       - "caseA_F_of_f.png (bottom panel, arg F -- added after an independent review found this panel cited but not actually plotted)"
     numbers: [peak_strain_amplification, rms_strain_amplification]
+  - id: geometric_optics_accuracy_at_this_y
+    statement: >
+      The whole band sits above w_geo_threshold=30, so every in-band F is the
+      geometric-optics asymptotic form; at y_A=1.589 it agrees with the exact
+      closed form to 1.9e-4 at f=10 Hz and 1.5e-5 at f_isco, and the
+      threshold discontinuity there would be 3.1e-4 (the threshold is never
+      crossed in band). Quoted at THIS y on purpose: the 3.1% reported by
+      check_hybrid_matches_at_threshold is the worst case over y and is set
+      entirely by y=0.3, where the two images are close together and highly
+      magnified so stationary phase is weakest -- a y nothing in this project
+      evaluates. Added 2026-09-07 after theory.tex was found quoting "0.4%"
+      and "3.1%" two lines apart, measured at different y, reading as a
+      contradiction.
+    evidence:
+      - run.py::main
+      - tests/test_waveoptics.py::check_geometric_optics_limit
+      - tests/test_waveoptics.py::check_hybrid_matches_at_threshold
+    numbers: [geo_vs_exact_relerr_at_f_start, geo_vs_exact_relerr_at_f_isco,
+              geo_vs_exact_relerr_at_threshold_w30, w_at_f_start, w_at_f_isco]
+  - id: rms_amplification_equals_paczynski
+    statement: >
+      The RMS amplification is not a free number: by Parseval it is the
+      |H(f)|^2-weighted mean of |F(f)|^2 over the band, and in the
+      geometric-optics regime the interference term averages away over the
+      ~400 in-band fringes, leaving mu_+ + |mu_-| -- the Paczynski (1986)
+      total magnification A(y_A). So rms_strain_amplification must equal
+      sqrt(A(y_A)) with nothing fitted: 1.0554959 vs 1.0558485, a relative
+      3.3e-4 (9.6e-9 on the TaylorF2 fallback, whose band has no ringdown
+      power above f_isco to unbalance the fringe average). This is the one
+      end-to-end validation of the whole pipeline -- waveform generator, F
+      evaluator, Fourier convention, reference phase, window -- against an
+      independent textbook result; every other check in this repo validates
+      one component against another. Added 2026-09-07: the prediction was
+      always available and never stated.
+    evidence:
+      - run.py::main
+      - src/gwlens/waveoptics.py::total_magnification_paczynski
+      - tests/test_waveoptics.py::check_paczynski_magnification
+      - Paczynski (1986)
+    numbers: [rms_strain_amplification, total_magnification_paczynski,
+              rms_amplification_predicted, rms_amplification_relerr]
+  - id: source_kinematics_negligible_here
+    statement: >
+      Case A can treat the source as kinematically static -- a claim about
+      the source's MOTION, separate from the static-lens claim about the
+      geometry, and checked separately rather than inherited from it. The
+      merger sits at the outer-orbital phase where the line-of-sight
+      velocity crosses zero (mean beta_los over the chirp 2.3e-6); over a
+      15 s window a constant delay and a constant slope are exactly
+      degenerate with t_c and with the chirp mass, so only the curvature
+      survives, at 8.6e-6 s = 0.0068 rad at f_isco. Reported, not applied:
+      resampling h(t) onto a retarded grid would introduce interpolation
+      error larger than the effect. The constant orbital redshift
+      (4.08e-4) is likewise degenerate with the chirp mass -- an M_chirp
+      bias, not a waveform feature. Added 2026-09-07, when Case B showed
+      the same orbit's kinematics dominate there; see wiki/log.md.
+    evidence:
+      - src/gwlens/doppler.py::roemer_residual
+      - src/gwlens/doppler.py::orbital_redshift_factor
+      - tests/test_doppler.py::check_case_A_roemer_is_negligible
+      - ../case_B_monochromatic/RESULTS.md (where the same effect dominates)
+    numbers: [mean_beta_los_over_chirp, roemer_residual_ptp_s,
+              roemer_residual_phase_at_fisco_rad, orbital_redshift_factor_minus_1]
   - id: causality_and_echo
     statement: >
       F(w,y) is referenced to the strong (minimum-time) image's own
@@ -169,7 +232,8 @@ figures:
       resolution chosen from the local fringe spacing 2*pi/(w*y).
     from_library: scipy.interpolate.interp1d, matplotlib (LogNorm colour scale).
     choices:
-      - "Radial/display grid resolution set from the fringe spacing at each w, after a first version aliased (see wiki/log.md)."
+      - "Radial/display grid resolution set from the fringe spacing at each w, after a first version aliased (see wiki/log.md). The left panel's DISPLAY grid was raised to n_grid=1201 on 2026-09-07: the fringe period in y shrinks with radius (0.050 at y=0.3, 0.028 at y=3), so the previous n_grid=481 gave dy=0.0125 -- only 2.2 samples per fringe on the outer rings, below what renders without moire. n_radial was already ample (dr=0.0011, ~26 per fringe); this was the display grid only."
+      - "savefig(bbox_inches='tight'): with set_aspect('equal') the axes are resized after tight_layout has computed positions, so both panels' x-axis label ($y_1$) was drawn below the canvas and cut off in the previously committed PNG. Fixed 2026-09-07."
       - "LogNorm color scale -- the central Einstein-ring spike otherwise saturates a linear scale."
       - "F_point_lens (exact) forced for r<0.5 regardless of w, not F_hybrid: at w=61.9 (left panel) F_hybrid always returns F_geometric_optics, which diverges as y->0 -- an earlier version of this figure plotted that divergence, cut off only by the innermost grid sample (1123 vs. the true finite pi*w=194.45), as if it were the regularized wave-optics value the caption describes; an independent review caught this (the figure demonstrated the opposite of its own caption). See wiki/log.md."
     supports: [y_A_value, w_regime]

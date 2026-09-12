@@ -54,6 +54,16 @@ run_checks() {
     echo "--- $f ---"
     "$PY" "$f"
   done
+  # theory/paraxial_validity.py is a validity check on the system parameters
+  # like everything above, not part of the physics pipeline -- but it writes
+  # the numbers theory.tex's paraxial table quotes, and that table says "run
+  # this script to regenerate them, not by hand". Until 2026-09-07 nothing in
+  # this script ran it, so those numbers could have gone stale against
+  # system.py with no reproduce path noticing. It lives here rather than in
+  # run_theory() because it needs no LaTeX, and a reader without a LaTeX
+  # install should still be regenerating it.
+  echo "--- theory/paraxial_validity.py ---"
+  "$PY" theory/paraxial_validity.py
 }
 
 run_cases() {

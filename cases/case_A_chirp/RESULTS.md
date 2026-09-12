@@ -44,6 +44,39 @@ projected approach — an explicit, stated choice of merger phase, not a fit;
 a different phase would move y_A elsewhere in Figure 3's pattern without
 changing the story.
 
+## The source is frozen too — a separate claim, checked separately
+
+"The lens is frozen" is about the *geometry*: y_A does not move. It says
+nothing about the source's **motion**, and in [Case B](../case_B_monochromatic/RESULTS.md)
+that motion — the same outer orbit, seen over days instead of seconds —
+turns out to imprint 90 GW cycles of Roemer/Doppler phase, dwarfing
+everything the lens does. So the claim that Case A can ignore it is not
+inherited from the static-lens argument and is not assumed; it is computed
+(`src/gwlens/doppler.py`, and
+`tests/test_doppler.py::check_case_A_roemer_is_negligible`):
+
+- The merger is placed at the outer orbit's phase of closest approach
+  (t/P_out = 0.25 — chosen for the lensing, not for this), which is exactly
+  where the line-of-sight velocity crosses zero. The mean over the chirp is
+  `mean_beta_los_over_chirp` = **2.3e-6**.
+- Over a 15 s window out of a 4-day orbit, a constant delay and a constant
+  slope in the delay are anyway **exactly degenerate** with t_c and with the
+  chirp mass — unmeasurable in a single event. Only the curvature (the
+  line-of-sight acceleration) is non-degenerate, and that residual is
+  `roemer_residual_ptp_s` = **8.6e-6 s**, i.e.
+  `roemer_residual_phase_at_fisco_rad` = **0.0068 rad** at the highest
+  in-band frequency.
+- It is therefore reported, not applied. Applying it would mean resampling
+  h(t) onto a retarded time grid, whose interpolation error would itself
+  exceed the 0.0068 rad being modelled.
+- The one kinematic effect that is *not* small is also not a waveform
+  feature: the gravitational redshift in the lens's potential plus the
+  transverse Doppler shift combine, for a circular geodesic, into
+  `(1-3GM_L/(a c²))^(-1/2)`, giving
+  `orbital_redshift_factor_minus_1` = **4.08e-4**. Constant ⇒ exactly
+  degenerate with the chirp mass ⇒ a bias on any inferred M_chirp, not
+  something visible in any figure here.
+
 ## Wave-optics parameter across the band
 
     w(f=10 Hz)      = 61.9
@@ -53,7 +86,19 @@ Both are well above the `w_geo_threshold=30` where `F_hybrid` switches from
 the exact closed form to the (independently validated, `tests/test_
 waveoptics.py::check_geometric_optics_limit`) geometric-optics asymptotic
 form — i.e. every F(f) value plotted below is the fast geometric-optics
-formula, not a slow mpmath evaluation, and is accurate to <4% by that test.
+formula, not a slow mpmath evaluation.
+
+How accurate that is, stated at the y this case actually uses rather than as
+a single worst-case number: at y_A=1.589 the exact and geometric-optics
+evaluators agree to `geo_vs_exact_relerr_at_f_start` = **1.9e-4** and
+`geo_vs_exact_relerr_at_f_isco` = **1.5e-5**, the error falling with w as an
+asymptotic expansion should. The `check_hybrid_matches_at_threshold` figure
+of 3.1% is the *worst case over y* at the threshold itself, and it is set
+entirely by y=0.3 — where the two images sit close together and highly
+magnified, so stationary phase is at its weakest, a y nothing here
+evaluates. At y_A that same threshold discontinuity is
+`geo_vs_exact_relerr_at_threshold_w30` = **3.1e-4**, and the threshold is
+never crossed in band anyway.
 
 This means Case A does **not** show a clean, few-fringe diffraction pattern
 (that is Case B's regime), and -- worth being precise about, since an
@@ -85,9 +130,32 @@ individual samples of that oscillation, not its envelope).
 
 - **Peak-sample amplification: 1.065** (the single largest |h(t)| sample is
   larger lensed than unlensed).
-- **RMS amplification: 1.056** (power averaged over the whole waveform —
+- **RMS amplification: 1.0555** (power averaged over the whole waveform —
   by Parseval's theorem this depends only on |F(f)|, so it is identical
   whichever Fourier-phase reference convention is used; see below).
+
+  This one is **not a free number**, and checking it against its closed form
+  is the only end-to-end validation of this entire pipeline — waveform
+  generator, F evaluator, Fourier convention, reference phase, window —
+  against an independent textbook result. By Parseval, the squared RMS ratio
+  is the |H(f)|²-weighted mean of |F(f)|² across the band; in the
+  geometric-optics regime (which the whole in-band F is, above),
+  |F|² = μ₊ + |μ₋| + 2√(μ₊|μ₋|)·sin(2πf·ΔT), and the oscillating term
+  averages away over the ~400 fringes in the band, leaving exactly
+  μ₊ + |μ₋| — the Paczynski (1986) **total magnification** A(y_A), which
+  `src/gwlens/waveoptics.py::total_magnification_paczynski` implements
+  independently and `tests/test_waveoptics.py::check_paczynski_magnification`
+  separately verifies against the image sum. So
+
+      rms_strain_amplification  =  sqrt(A(y_A))
+      1.0554959                 vs 1.0558485        (relative 3.3e-4)
+
+  (`total_magnification_paczynski`, `rms_amplification_predicted`,
+  `rms_amplification_relerr` in `numbers.json`), with nothing fitted and no
+  free parameter. The residual is the finite-fringe-count sampling of that
+  average — running the same script on the TaylorF2 fallback, whose band is
+  exactly [10 Hz, f_isco] with no ringdown power above it, brings the
+  agreement to 9.6e-9.
 
 F(f) modulates **phase** as well as amplitude, so the lensed waveform is a
 dephased, not simply rescaled, copy of the unlensed one
@@ -102,7 +170,7 @@ cannot wind all the way around).
 **A note on the reference phase, causality, and a genuine echo.** `F(w,y)`
 is referenced to the strong (minimum-time) image's own arrival: it carries
 zero phase there by construction (`src/gwlens/waveoptics.py`,
-"REFERENCE-PHASE NORMALIZATION FIX"), so the combined lensed merger peaks
+"Reference phase"), so the combined lensed merger peaks
 at *exactly* the unlensed merger time
 (`peak_time_lensed_minus_unlensed_s=0.0`). Case A's lensed signal is the
 coherent sum of that strong image and a weak (saddle-point) image,

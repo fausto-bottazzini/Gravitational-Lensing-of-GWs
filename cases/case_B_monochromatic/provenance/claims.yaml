@@ -45,7 +45,80 @@ claims:
       - D'Orazio & Loeb (2020), "Repeated gravitational lensing of
         gravitational waves in hierarchical black hole triples"
     numbers: [max_abs_F, mean_abs_F2_over_observation, rms_amplification_over_observation]
+  - id: doppler_dominates_the_lensing
+    statement: >
+      The same outer orbit that produces the lensing pulses also moves the
+      source along the line of sight at beta_los=0.0165, imprinting a Roemer
+      (light-travel-time) modulation of 1810 s peak-to-peak = 90.5 GW cycles
+      of phase at f_B. That is 5206x the phase the lens itself writes
+      (arg F/2pi, 0.0174 cycles) and 527x the image time delay Delta_T=3.43 s
+      at the pulse. The Doppler frequency swing (0.0035 Hz) also exceeds the
+      whole intrinsic chirp drift across the observation (0.0020 Hz).
+      Added 2026-09-07; before that this case modelled only the lensing and
+      described it as the outer orbit's signature, understating the orbit's
+      actual imprint by two to three orders of magnitude.
+    evidence:
+      - src/gwlens/doppler.py::roemer_delay
+      - src/gwlens/doppler.py::emission_time
+      - tests/test_doppler.py::check_roemer_dwarfs_the_image_delay
+      - caseB_doppler_vs_lensing.png
+      - D'Orazio & Loeb (2020), Appendix A -- the same paper this case
+        follows for repeated lensing models the Doppler boost alongside it
+    numbers: [roemer_delay_ptp_s, roemer_phase_ptp_cycles, beta_los_max,
+              lens_phase_ptp_cycles, roemer_over_lens_phase_ratio,
+              roemer_over_image_delay_ratio, image_delay_at_pulse_s,
+              doppler_freq_swing_Hz, intrinsic_freq_drift_Hz]
+  - id: doppler_is_pure_timing
+    statement: >
+      Doppler is applied by evaluating the waveform at the retarded emission
+      time and multiplying by nothing else -- licensed by the identity
+      dt_em/dt_obs = 1/(1+beta_los), verified to 5.5e-11. Being pure timing,
+      it changes the strain envelope by only 1.2e-5, so every amplitude
+      result in this case (pulse heights, <|F|^2>, RMS amplification, all
+      diffraction figures) is unchanged by its addition; the waveform PHASE
+      changes by 93.8 cycles. The remaining second-order and gravitational
+      piece is exactly constant for a circular orbit
+      ((1-3GM_L/(a c^2))^(-1/2) - 1 = 4.08e-4), hence exactly degenerate
+      with the chirp mass: reported as an M_chirp bias, deliberately not
+      applied.
+    evidence:
+      - src/gwlens/doppler.py::emission_time
+      - src/gwlens/doppler.py::orbital_redshift_factor
+      - tests/test_doppler.py::check_retarded_time_is_the_whole_first_order_doppler
+      - tests/test_doppler.py::check_envelope_unaffected_by_roemer
+    numbers: [emission_time_iterations, doppler_envelope_max_fractional_change,
+              doppler_phase_ptp_cycles_vs_static, orbital_redshift_factor_minus_1]
+  - id: fixed_w_approximation_quantified
+    statement: >
+      F is evaluated at the fixed nominal w_B, with neither the 4% intrinsic
+      drift nor the Doppler shift fed back into it -- the same omission
+      D'Orazio & Loeb (2020) make, for the same reason (lensing only happens
+      where the line-of-sight velocity crosses zero, which for this
+      near-edge-on circular orbit is exactly the pulse's orbital phase).
+      Quantified rather than left as that argument: evaluating F at the true
+      instantaneous observed frequency changes |F| by 1.0e-4 at the pulse,
+      but by up to 6.4e-3 at the worst point of the lensed half, far from the
+      pulse where |F| sits on a steep fringe flank at a value near 1 that
+      carries no weight in any result quoted. Both numbers reported; quoting
+      only the first would overclaim.
+    evidence:
+      - run.py::main
+      - D'Orazio & Loeb (2020), main text (the argument this quantifies)
+    numbers: [abs_F_relerr_from_fixed_w_at_pulse, abs_F_relerr_from_fixed_w_max]
 figures:
+  - file: caseB_doppler_vs_lensing.png
+    produced_by: run.py::main
+    shows: >
+      The phase the outer orbit writes on the waveform, in GW cycles, from
+      each of the two mechanisms it drives: Roemer/Doppler (90.5 cycles) and
+      lensing (arg F/2pi, 0.0174 cycles), with an inset at 3392x zoom so the
+      lensing curve is shown resolved rather than only shown to be flat.
+    from_scratch: The Roemer delay from the orbit (doppler.py) and arg F from the wave-optics evaluator.
+    from_library: matplotlib.
+    choices:
+      - "Plotted in GW CYCLES, not seconds, so both curves are bounded and directly comparable. Delta_T(y(t)) is reported as a number but deliberately NOT plotted: it increases with y and so formally diverges toward each D_LS->0 crossing, where the second image's magnification goes to zero -- that divergence is the second image ceasing to exist, not a large observable delay, and a raw Delta_T(t) curve puts it on screen as if it dominated, the exact opposite of the finding."
+      - "Linear y-axis, not symlog: the Roemer delay is a pure sinusoid and symlog renders it as a flat-topped square wave, misstating the shape of the very curve the figure is about."
+    supports: [doppler_dominates_the_lensing]
   - file: caseB_repeated_pulses.png
     produced_by: run.py::main
     shows: "|F(w_B,y(t))|^2 over the full 6-period observation."
