@@ -67,10 +67,12 @@ def spa_phase(f_hz, m1_msun, m2_msun, t_c, phi_c=0.0):
 
 
 def spa_amplitude(f_hz, m1_msun, m2_msun, d_eff_mpc):
-    """|h(f)| ~ f^(-7/6) SPA amplitude -- the same formula as
-    chirp.restricted_pn_amplitude_fd, re-derived here in terms of (m1,m2)
-    directly rather than the chirp mass, for a self-contained module; the
-    two are cross-checked for consistency in tests/test_taylorf2.py."""
+    """|h(f)| ~ f^(-7/6) SPA amplitude, parametrized by (m1, m2).
+"
+    The single definition of the frequency-domain amplitude scaling in this
+    repo. Note this is NOT the time-domain envelope, which grows towards
+    merger: that one is chirp.restricted_pn_amplitude_td.
+    """
     mchirp = (m1_msun * m2_msun) ** 0.6 / (m1_msun + m2_msun) ** 0.2
     Mc_sec = units.msun_to_seconds(mchirp)
     D_sec = d_eff_mpc * units.MPC_SI / units.C_SI

@@ -80,26 +80,13 @@ def check_ifft_reconstructs_chirp_at_tc():
     return ok, f"peak times at pad_mult=[2,4,8]: {peak_times_f} (t_c={t_c:.3f}); spread={spread:.4f}s"
 
 
-def check_amplitude_consistency_with_chirp_module():
-    """taylorf2.spa_amplitude and chirp.restricted_pn_amplitude_fd are two
-    independently-written implementations of the same f^-7/6 SPA scaling
-    (one parametrized by (m1,m2), the other by Mchirp) -- must agree."""
-    m1, m2 = 20.0, 15.0
-    Mc = chirp.chirp_mass(m1, m2)
-    f = np.array([10.0, 50.0, 100.0])
-    a1 = taylorf2.spa_amplitude(f, m1, m2, 5.0e-3)
-    a2 = chirp.restricted_pn_amplitude_fd(f, Mc, 5.0e-3)
-    relerr = np.max(np.abs(a1 - a2) / np.abs(a2))
-    ok = relerr < 1e-10
-    return ok, f"max relative error taylorf2.spa_amplitude vs chirp.restricted_pn_amplitude_fd = {relerr:.2e}"
-
-
 def check_pn_terms_are_small_corrections():
-    """Sanity bound, not a precision claim: at f=20 Hz for a 20+15 Msun
-    binary, v is small enough that the 1PN/1.5PN/2PN terms are genuine
-    (order tens of percent, not order-unity or larger) corrections to the
-    leading term -- if this failed the PN expansion would not be a sensible
-    approximation for this system at this frequency at all."""
+    """A precondition, not a verification: the PN series is only meaningful
+    while its terms are corrections. At f=20 Hz for a 20+15 Msun binary, v
+    must be small enough that the 1PN, 1.5PN and 2PN terms stay at the tens
+    of percent level rather than order unity. If this failed, nothing else
+    in taylorf2.py would mean anything for this system at this frequency,
+    however correctly it were implemented."""
     m1, m2 = 20.0, 15.0
     mtot = m1 + m2
     eta = m1 * m2 / mtot ** 2
@@ -115,7 +102,6 @@ def check_pn_terms_are_small_corrections():
 CHECKS = [
     ("leading_order_group_delay", check_leading_order_group_delay),
     ("ifft_reconstructs_chirp_at_tc", check_ifft_reconstructs_chirp_at_tc),
-    ("amplitude_consistency_with_chirp_module", check_amplitude_consistency_with_chirp_module),
     ("pn_terms_are_small_corrections", check_pn_terms_are_small_corrections),
 ]
 

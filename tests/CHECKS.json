@@ -5,7 +5,7 @@
   },
   "causality_of_lensed_pulse_low_w": {
     "passed": true,
-    "message": "w(f0)=6.19 (<30, so F_point_lens is exercised); strong image at t_ref+0.0000s, amplitude 1.0845 (expect sqrt(mu_+)=1.0820); weak image AFTER = 0.2542 (expect sqrt(mu_-)=0.4133), BEFORE = 0.0005 (expect ~0) -- dT=2.049s"
+    "message": "w(f0)=6.19 (<30, so F_point_lens is exercised); strong image at t_ref+0.0000s, amplitude 1.0845 (expect sqrt(mu_+)=1.0820, tol 2%); trailing/leading energy ratio = 4.0e+04 (require > 1e4). For information only: peak of the trailing response is 0.2542, vs the geometric-optics sqrt(mu_-)=0.4133 it is NOT expected to reach at this w -- dT=2.049s"
   },
   "paczynski_magnification": {
     "passed": true,
@@ -33,6 +33,6 @@
   },
   "hybrid_matches_at_threshold": {
     "passed": true,
-    "message": "max relative error |F_point_lens-F_geometric_optics| at w=30, over y in [0.3,1,1.6,2.5] = 3.10e-02 (tol 4e-2)"
+    "message": "relative error |F_point_lens-F_geometric_optics| at w=30 -- y=0.3: 3.1e-02, y=1.0: 2.6e-03, y=1.589: 3.1e-04, y=1.6: 3.0e-04, y=2.5: 5.6e-04 (max 3.10e-02, tol 4e-2). The max is set by the smallest y; at Case A's y_A=1.589 the switch is smooth to 3.1e-04."
   }
 }

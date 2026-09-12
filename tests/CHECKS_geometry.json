@@ -23,8 +23,12 @@
     "passed": true,
     "message": "theta_E(2M)/theta_E(M) = 1.4142135624 (expect sqrt(2)=1.4142135624)"
   },
-  "time_varying_impact_parameter": {
+  "one_lensing_pulse_per_outer_period": {
     "passed": true,
-    "message": "lensed fraction=0.497 (expect ~0.5), finite&positive y on lensed half: True"
+    "message": "1 minimum of y per outer period (expect exactly 1) at t/P=0.2499 (expect 0.25); y_min=1.178753 vs closed form 1.178720, relative error 2.8e-05; lensed fraction 0.500"
+  },
+  "impact_parameter_closed_form_and_D_L_independence": {
+    "passed": true,
+    "message": "max relative error vs y = rho/sqrt(4GM_L D_LS/c^2): 5.29e-16; max relative change when D_L goes 5000 pc -> 500 pc: 4.25e-16 (y must be independent of D_L; both tol 1e-13)"
   }
 }

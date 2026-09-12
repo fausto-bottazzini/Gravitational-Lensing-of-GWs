@@ -10,25 +10,98 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import numpy as np
 from gwlens import system, chirp, units
 
 
 def check_hierarchy():
-    """a_in << a_out at both epochs used (Case A start and Case B) -- the
-    condition for treating the binary as a single point source (no tidal /
-    differential-lensing effects across it)."""
-    a_in_A = system.inner_separation_m(system.F_A_START_HZ, system.M1_MSUN, system.M2_MSUN)
-    a_in_B = system.inner_separation_m(system.F_B_HZ, system.M1_MSUN, system.M2_MSUN)
-    ratio_A = a_in_A / system.A_OUT_M
-    ratio_B = a_in_B / system.A_OUT_M
-    ok = ratio_A < 1e-3 and ratio_B < 1e-3
-    return ok, f"a_in/a_out at Case A start = {ratio_A:.2e}, at Case B = {ratio_B:.2e} (require < 1e-3)"
+    """The triple has to actually BE a hierarchical triple -- tested against
+    the real criteria, not against the `a_in/a_out < 1e-3` proxy this check
+    used until 2026-09-07. That proxy is not the stability condition, and a
+    system could satisfy it while being dynamically unstable or having its
+    inner binary tidally unbound by the tertiary; both would invalidate the
+    whole setup, not just a detail of it. Three things, at both epochs:
+
+      1. Dynamical stability, Mardling & Aarseth (2001):
+             a_out/a_in > 2.8 [(1+q_out)(1+e_out)/sqrt(1-e_out)]^(2/5),
+         q_out = M_binary/M_lens. Margin here is ~1700x at Case B.
+      2. The inner binary sits well inside its own Hill radius about the
+         tertiary, a_in << a_out (M_b/3M_L)^(1/3) -- i.e. it is bound to
+         itself, not tidally stripped. Margin ~290x at Case B.
+      3. a_in << a_out, the ORIGINAL point-source condition (both members
+         deflected identically, no differential lensing across the binary).
+         Kept, but now as one of three rather than standing in for all of
+         them.
+    """
+    # q_out = m3/(m1+m2), the definition in Mardling & Aarseth (2001) Eq. 90.
+    q_out = system.M_LENS_MSUN / system.MTOT_MSUN
+    e = system.E_OUT
+    crit = 2.8 * ((1.0 + q_out) * (1.0 + e) / np.sqrt(1.0 - e)) ** 0.4
+    r_hill = system.A_OUT_M * (system.MTOT_MSUN / (3.0 * system.M_LENS_MSUN)) ** (1.0 / 3.0)
+
+    worst_stab, worst_hill, worst_point = np.inf, np.inf, 0.0
+    for f in (system.F_A_START_HZ, system.F_B_HZ):
+        a_in = system.inner_separation_m(f, system.M1_MSUN, system.M2_MSUN)
+        worst_stab = min(worst_stab, (system.A_OUT_M / a_in) / crit)
+        worst_hill = min(worst_hill, r_hill / a_in)
+        worst_point = max(worst_point, a_in / system.A_OUT_M)
+
+    ok = worst_stab > 10.0 and worst_hill > 10.0 and worst_point < 1e-3
+    return ok, (f"Mardling-Aarseth stability: {worst_stab:.0f}x the critical "
+                f"a_out/a_in={crit:.2f} at the tighter epoch; inner binary "
+                f"{worst_hill:.0f}x inside its Hill radius about the lens; "
+                f"a_in/a_out = {worst_point:.2e} (point source). Requires "
+                f"10x margin on the first two, <1e-3 on the third.")
+
+
+def check_outer_orbit_is_static_over_the_observation():
+    """Everything here models the outer orbit as a FIXED Keplerian ellipse
+    and the inner binary as circular. Two things could break that on the
+    timescales involved, and neither was checked anywhere before 2026-09-07:
+
+      1. The outer orbit radiates too. Its own GW inspiral time
+         tau = (5/256) c^5 a^4 / (G^3 M_L M_b (M_L+M_b)) must be enormously
+         longer than anything observed here, or a_out is not fixed.
+      2. Kozai-Lidov oscillations would pump the inner binary's eccentricity
+         on t_KL ~ (8/15pi)((M_b+M_L)/M_L)(P_out^2/P_in)(1-e_out^2)^(3/2),
+         which would invalidate the circular-inspiral waveform. Here that is
+         16 yr -- not negligible against the 240 d to merger on its own (4%),
+         which is exactly why the second half of the argument matters: KL is
+         quenched when the inner binary's own GR periastron precession is
+         faster, t_GR = P_in a_in c^2 (1-e^2)/(3 G M_b) << t_KL, and here it
+         is faster by ~3e4. Quoting only the first ratio would have made this
+         look marginal; quoting only the second would have skipped why it is
+         needed.
+    """
+    G, c, Msun = units.G_SI, units.C_SI, units.M_SUN_SI
+    M_L, M_b = system.M_LENS_MSUN * Msun, system.MTOT_MSUN * Msun
+    a_out, P_out = system.A_OUT_M, system.P_OUT_S
+
+    tau_out = (5.0 / 256.0) * c ** 5 * a_out ** 4 / (G ** 3 * M_L * M_b * (M_L + M_b))
+    tau_inner_merger = chirp.time_to_merger(system.F_B_HZ, system.MCHIRP_MSUN)
+    decay_frac = tau_inner_merger / tau_out
+
+    P_in = 2.0 / system.F_B_HZ            # GW frequency is twice the orbital
+    t_kl = (8.0 / (15.0 * np.pi)) * ((M_b + M_L) / M_L) * P_out ** 2 / P_in
+    a_in = system.inner_separation_m(system.F_B_HZ, system.M1_MSUN, system.M2_MSUN)
+    t_gr = P_in * a_in * c ** 2 / (3.0 * G * M_b)
+
+    ok = decay_frac < 1e-4 and (t_kl / t_gr) > 100.0
+    return ok, (f"outer orbit's own GW decay time = {tau_out/units.YEAR_SI:.2e} yr, of which "
+                f"{decay_frac:.1e} elapses before the inner binary merges (require <1e-4, so "
+                f"a_out is fixed); Kozai-Lidov t_KL = {t_kl/units.YEAR_SI:.1f} yr is "
+                f"{t_kl/tau_inner_merger:.0f}x the time to merger, and further quenched "
+                f"by inner GR precession, t_KL/t_GR = {t_kl/t_gr:.1e} "
+                f"(require >100)")
 
 
 def check_static_lens_regime():
-    """Case A: total merger duration (from f_A_start to formal coalescence)
-    must be a tiny fraction of the outer orbital period -- the lens must not
-    move at all during the observed chirp."""
+    """Not a check on any code: an assertion that the pinned system sits in
+    the regime Case A claims. The merger duration, from f_A_start to formal
+    coalescence, must be a tiny fraction of the outer orbital period, so
+    that the lens does not move during the observed chirp. Recorded here
+    because the report states it; it would fail if someone changed the
+    system parameters out from under that claim."""
     tau_A = chirp.time_to_merger(system.F_A_START_HZ, system.MCHIRP_MSUN)
     frac = tau_A / system.P_OUT_S
     ok = frac < 1e-3
@@ -36,9 +109,10 @@ def check_static_lens_regime():
 
 
 def check_quasi_monochromatic_regime():
-    """Case B: time-to-merger from f_B must span several outer periods (so
-    the orbital modulation is actually observable) while f itself barely
-    changes over that span (checked separately, via the frequency drift)."""
+    """The same kind of assertion as the previous check, for Case B: the
+    time to merger from f_B must span several outer periods, so the orbital
+    modulation is observable at all, while f itself barely changes over the
+    observing baseline."""
     tau_B = chirp.time_to_merger(system.F_B_HZ, system.MCHIRP_MSUN)
     n_periods_to_merger = tau_B / system.P_OUT_S
     # fractional frequency drift over the ACTUAL Case B observing baseline
@@ -46,7 +120,6 @@ def check_quasi_monochromatic_regime():
     # time to merger -- an earlier version of this check used tau_B/2 and
     # failed because f formally diverges as t->t_c regardless of how the
     # observing window is chosen (see wiki/log.md).
-    import numpy as np
     f_start = chirp.freq_of_time(np.array([0.0]), tau_B, system.MCHIRP_MSUN)[0]
     f_end = chirp.freq_of_time(np.array([system.T_OBS_B_S]), tau_B, system.MCHIRP_MSUN)[0]
     drift = abs(f_end - f_start) / f_start
@@ -59,19 +132,27 @@ def check_quasi_monochromatic_regime():
 
 
 def check_wave_optics_regime_nontrivial():
-    """Neither epoch should sit in the trivial w->0 (F~1 everywhere, no
-    lensing at all worth showing) or so deep in w>>1 that F is numerically
-    indistinguishable from the pure geometric-optics envelope -- i.e. w is
-    not absurd at either epoch (a loose sanity bound, not a design target)."""
+    """The two epochs must land on OPPOSITE sides of the optics transition,
+    which is the whole reason for studying both. Case B must be in the
+    diffractive regime, w_B < 1, where neither geometric optics nor the
+    long-wavelength limit applies and the exact F is needed; Case A must be
+    above w=30, the threshold at which F_hybrid switches to the asymptotic
+    form, for its whole band. The earlier version of this check only asked
+    that w be somewhere between 1e-2 and 1e4 at each epoch, which is no
+    constraint at all."""
     from gwlens import waveoptics as wo
     w_B = wo.w_of_frequency(system.F_B_HZ, system.M_LENS_MSUN)
     w_A_start = wo.w_of_frequency(system.F_A_START_HZ, system.M_LENS_MSUN)
-    ok = 1e-2 < w_B < 1e2 and 1e-2 < w_A_start < 1e4
-    return ok, f"w_B={w_B:.3f}, w_A_start={w_A_start:.3f}"
+    w_A_isco = wo.w_of_frequency(system.F_ISCO_HZ, system.M_LENS_MSUN)
+    ok = w_B < 1.0 and w_A_start > 30.0 and w_A_isco > w_A_start
+    return ok, (f"w_B={w_B:.3f} (require <1, diffractive); Case A band "
+                f"w={w_A_start:.1f} to {w_A_isco:.1f} (require >30 throughout, "
+                f"geometric optics)")
 
 
 CHECKS = [
     ("hierarchy", check_hierarchy),
+    ("outer_orbit_is_static_over_the_observation", check_outer_orbit_is_static_over_the_observation),
     ("static_lens_regime", check_static_lens_regime),
     ("quasi_monochromatic_regime", check_quasi_monochromatic_regime),
     ("wave_optics_regime_nontrivial", check_wave_optics_regime_nontrivial),

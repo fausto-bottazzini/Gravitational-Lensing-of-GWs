@@ -44,10 +44,12 @@ def check_low_w_limit():
 
 def check_geometric_optics_limit():
     """F_point_lens (exact) vs F_geometric_optics (independent stationary-
-    phase derivation) must agree, and the relative error must SHRINK as w
-    grows (it's an asymptotic expansion). Both are referenced to the strong
-    image's own arrival (see module docstring, "REFERENCE-PHASE
-    NORMALIZATION FIX")."""
+    phase derivation) must agree, and the error at the largest w must be
+    smaller than at the smallest, as an asymptotic expansion requires. It is
+    not monotonic in between: |F| oscillates and so does the relative error,
+    so what this asserts is the two endpoints and a ceiling, not
+    monotonicity. Both evaluators are referenced to the strong image's own
+    arrival (see the module docstring of waveoptics.py)."""
     y = 1.0
     ws = [10, 50, 200, 1000]
     errs = []
@@ -116,13 +118,25 @@ def check_hybrid_matches_at_threshold():
     earlier version of this check compared w=19.9 to w=20.1 and mixed the
     two effects together)."""
     w = 30.0
-    worst = 0.0
-    for y in [0.3, 1.0, 1.6, 2.5]:
+    ys = [0.3, 1.0, 1.589, 1.6, 2.5]
+    errs = {}
+    for y in ys:
         exact = wo.F_point_lens(w, y)
-        geo_approx = wo.F_geometric_optics(w, y)
-        worst = max(worst, abs(exact - geo_approx) / abs(exact))
+        errs[y] = abs(exact - wo.F_geometric_optics(w, y)) / abs(exact)
+    worst = max(errs.values())
     ok = worst < 0.04
-    return ok, f"max relative error |F_point_lens-F_geometric_optics| at w=30, over y in [0.3,1,1.6,2.5] = {worst:.2e} (tol 4e-2)"
+    # Report per-y, not just the max: the max is dominated by the SMALLEST y,
+    # where the two images are close together and highly magnified and so the
+    # stationary-phase approximation is at its worst. Quoting only that number
+    # (as this check used to) makes the switch look ~100x cruder than it is
+    # anywhere the project actually evaluates F -- at Case A's y_A=1.589 the
+    # discontinuity at the threshold is 3.1e-4, and Case A's whole band sits
+    # above w=30 in any case. y=0.3 is kept in the list precisely because it
+    # is the hard case, not because anything here uses it.
+    detail = ", ".join(f"y={y}: {errs[y]:.1e}" for y in ys)
+    return ok, (f"relative error |F_point_lens-F_geometric_optics| at w=30 -- {detail} "
+                f"(max {worst:.2e}, tol 4e-2). The max is set by the smallest y; "
+                f"at Case A's y_A=1.589 the switch is smooth to {errs[1.589]:.1e}.")
 
 
 def _lensed_test_pulse(y, M_L_msun, f0, t_ref, sigma, w_evaluator, fs=4096.0, T=16.0):
@@ -213,7 +227,25 @@ def check_causality_of_lensed_pulse_low_w():
     use, and which the check above never exercises (an independent review
     found this: with y=1.0/f0=40Hz/M_L=5e4Msun, 1.6e-34 of the pulse's power
     sits below w_geo_threshold, see wiki/log.md). A lower carrier frequency
-    keeps the same M_L but puts the whole pulse's band below threshold."""
+    keeps the same M_L but puts the whole pulse's band below threshold.
+
+    What it does NOT assert, and why (fixed 2026-09-07, see wiki/log.md):
+    an earlier version of this check required the trailing response to reach
+    0.2*sqrt(mu_-), and passed with a measured 0.254 against an "expected"
+    0.413 -- a 38% miss inside a 5x-wide tolerance window, i.e. a check that
+    looked like an amplitude validation while validating nothing. The
+    expectation was the wrong one: sqrt(mu_-) is the GEOMETRIC-optics weak-
+    image amplitude, and at w~6 there are no separated images to have an
+    amplitude -- the second image is smeared over a time comparable to its
+    own delay, which is the entire content of being in the wave-optics
+    regime. Replaced by the assertion that is exact at any w: CAUSALITY.
+    All of the lensing-induced response must arrive after the strong image,
+    so the energy in the window preceding it must sit at the numerical floor.
+    That is what a conjugation error breaks, and it breaks it by orders of
+    magnitude, not by tens of percent. The geometric-optics comparison is
+    still reported in the message, as information rather than as a
+    pass/fail criterion.
+    """
     y = 1.0
     M_L_msun = 5.0e4
     f0, t_ref, sigma = 1.0, 6.0, 0.05
@@ -222,20 +254,28 @@ def check_causality_of_lensed_pulse_low_w():
 
     w_at_f0 = wo.w_of_frequency(f0, M_L_msun)
     t_strong, amp_strong = _local_peak(t, lensed, t_ref, 0.3)
-    t_after, amp_after = _local_peak(t, lensed, t_ref + dT_seconds, 0.3)
-    _, amp_before = _local_peak(t, lensed, t_ref - dT_seconds, 0.3)
     expected_strong = np.sqrt(mu_plus)
-    expected_weak = np.sqrt(mu_minus)
+
+    # energy strictly before / strictly after the strong image, excluding the
+    # pulse itself (+-5 sigma) so this measures the LENSING response only
+    pad = 5.0 * sigma
+    before = (t > t_ref - dT_seconds - pad) & (t < t_ref - pad)
+    after = (t > t_ref + pad) & (t < t_ref + dT_seconds + pad)
+    e_before = float(np.sum(lensed[before] ** 2))
+    e_after = float(np.sum(lensed[after] ** 2))
 
     strong_at_t_ref = abs(t_strong - t_ref) < 2.0 / 4096.0
-    strong_amp_ok = abs(amp_strong - expected_strong) < 0.1 * expected_strong
-    weak_after_ok = (amp_after > 0.2 * expected_weak) and (amp_before < 0.05 * expected_weak)
-    ok = (w_at_f0 < 30.0) and strong_at_t_ref and strong_amp_ok and weak_after_ok
+    strong_amp_ok = abs(amp_strong - expected_strong) < 0.02 * expected_strong
+    causal = e_after > 1e4 * e_before
+    ok = (w_at_f0 < 30.0) and strong_at_t_ref and strong_amp_ok and causal
+    _, amp_after = _local_peak(t, lensed, t_ref + dT_seconds, 0.3)
     return ok, (f"w(f0)={w_at_f0:.2f} (<30, so F_point_lens is exercised); strong image at "
                 f"t_ref+{t_strong - t_ref:.4f}s, amplitude {amp_strong:.4f} "
-                f"(expect sqrt(mu_+)={expected_strong:.4f}); weak image AFTER = {amp_after:.4f} "
-                f"(expect sqrt(mu_-)={expected_weak:.4f}), BEFORE = {amp_before:.4f} (expect ~0) "
-                f"-- dT={dT_seconds:.3f}s")
+                f"(expect sqrt(mu_+)={expected_strong:.4f}, tol 2%); trailing/leading "
+                f"energy ratio = {e_after / e_before:.1e} (require > 1e4). For information "
+                f"only: peak of the trailing response is {amp_after:.4f}, vs the "
+                f"geometric-optics sqrt(mu_-)={np.sqrt(mu_minus):.4f} it is NOT expected to "
+                f"reach at this w -- dT={dT_seconds:.3f}s")
 
 
 CHECKS = [

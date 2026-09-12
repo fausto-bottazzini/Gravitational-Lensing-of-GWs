@@ -1,7 +1,11 @@
 {
   "hierarchy": {
     "passed": true,
-    "message": "a_in/a_out at Case A start = 6.16e-06, at Case B = 2.11e-04 (require < 1e-3)"
+    "message": "Mardling-Aarseth stability: 93x the critical a_out/a_in=51.20 at the tighter epoch; inner binary 292x inside its Hill radius about the lens; a_in/a_out = 2.11e-04 (point source). Requires 10x margin on the first two, <1e-3 on the third."
+  },
+  "outer_orbit_is_static_over_the_observation": {
+    "passed": true,
+    "message": "outer orbit's own GW decay time = 4.00e+07 yr, of which 1.6e-08 elapses before the inner binary merges (require <1e-4, so a_out is fixed); Kozai-Lidov t_KL = 16.1 yr is 24x the time to merger, and further quenched by inner GR precession, t_KL/t_GR = 3.4e+04 (require >100)"
   },
   "static_lens_regime": {
     "passed": true,
@@ -13,6 +17,6 @@
   },
   "wave_optics_regime_nontrivial": {
     "passed": true,
-    "message": "w_B=0.309, w_A_start=61.896"
+    "message": "w_B=0.309 (require <1, diffractive); Case A band w=61.9 to 777.6 (require >30 throughout, geometric optics)"
   }
 }

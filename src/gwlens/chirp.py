@@ -8,8 +8,11 @@ evolution
 
     df/dt = (96/5) * pi^{8/3} * (G*Mchirp/c^3)^{5/3} * f^{11/3}      (*)
 
-(e.g. Peters 1964; Maggiore, "Gravitational Waves" Vol.1 Eq. 4.??-class
-result). Time-to-coalescence and f(t) below are obtained by directly
+(Peters 1964, Eq. (5.6)'s da/dt rewritten in terms of the GW frequency via
+Kepler's third law; also standard textbook material, e.g. Maggiore 2008
+Vol. 1 Ch. 4, cited by chapter rather than by equation number, which this
+project has no copy of to check).
+Time-to-coalescence and f(t) below are obtained by directly
 integrating (*), not copied from a table -- reproduced in
 tests/test_chirp.py by numerically integrating (*) with
 scipy.integrate.solve_ivp and checking it agrees with the closed form.
@@ -53,9 +56,9 @@ def freq_of_time(t, t_c, mchirp_msun):
     tau = np.clip(t_c - np.asarray(t, dtype=float), 1e-12, None)
     # f = (1/pi) * (5/256)^(3/8) * tau^(-3/8) * Mc_sec^(-5/8) -- solved for f
     # from time_to_merger(f)=tau by direct algebraic inversion (see the
-    # module docstring derivation). An earlier version got the exponents on
-    # (5/256) and Mc_sec backwards by folding them into one bracket; caught
-    # because f(t=0) did not reproduce the input f0 in tests/test_chirp.py.
+    # module docstring derivation). Written as separate factors on purpose:
+    # folded into one bracket, the exponents on (5/256) and Mc_sec are easy
+    # to get wrong, and tests/test_chirp.py exists partly to catch that.
     return (1.0 / np.pi) * (5.0 / 256.0) ** (3.0 / 8.0) * tau ** (-3.0 / 8.0) * Mc_sec ** (-5.0 / 8.0)
 
 
@@ -84,20 +87,6 @@ def phase_of_time(f_func, t0, t1, n=200_000):
     return tt, phase
 
 
-def restricted_pn_amplitude_fd(f_hz, mchirp_msun, d_eff_mpc):
-    """Restricted (leading-order, quadrupole) PN amplitude prefactor, the
-    standard textbook stationary-phase-approximation (SPA) scaling of the
-    FREQUENCY-DOMAIN Fourier transform, |h(f)| ~ A0 f^{-7/6}. NOT the
-    time-domain envelope (that INCREASES toward merger, see
-    `restricted_pn_amplitude_td` below) -- kept only for reference/any
-    future frequency-domain figure; the case scripts use the td version.
-    """
-    Mc_sec = units.msun_to_seconds(mchirp_msun)
-    D_sec = d_eff_mpc * units.MPC_SI / units.C_SI  # Mpc -> light-seconds
-    A0 = np.sqrt(5.0 / 24.0) / np.pi ** (2.0 / 3.0) * Mc_sec ** (5.0 / 6.0) / D_sec
-    return A0 * np.asarray(f_hz, dtype=float) ** (-7.0 / 6.0)
-
-
 def restricted_pn_amplitude_td(f_hz, mchirp_msun, d_eff_mpc):
     """Restricted (leading-order, quadrupole) TIME-DOMAIN strain envelope:
 
@@ -107,11 +96,10 @@ def restricted_pn_amplitude_td(f_hz, mchirp_msun, d_eff_mpc):
     O(1) inclination/polarization prefactors folded into the leading 4, not
     separately calibrated -- logged as a choice in wiki/log.md, along with
     everywhere else this project does not claim an absolutely calibrated
-    strain). Grows with f, as a real inspiral's amplitude must -- an earlier
-    version of the case script used `restricted_pn_amplitude_fd` (the
-    frequency-domain, DEcreasing f^-7/6 scaling) as if it were the
-    time-domain envelope; caught by eye (the plotted chirp's amplitude was
-    shrinking toward merger instead of growing) -- see wiki/log.md.
+    strain). It GROWS with f, as a real inspiral's amplitude must. Do not
+    substitute `taylorf2.spa_amplitude` here: that is the frequency-domain
+    f^-7/6 scaling, which decreases with f, and using it as a time-domain
+    envelope makes the plotted chirp shrink towards merger.
     """
     Mc_sec = units.msun_to_seconds(mchirp_msun)
     R_c_m = Mc_sec * units.C_SI  # G*Mchirp/c^2, metres

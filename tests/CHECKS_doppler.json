@@ -1,0 +1,22 @@
+{
+  "los_velocity_matches_the_orbit_code": {
+    "passed": true,
+    "message": "max relative |d(z_src)/dt - closed-form v_z| over e in [0,0.4] = 2.36e-10 (tol 1e-6)"
+  },
+  "retarded_time_is_the_whole_first_order_doppler": {
+    "passed": true,
+    "message": "max |dt_em/dt_obs - 1/(1+beta(t_em))| = 5.54e-11 (tol 1e-8); the same against beta(t_obs) would be 2.71e-04. Retarded-time residual |t_em + z/c - t_obs| = 5.82e-11 s after 8 iterations."
+  },
+  "roemer_dwarfs_the_image_delay": {
+    "passed": true,
+    "message": "Roemer p-p = 1809.8 s (closed form 2 a_src sin i/c = 1809.8 s) vs image delay Delta_T(y_min=1.589) = 3.434 s -> 527x; 90.5 GW cycles p-p at f_B=0.05 Hz"
+  },
+  "envelope_unaffected_by_roemer": {
+    "passed": true,
+    "message": "max fractional change in the strain envelope from the Roemer delay = 1.20e-05 (tol 1e-3)"
+  },
+  "case_A_roemer_is_negligible": {
+    "passed": true,
+    "message": "over the 15.2 s chirp: degenerate slope beta_los=2.27e-06 (absorbed into M_chirp), non-degenerate residual 8.64e-06 s -> 0.0068 rad at f_isco=125.6 Hz (require < 0.05 rad). Constant orbital redshift 4.076e-04: an M_chirp bias, not a waveform feature."
+  }
+}

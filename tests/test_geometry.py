@@ -59,28 +59,106 @@ def check_face_on_orbit_projects_full_ellipse():
 
 def check_einstein_radius_scaling():
     """theta_E ~ sqrt(M_L): doubling the lens mass at fixed geometry must
-    scale theta_E by exactly sqrt(2)."""
-    t1 = geo.einstein_radius_angle(1000.0, 1000.0, 8000.0)
-    t2 = geo.einstein_radius_angle(2000.0, 1000.0, 8000.0)
-    ratio = t2 / t1
+    scale theta_E by exactly sqrt(2). Exercised through
+    `impact_parameter_of_time`, which is the code path the cases actually
+    use and the only place theta_E is computed."""
+    a_out_pc = 1.0 * 4.84814e-6  # 1 AU in pc
+    t = np.array([0.25])          # quarter period: source behind the lens
+    args = (a_out_pc, 0.0, 1.0, np.deg2rad(87.0), 0.0, 0.0, 0.0)
+    _, _, tE1 = geo.impact_parameter_of_time(t, *args, 1000.0, 1000.0)
+    _, _, tE2 = geo.impact_parameter_of_time(t, *args, 2000.0, 1000.0)
+    ratio = tE2[0] / tE1[0]
     ok = abs(ratio - np.sqrt(2.0)) < 1e-10
     return ok, f"theta_E(2M)/theta_E(M) = {ratio:.10f} (expect sqrt(2)={np.sqrt(2):.10f})"
 
 
-def check_time_varying_impact_parameter():
-    """impact_parameter_of_time: roughly half an (i != 0) outer orbit must
-    be unlensed (source in front of the lens, D_LS<0), and y must stay
-    finite and positive throughout the lensed half."""
+def check_one_lensing_pulse_per_outer_period():
+    """The structural claim Case B rests on, which the previous version of
+    this check did not test: over one outer period, y(t) must have exactly
+    ONE minimum, it must sit at conjunction, and its value must be the
+    closed form obtained by putting theta = nu+omega = pi/2 into y(theta)
+    (theory.pdf Eq. 4.7),
+
+        y_min = sqrt(a_out c^2 / (4 G M_L)) * cos(i) / sqrt(sin i).
+
+    That is what makes the signal a train of separated pulses, one per
+    period, rather than a continuous modulation. Counting how much of the
+    orbit is lensed -- the old assertion, kept below as a third condition --
+    would pass for a y(t) with any number of minima, anywhere."""
+    from gwlens import units
     a_out_pc = 1.0 * 4.84814e-6  # 1 AU in pc
-    P_out = 4 * 86400.0
-    t = np.linspace(0, P_out, 400)
-    y, lensed, theta_E = geo.impact_parameter_of_time(
-        t, a_out_pc, e_out=0.0, period_out=P_out, i_out=np.deg2rad(89.0),
-        Omega_out=0.0, omega_out=0.0, t_peri=0.0, M_lens_msun=5.0e4, D_L_pc=5000.0)
-    frac = np.mean(lensed)
-    finite_and_positive = np.all(np.isfinite(y[lensed])) and np.all(y[lensed] > 0)
-    ok = abs(frac - 0.5) < 0.05 and finite_and_positive
-    return ok, f"lensed fraction={frac:.3f} (expect ~0.5), finite&positive y on lensed half: {finite_and_positive}"
+    a_out_m = a_out_pc * units.PC_SI
+    P_out, i_out, M_L = 4 * 86400.0, np.deg2rad(87.0), 5.0e4
+    t = np.linspace(0.0, P_out, 4001, endpoint=False)
+    y, lensed, _ = geo.impact_parameter_of_time(
+        t, a_out_pc, 0.0, P_out, i_out, 0.0, 0.0, 0.0, M_L, 5000.0)
+
+    # local minima of y on the lensed half
+    interior = np.where(lensed)[0]
+    interior = interior[(interior > 0) & (interior < len(t) - 1)]
+    minima = [k for k in interior if y[k] < y[k - 1] and y[k] < y[k + 1]]
+    n_min = len(minima)
+
+    # e=0 and omega=0, so theta = 2*pi*t/P and conjunction is t = P/4
+    t_min = t[minima[0]] if n_min == 1 else float("nan")
+    phase_err = abs(t_min / P_out - 0.25) if n_min == 1 else np.inf
+
+    y_closed = (np.sqrt(a_out_m / (4.0 * units.msun_to_meters(M_L)))
+                * np.cos(i_out) / np.sqrt(np.sin(i_out)))
+    y_err = abs(y[minima[0]] - y_closed) / y_closed if n_min == 1 else np.inf
+
+    frac = float(np.mean(lensed))
+    ok = (n_min == 1 and phase_err < 1e-3 and y_err < 1e-4
+          and abs(frac - 0.5) < 0.05
+          and np.all(np.isfinite(y[lensed])) and np.all(y[lensed] > 0))
+    return ok, (f"{n_min} minimum of y per outer period (expect exactly 1) at "
+                f"t/P={t_min/P_out:.4f} (expect 0.25); y_min={y[minima[0]]:.6f} vs "
+                f"closed form {y_closed:.6f}, relative error {y_err:.1e}; "
+                f"lensed fraction {frac:.3f}")
+
+
+def check_impact_parameter_closed_form_and_D_L_independence():
+    """`impact_parameter_of_time` is the one place this project's geometry
+    genuinely departs from textbook lensing, and until now the only thing
+    checked about it was that ~half the orbit comes out lensed -- which a
+    formula off by any overall factor would still satisfy. Two assertions
+    that would not:
+
+    1. Substituting theta = rho/D_L and theta_E^2 = 4GM_L D_LS/(c^2 D_L^2)
+       into y = theta/theta_E gives, exactly,
+
+           y = rho / sqrt(4 G M_L D_LS / c^2)
+
+       with every distance in metres and D_L cancelling identically. Checked
+       against the function's own output to machine precision.
+    2. Therefore y must not depend on D_L AT ALL. This is the physically
+       non-obvious content -- in cosmological lensing y very much does depend
+       on the distances -- and it is what a stray D_L, a D_L/D_S mix-up, or a
+       pc/metre slip in either factor would break. Checked by moving the
+       whole triple from 5 kpc to 500 pc and requiring y to be unchanged.
+    """
+    from gwlens import units
+    a_out_pc = 1.8172 * units.AU_SI / units.PC_SI
+    P_out, M_L = 4 * 86400.0, 5.0e4
+    args = (a_out_pc, 0.0, P_out, np.deg2rad(87.0), 0.0, 0.0, 0.0, M_L)
+    t = np.linspace(0.0, P_out, 401)
+
+    y, lensed, _ = geo.impact_parameter_of_time(t, *args, 5000.0)
+    r, nu = geo.relative_separation(t, a_out_pc, 0.0, P_out, 0.0)
+    x_sky, y_sky, z_los = geo.orbital_plane_to_sky(r, nu, 0.0, np.deg2rad(87.0), 0.0)
+    rho_m = np.hypot(x_sky, y_sky) * units.PC_SI
+    D_LS_m = z_los * units.PC_SI
+    y_closed = rho_m[lensed] / np.sqrt(
+        4.0 * units.msun_to_meters(M_L) * D_LS_m[lensed])
+    err_closed = float(np.max(np.abs(y[lensed] - y_closed) / y_closed))
+
+    y_near, lensed_near, _ = geo.impact_parameter_of_time(t, *args, 500.0)
+    err_D_L = float(np.max(np.abs(y_near[lensed] - y[lensed]) / y[lensed]))
+
+    ok = err_closed < 1e-13 and err_D_L < 1e-13 and np.array_equal(lensed, lensed_near)
+    return ok, (f"max relative error vs y = rho/sqrt(4GM_L D_LS/c^2): {err_closed:.2e}; "
+                f"max relative change when D_L goes 5000 pc -> 500 pc: {err_D_L:.2e} "
+                f"(y must be independent of D_L; both tol 1e-13)")
 
 
 CHECKS = [
@@ -90,7 +168,9 @@ CHECKS = [
     ("edge_on_orbit_projects_to_a_line", check_edge_on_orbit_projects_to_a_line),
     ("face_on_orbit_projects_full_ellipse", check_face_on_orbit_projects_full_ellipse),
     ("einstein_radius_scaling", check_einstein_radius_scaling),
-    ("time_varying_impact_parameter", check_time_varying_impact_parameter),
+    ("one_lensing_pulse_per_outer_period", check_one_lensing_pulse_per_outer_period),
+    ("impact_parameter_closed_form_and_D_L_independence",
+     check_impact_parameter_closed_form_and_D_L_independence),
 ]
 
 

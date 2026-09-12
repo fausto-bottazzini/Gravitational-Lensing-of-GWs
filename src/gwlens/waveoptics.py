@@ -1,87 +1,49 @@
 """Wave-optics gravitational lensing of a scalar field, point-mass lens.
 
-Notation follows wiki/conventions.md (dimensionless lens-plane position x,
-dimensionless source position/impact parameter y, dimensionless frequency
-w = 8 pi G M_L f / c^3). Full derivation: theory/theory.tex.
+Notation: dimensionless lens-plane position x, source position / impact
+parameter y, frequency w = 8 pi G M_L f / c^3. Derivations in
+theory/theory.pdf chapters 2-3; conventions in wiki/conventions.md.
 
-*** SIGN-CONVENTION FIX (2026-09-07, see wiki/log.md) ***
-Every F(w,y) below is the COMPLEX CONJUGATE of the literal Fresnel integral
-F_raw(w,y) = (w/2*pi*i) * int d^2x exp(i*w*phi(x,y)) (theory.tex Eq. 2.5) --
-each function computes F_raw internally (unchanged from the original
-derivation) and returns its conjugate. This was found to be necessary by an
-independent review's causality test, confirmed here independently: with
-F_raw applied directly (i.e. WITHOUT this conjugation) as
-h_lensed(f)=F_raw(f,y)*h_unlensed(f) and inverse-transformed with
-numpy.fft.irfft (which implements THIS project's own declared convention,
-wiki/conventions.md: h(t)=int h(f) e^{+2pi i f t} df), a short test pulse's
-weak (saddle-point) image comes out BEFORE the strong (minimum) image --
-acausal. Conjugating fixes it: re-running the same test, the weak image
-lands AFTER the strong one, at the correct delay Delta_t, with the correct
-amplitude ratio sqrt(|mu_-/mu_+|). The root cause: wiki/conventions.md
-asserted "a later-arriving image gets a +i*w*Delta_t phase" in the
-h(f)=int h(t) e^{-2*pi*i*f*t} dt convention -- that assertion is simply
-wrong (the standard Fourier delay theorem gives e^{-i*2*pi*f*Delta_t} for a
-delay of Delta_t>0 in THAT convention, not e^{+i*2*pi*f*Delta_t}), and
-every formula below (all independently re-derived or cited under that one
-wrong premise) inherited the same overall sign error, consistently, which
-is exactly why they kept passing their OWN cross-checks against each other
-without it ever showing up: |F| is conjugation-invariant, so every
-magnitude-only check (Paczynski magnification, the w->0 and w->infinity
-limits, the three-evaluator F(w,y) agreement, every Case B pulse-height and
-Case A fringe-amplitude plot) already gave the same answer either way.
-Only phase-sensitive, time-domain reconstruction (Case A's lensed
-waveform/peak amplification, and the new causality regression test below)
-could catch this, and none of the original tests did.
+Two conventions are built into every F(w,y) this module returns, and both
+change the answer:
 
-*** REFERENCE-PHASE NORMALIZATION FIX (2026-09-07, see wiki/log.md) ***
-Every F(w,y) below now also carries an extra factor exp(i*w*phi_+(y)),
-phi_+(y) = fermat_potential(x_plus(y), y) the MINIMUM (strong) image's own
-Fermat potential. Without it (the state of this file until this fix), F's
-absolute phase was the raw, un-subtracted phi(x,y) of theory.tex Eq. 2.5 --
-mathematically self-consistent (all four evaluators agreed with each other,
-since none of them subtracted anything, so every existing magnitude- or
-relative-phase-only test kept passing), but physically not what "F(w,y)"
-conventionally means in this literature (Takahashi & Nakamura 2003, their
-eq. 17-ish reference-phase subtraction): since ln|x| solves the deflection
-Poisson equation only up to an arbitrary additive constant, the ABSOLUTE
-phase w*phi_+(y) an un-normalized F carries is not a physical observable --
-only the phase DIFFERENCE between images (i.e. Delta_T(y), which this
-constant cancels out of) is. An independent review found this by asking
-why Case A's lensed merger peak lands 0.60s "before" the unlensed one: that
-number turned out to be EXACTLY 4*G*M_L*phi_+(y_A)/c^3 (agreement <2e-4s,
-under half a sample) -- an arbitrary convention artifact, not the
-interference effect an earlier version of this project's own analysis
-(RESULTS.md, report.tex, wiki/log.md) mistakenly concluded it was. With
-this fix, F is referenced to the strong image's OWN arrival: the
-geometric-optics limit becomes exactly F -> sqrt(mu_+) (zero phase) as
-w -> infinity along the strong-image-only direction, the lensed merger
-peaks at EXACTLY the unlensed merger time (not 0.6s before it), and the
-second-image echo lands at EXACTLY t_peak_unlensed + Delta_T(y) (not offset
-by the same arbitrary 0.6s). |F(w,y)| is unaffected (a unit-magnitude
-phase factor), so every Case B result, every diffraction-pattern figure,
-and rms_strain_amplification (Parseval) are unchanged; only Case A's
-absolute waveform TIMING changes.
+  * Fourier sign. The literal Fresnel-Kirchhoff integral,
+    F_raw = (w/2 pi i) int d^2x exp(i w phi(x,y)), is written in the lensing
+    literature's convention, which is the opposite of this project's
+    (h(f) = int h(t) e^{-2 pi i f t} dt, matching numpy.fft). Every function
+    below computes F_raw and returns its CONJUGATE. Without that, the weak
+    image arrives BEFORE the strong one. |F| is conjugation-invariant, so
+    comparing evaluators against each other cannot detect a mistake here;
+    only a time-domain reconstruction can, which is what
+    tests/test_waveoptics.py::check_causality_of_lensed_pulse does.
 
+  * Reference phase. psi(x) = ln|x| solves the deflection Poisson equation
+    only up to an additive constant, so F's ABSOLUTE phase is not an
+    observable. Every F below is referenced to the strong (minimum) image's
+    own arrival, via a factor exp(i w phi_+(y)): that image then carries no
+    phase, and only the physical delay Delta_T(y) between images survives.
 
-Everything here is evaluated at LEAST TWO independent ways and cross-checked
-in tests/test_waveoptics.py — see wiki/todo.md. Three evaluators of F(w,y):
+Both of these were wrong once and were fixed on 2026-09-07; wiki/log.md has
+the account, including why every evaluator agreeing with every other one was
+not evidence that they were right.
 
-  1. `F_bruteforce_2d`   direct 2D numerical quadrature of the Kirchhoff
-                         diffraction integral, regularized by a convergence
-                         factor. Slow, first-principles, no closed-form input
-                         at all -- the ground truth.
-  2. `F_radial_1d`       the same integral after doing the azimuthal part
-                         analytically (Bessel J0 identity), leaving a 1D
-                         radial integral. Faster, still first-principles.
-  3. `F_point_lens`      the closed-form confluent-hypergeometric expression
-                         (Deguchi & Watson 1986; Takahashi & Nakamura 2003),
-                         evaluated at arbitrary precision with mpmath. Fast;
-                         this is what the case scripts actually call.
+Three evaluators of F(w,y), in decreasing order of cost:
 
-Geometric-optics (ray) quantities -- image positions, magnifications, time
-delay -- are derived independently below and used both as w -> infinity
-checks on F and, via the Paczynski (1986) total-magnification formula, as an
-internal cross-check on the magnification formula itself.
+  1. F_bruteforce_2d   direct 2D quadrature of the diffraction integral,
+                       regularized by a convergence factor. No closed form
+                       anywhere in it.
+  2. F_radial_1d       the same integral with the azimuthal part done
+                       analytically (Bessel J0 identity). Still from first
+                       principles, much faster.
+  3. F_point_lens      the closed-form confluent-hypergeometric expression
+                       (Deguchi & Watson 1986; Takahashi & Nakamura 2003),
+                       evaluated with mpmath. This is what the case scripts
+                       use, through F_hybrid.
+
+The geometric-optics quantities below -- image positions, magnifications,
+time delay -- are derived independently of all three, and are used both as
+the w -> infinity limit of F and, through the Paczynski (1986) total
+magnification, as a cross-check on the magnification formula itself.
 """
 import numpy as np
 from scipy import integrate
@@ -142,15 +104,11 @@ def F_geometric_optics(w, y):
     F -> sqrt(mu_+) + i*sqrt(|mu_-|)*exp(-i*w*DeltaT), the standard two-image
     stationary-phase (Morse-index) result, REFERENCED TO THE STRONG (minimum,
     x_+) IMAGE'S OWN ARRIVAL: its own Fermat potential phi_+(y) has been
-    subtracted (see module docstring, "REFERENCE-PHASE NORMALIZATION FIX"),
+    subtracted (see the module docstring, "Reference phase"),
     so it carries zero phase here by construction and the saddle image x_-
     carries only the physical, convention-independent relative delay
     Delta_T(y) plus its Morse phase (factor i, in the e^{-i2*pi*f*t}
-    convention fixed in wiki/conventions.md). An earlier version of this
-    function kept the un-subtracted exp(i*w*phi_+) prefactor instead
-    (matching `F_point_lens` before ITS normalization fix, so the two still
-    agreed -- see wiki/log.md for why that agreement was not, by itself,
-    evidence of correctness).
+    convention fixed in wiki/conventions.md).
     """
     w = np.asarray(w, dtype=float)
     x_plus, x_minus = image_positions(y)
@@ -171,14 +129,25 @@ def _phi2d(x1, x2, y):
     return 0.5 * ((x1 - y)**2 + x2**2) - 0.5 * np.log(r2)
 
 
-def F_bruteforce_2d(w, y, x_max=40.0, n=1200, eta=0.0):
+def F_bruteforce_2d(w, y, x_max=25.0, n=1200, eta=0.005):
     """Direct 2D quadrature of F(w,y) = (w/2pi i) int d^2x exp[i w phi(x,y)],
     referenced to the strong image (see module docstring).
 
-    Regularized with an optional Gaussian convergence factor exp(-eta*x^2)
-    (eta=0 -> unregularized; increase eta slightly if the raw sum does not
-    look converged for a given (w, x_max, n) -- checked in tests/, not just
-    asserted here). O(n^2) points on a square grid; slow, spot-check only.
+    Regularized with a Gaussian convergence factor exp(-eta*x^2). `eta` is
+    NOT optional in practice and its default is not zero, because the
+    unregularized integral does not converge under a hard cutoff: the tail
+    of int d^2x exp(i w x^2/2) beyond radius R contributes
+    (2 pi/i w)[exp(i w R^2/2) - 1], which the (w/2 pi i) prefactor turns into
+    an O(1) oscillation in R that never decays. Measured, at w=y=1: the
+    relative error is 4.6e-2 at (x_max=25, n=1200, eta=0) and still 4.4e-2 at
+    n=2000 -- it does not shrink with resolution, only wanders with x_max
+    (1.0e-2 at x_max=40). With eta=0.005 it is 1.1e-2 and behaves as the
+    O(eta) regularization error it should be, the same way `F_radial_1d`'s
+    does. The defaults here are exactly the arguments
+    tests/test_waveoptics.py::check_bruteforce_2d_agrees passes, so the
+    default call is the one that has actually been validated.
+
+    O(n^2) points on a square grid; slow, spot-check only.
     """
     xs = np.linspace(-x_max, x_max, n)
     dx = xs[1] - xs[0]
@@ -195,7 +164,7 @@ def F_bruteforce_2d(w, y, x_max=40.0, n=1200, eta=0.0):
     return np.conjugate(F_raw) * np.exp(1j * w * phi_plus)
 
 
-def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints=3000):
+def F_radial_1d(w, y, eta=0.01, safety=25.0, min_breakpoints=60, max_breakpoints=3000):
     """1D radial reduction of the same integral via
     int_0^2pi dtheta exp(i a cos theta) = 2 pi J0(a) (Abramowitz & Stegun
     9.1.21), applied to the cross term in |x-y|^2 = x^2+y^2-2xy*cos(theta):
@@ -213,6 +182,11 @@ def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints
     (~w*x_max^2/(4pi)) expected below it, so this stays accurate without a
     hand-tuned cutoff. Convergence as eta -> 0 (at fixed accuracy) is
     checked in tests/test_waveoptics.py against `F_point_lens`.
+
+    The residual regularization error is O(eta), and measured: at w=y=1 the
+    relative error is 2.6e-2 at eta=0.02 and 6.5e-3 at eta=0.005, halving
+    with eta as it should. The default eta=0.01 is ~1.3% on a bare
+    `F_radial_1d(w, y)` call; pass a smaller one if that matters.
     """
     from scipy.special import j0
 
@@ -224,9 +198,8 @@ def F_radial_1d(w, y, eta=0.05, safety=25.0, min_breakpoints=60, max_breakpoints
         if x <= 0:
             return 0.0 + 0.0j
         # exp(i * w*(1+i*eta) * x^2/2) = exp(i w x^2/2) * exp(-eta*w*x^2/2):
-        # the (1+i*eta) factor -- NOT (1-i*eta) -- is what damps at large x;
-        # the sign was wrong in an earlier version and blew the integral up
-        # (see wiki/log.md).
+        # it is (1+i*eta), NOT (1-i*eta), that damps at large x. The other
+        # sign makes the integral diverge.
         decay = np.exp(-eta * w * x**2 / 2.0)
         oscillation = np.exp(1j * w * (0.5 * x**2 - np.log(x)))
         return x * j0(w * x * y) * oscillation * decay
@@ -259,11 +232,9 @@ def F_point_lens(w, y, dps=30):
     the case scripts use; cross-checked against `F_radial_1d` and
     `F_bruteforce_2d` in tests/test_waveoptics.py, and against the w->0 and
     w->infinity limits derived independently above. The closed-form
-    expression above is the literal published one (no reference phase);
-    after conjugating (sign-convention fix) an extra factor
-    exp(i*w*phi_+(y)) is applied to reference it to the strong image's own
-    arrival (reference-phase fix) -- see module docstring, both dated
-    2026-09-07.
+    expression above is the literal published one, carrying no reference
+    phase; it is conjugated and then multiplied by exp(i*w*phi_+(y)) to
+    apply the two conventions described in the module docstring.
     """
     mp.mp.dps = dps
     w = mp.mpf(w)
@@ -294,21 +265,13 @@ def F_hybrid(w, y, w_geo_threshold=30.0):
     3e-4 at w=10 falling to 3e-5 at w=1000). `w_geo_threshold=30` sits
     comfortably inside that validated agreement (3.1% at w=30 itself, per
     `check_hybrid_matches_at_threshold`, well under its 4% tolerance and
-    shrinking fast on either side of that point). First noticed as a stall:
-    evaluating `F_point_lens` at the actual (w,y) used in Case A took ~150 s
-    for one frequency sweep; `F_hybrid` needs no mpmath calls at all there
-    (see wiki/log.md).
+    shrinking fast on either side of that point). The cost is not marginal:
+    one Case A frequency sweep through `F_point_lens` takes ~150 s, and
+    through `F_hybrid` no mpmath call is needed at all.
     """
     if w < w_geo_threshold:
         return F_point_lens(w, y)
     return complex(F_geometric_optics(w, y))
-
-
-def F_point_lens_array(w_array, y):
-    """Vectorized convenience wrapper around F_point_lens for an array of w
-    at fixed y (the common case: sweeping frequency at one impact parameter,
-    or one frequency at many impact-parameter samples along an orbit)."""
-    return np.array([F_point_lens(w, y) for w in np.atleast_1d(w_array)])
 
 
 def w_of_frequency(f_hz, M_lens_msun):

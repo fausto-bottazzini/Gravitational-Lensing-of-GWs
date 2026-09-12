@@ -17,9 +17,11 @@ MCHIRP_MSUN = chirp.chirp_mass(M1_MSUN, M2_MSUN)
 F_ISCO_HZ = chirp.isco_frequency(MTOT_MSUN)
 
 # --- outer body (the lens) -----------------------------------------------
-# "Massive IMBH" (~5e4 Msun): chosen, not textbook-typical, so that the
-# wave-optics parameter w=8*pi*G*M_L*f/c^3 is O(0.1-10) at BOTH epochs used
-# below -- logged as a choice in wiki/log.md.
+# "Massive IMBH" (~5e4 Msun): chosen, not textbook-typical, so that the two
+# epochs land on opposite sides of the optics transition -- w=0.31 at f_B
+# (diffraction) and w=62 to 778 across the Case A band (geometric optics).
+# Asserted in tests/test_system.py::check_wave_optics_regime_nontrivial;
+# logged as a choice in wiki/log.md.
 M_LENS_MSUN = 5.0e4
 D_L_PC = 5000.0  # distance to the whole triple (lens ~ source, see geometry.py)
 
@@ -53,7 +55,12 @@ T_OBS_B_S = 6.0 * P_OUT_S  # Case B observing baseline: 6 outer periods
 
 def inner_separation_m(f_gw_hz, m1_msun, m2_msun):
     """Inner-binary physical separation at GW frequency f_gw (Kepler, GW freq
-    = 2x orbital freq): a_in^3 = G Mtot / (pi f_gw)^2 / 4."""
+    = 2x orbital freq): omega_orb = 2 pi f_orb = pi f_gw, so
+
+        a_in^3 = G Mtot / omega_orb^2 = G Mtot / (pi f_gw)^2
+
+    Note there is no extra factor of 4: it is already inside
+    (2 pi f_orb)^2 = (pi f_gw)^2."""
     Mtot_SI = units.G_SI * (m1_msun + m2_msun) * units.M_SUN_SI
     f_orb = f_gw_hz / 2.0
     return (Mtot_SI / (2.0 * np.pi * f_orb) ** 2) ** (1.0 / 3.0)

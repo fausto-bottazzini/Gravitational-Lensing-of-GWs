@@ -9,22 +9,6 @@ import numpy as np
 from . import units
 
 
-def einstein_radius_angle(M_lens_msun, D_L_pc, D_S_pc):
-    """theta_E = sqrt(4 G M_L/c^2 * D_LS/(D_L D_S)) (point lens, z_L=0)."""
-    D_LS_pc = D_S_pc - D_L_pc
-    if D_LS_pc <= 0:
-        raise ValueError("lens must be closer than the source (D_L < D_S)")
-    R_L_m = units.msun_to_meters(M_lens_msun)  # GM/c^2, metres
-    D_L_m = D_L_pc * units.PC_SI
-    D_S_m = D_S_pc * units.PC_SI
-    D_LS_m = D_LS_pc * units.PC_SI
-    return np.sqrt(4.0 * R_L_m * D_LS_m / (D_L_m * D_S_m))
-
-
-def y_of_angular_offset(theta_rad, theta_E_rad):
-    return theta_rad / theta_E_rad
-
-
 # ---------------------------------------------------------------------
 # Kepler orbit: relative separation vector of the binary CM around the lens
 # ---------------------------------------------------------------------
@@ -67,13 +51,8 @@ def orbital_plane_to_sky(r, nu, omega, i, Omega):
     frame: z = line of sight, INCREASING AWAY FROM the observer (so a more
     positive z_los is farther from Earth, i.e. more nearly "behind" whatever
     is at z=0 -- consistent with `impact_parameter_of_time`'s use of
-    `z_los>0` for "source behind the lens", the only place the SIGN of this
-    axis is actually load-bearing; a previous version of this docstring said
-    "toward the observer" instead, backwards -- caught by an independent
-    review, no numerical consequence for the circular (e_out=0) orbit
-    actually used in cases/, since the lensed half is symmetric either way
-    and only WHICH half is lensed (a P_out/2 phase choice, itself arbitrary)
-    would flip; see wiki/log.md). (x,y) = sky plane. Standard
+    `z_los>0` for "source behind the lens", which is the only place the SIGN
+    of this axis is load-bearing. (x,y) = sky plane. Standard
     R_z(Omega) R_x(i) R_z(omega) rotation (e.g. Murray & Dermott Sec. 2.8,
     adapted: i=0 is face-on/orbital plane == sky plane, i=pi/2 is edge-on
     with the line of sight in the orbital plane).
@@ -122,7 +101,7 @@ def impact_parameter_of_time(t, a_out, e_out, period_out, i_out, Omega_out,
     This is exactly the origin of the "repeated lensing" pulses once per
     outer orbit found in hierarchical-triple GW lensing (only the far-side
     half-orbit is lensed at all) -- see D'Orazio & Loeb (2020) and
-    theory/theory.tex Sec. 5.
+    theory/theory.pdf Sec. 4.3.
 
     Returns (y, lensed_mask, theta_E_rad) -- y is np.inf where lensed_mask
     is False.
