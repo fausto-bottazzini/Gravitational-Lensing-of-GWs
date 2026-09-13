@@ -238,7 +238,7 @@ def main():
     # (A y(t)-over-time panel was tried here first -- the divergence at each
     # D_LS=0 crossing dominates the plot and left little room to actually
     # see anything else, so it added no real information beyond what
-    # fraction_of_time_lensed and caseB_pattern_with_orbit.png already show;
+    # fraction_of_time_lensed already shows;
     # dropped rather than kept for its own sake.)
     one_p = t <= 1.5 * system.P_OUT_S  # used below for the orbit-track figure
 
@@ -322,33 +322,22 @@ def main():
     y1_traj = x_sky / system.D_L_PC / theta_E_traj
     y2_traj = y_sky / system.D_L_PC / theta_E_traj
 
-    fig, ax = plt.subplots(figsize=(6.5, 5.5))
-    im = ax.pcolormesh(axis, axis, pattern, shading="auto", cmap="inferno",
-                        norm=LogNorm(vmin=max(pattern.min(), 1e-2), vmax=pattern.max()))
-    lensed_traj = z_los > 0
-    ax.plot(y1_traj[lensed_traj], y2_traj[lensed_traj], "-", color="cyan", lw=1.5,
-            label="trayectoria de la fuente (mitad lensada)")
-    ax.plot(y1_traj[~lensed_traj], y2_traj[~lensed_traj], "--", color="lime", lw=1.0,
-            label="trayectoria (mitad no lensada, delante del lente)")
-    ax.set_aspect("equal")
-    ax.set_xlim(-y_max, y_max)
-    ax.set_ylim(-y_max, y_max)
-    ax.set_xlabel(r"$y_1$")
-    ax.set_ylabel(r"$y_2$")
-    ax.set_title(f"Caso B: patrón de difracción fijo ($w_B={w_B:.2f}$) con la trayectoria\n"
-                 "de la órbita externa de la fuente durante 1.5 períodos")
-    fig.colorbar(im, ax=ax, shrink=0.85, label=r"$|F|^2$ (escala logarítmica)")
-    ax.legend(fontsize=8, loc="upper right")
-    fig.tight_layout()
-    fig.savefig(OUT / "caseB_pattern_with_orbit.png", dpi=170, bbox_inches="tight")
-    plt.close(fig)
+    lensed_traj = z_los > 0   # still needed by the animation export below
+    # The orbit track overlaid on the pattern was removed: the track is a
+    # near-straight line crossing rings whose spacing is what the figure is
+    # about, and drawing it on top hid exactly the structure it was meant to
+    # locate. The pattern alone is caseB_pattern_only.png; where the source
+    # sits on it is `caseB_repeated_pulses.png`, which says it in time, where
+    # it is legible. The animated version in report/report.html draws its own
+    # moving marker over caseB_pattern_only.png, which is the readable way to
+    # put the two together.
 
     # Fig 4: idealized detector view -- lensed vs unlensed strain envelope
     fig, axes = plt.subplots(2, 1, figsize=(8, 6))
     axes[0].plot(t / 86400.0, np.abs(z_unlensed), color="#888888", lw=0.8, label="envolvente sin lente")
     axes[0].plot(t / 86400.0, np.abs(z_lensed), color="#2b6cb0", lw=0.8, label="envolvente con lente")
     axes[0].set_xlabel("$t$ [días]")
-    axes[0].set_ylabel("envolvente del strain [unidades arbitrarias]")
+    axes[0].set_ylabel("envolvente de $h(t)$ [u. arb.]")
     axes[0].set_title("Caso B: vista de detector idealizada sobre toda la observación")
     # Headroom above the data so the legend box has empty space to sit in,
     # rather than covering the pulses/carrier ripple beneath it (it did, at
@@ -386,10 +375,21 @@ def main():
     z_u_fine = amp_fine * np.exp(1j * phase_fine)
     z_l_fine = F_fine * z_u_fine
 
-    axes[1].plot(t_fine - t_pulse, z_u_fine.real, color="#888888", lw=0.7, label="sin lente")
-    axes[1].plot(t_fine - t_pulse, z_l_fine.real, color="#2b6cb0", lw=0.7, alpha=0.85, label="con lente")
-    axes[1].set_xlabel(f"$t$ − {t_pulse/86400:.3f} d  [s]")
-    axes[1].set_ylabel("$h(t)$ [unidades arbitrarias]")
+    axes[1].plot(t_fine - t_pulse, z_u_fine.real, color="#888888", lw=0.9)
+    axes[1].plot(t_fine - t_pulse, z_l_fine.real, color="#2b6cb0", lw=0.9)
+    axes[1].set_xlabel("tiempo respecto del pico del pulso [s]")
+    axes[1].set_ylabel("$h(t)$ [u. arb.]")
+    # Labels ON the curves rather than in a box: there are only two, they are
+    # concentric, and a box in any corner covers crests of the very sinusoid
+    # being compared. Anchored at the first crest to the right of centre.
+    k_crest = int(np.argmax(z_l_fine.real[len(t_fine) // 2:])) + len(t_fine) // 2
+    t_crest = t_fine[k_crest] - t_pulse
+    axes[1].annotate("con lente", xy=(t_crest, z_l_fine.real[k_crest]),
+                     xytext=(6, 4), textcoords="offset points",
+                     color="#2b6cb0", fontsize=9, fontweight="bold")
+    axes[1].annotate("sin lente", xy=(t_crest, z_u_fine.real[k_crest]),
+                     xytext=(6, -14), textcoords="offset points",
+                     color="#555555", fontsize=9)
     # What this panel shows is the AMPLITUDE difference, |F|=1.177, i.e. 17.7%
     # taller crests. It does NOT show a dephasing: both curves are evaluated
     # at the same retarded time t_em, so the Roemer delay is common to them,
@@ -403,16 +403,13 @@ def main():
     # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.
     # This +-200 s window exists only to resolve individual 20 s carrier
     # cycles at the instant of peak amplification.
-    axes[1].set_title("Ampliación: ciclos de la portadora en el pico del pulso\n"
-                       "(amplificación en amplitud, $|F|=1.177$; el desfase, "
-                       "$\\arg F=1.0^\\circ$, es invisible a esta escala)",
-                       fontsize=10)
-    # Same headroom fix as the panel above -- this one is a dense sinusoid
-    # filling the whole frame, so ANY fixed corner covers real peaks
-    # without it.
-    y0, y1 = axes[1].get_ylim()
-    axes[1].set_ylim(y0, y0 + 1.35 * (y1 - y0))
-    axes[1].legend(fontsize=8, loc="upper right")
+    axes[1].set_title("Ampliación en el pico: la señal es un $%.1f\\%%$ más alta"
+                       % (100 * (abs(F_t[i_pulse]) - 1.0)), fontsize=10)
+    # Centred on zero, with a symmetric margin: the curves are a symmetric
+    # oscillation, so an asymmetric frame reads as an offset that is not
+    # there. No legend box to displace them (labels are on the curves).
+    span = 1.18 * float(np.max(np.abs(z_l_fine.real)))
+    axes[1].set_ylim(-span, span)
     fig.tight_layout()
     fig.savefig(OUT / "caseB_detector_view.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
@@ -434,39 +431,52 @@ def main():
     # only shown to be invisible.
     # Both curves in GW CYCLES, the unit the waveform is actually written in,
     # so the comparison is like-for-like and both are bounded.
-    fig, ax = plt.subplots(figsize=(8, 4.4))
+    # One curve per panel, sharing the time axis, instead of two curves on one
+    # axis where the second is necessarily a flat line at zero. The point of
+    # the figure is the RATIO of two phases, and a ratio of 5206 cannot be
+    # drawn on a common axis: either the small curve is invisible or the large
+    # one is off-screen. Stacked panels give each its own scale and keep the
+    # comparison honest, with the ratio stated rather than drawn.
+    fig, axes = plt.subplots(2, 1, figsize=(8, 5.4), sharex=True)
     tp = t[one_p] / 86400.0
     roemer_cycles = system.F_B_HZ * roemer_t
-    ax.plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.6,
-            label=r"Roemer / Doppler, $f_B\,z_{\rm fuente}(t)/c$")
-    ax.plot(tp, lens_phase_cycles[one_p], color="#c0392b", lw=1.6,
-            label=r"lensing, $\arg F(w_B,y(t))/2\pi$")
-    ax.axhline(0.0, color="0.7", lw=0.6)
-    ax.set_xlabel("$t$ [días]")
-    ax.set_ylabel(r"fase escrita sobre la forma de onda [ciclos de GW a $f_B$]")
-    ax.legend(fontsize=8, loc="lower left")
-    ax.set_title("Caso B: la misma órbita externa imprime dos cosas muy distintas\n"
-                 f"{NUMBERS['roemer_phase_ptp_cycles']:.0f} ciclos de Roemer/Doppler frente a "
-                 f"{NUMBERS['lens_phase_ptp_cycles']:.3f} ciclos de lensing "
-                 f"— {NUMBERS['roemer_over_lens_phase_ratio']:.0f}$\\times$", fontsize=10)
-    # Headroom so the inset below sits on empty canvas instead of covering the
-    # sinusoid it is an inset OF -- the same fix already applied to the legend
-    # boxes in caseB_detector_view.png.
-    lo, hi = ax.get_ylim()
-    ax.set_ylim(lo, lo + 1.85 * (hi - lo))
 
-    # The lensing curve is a flat line at this scale -- that is the finding,
-    # not a rendering failure -- so an inset shows it resolved rather than
-    # only shown to be invisible.
-    zoom = 1.1 * float(np.max(np.abs(lens_phase_cycles)))
-    inset = ax.inset_axes([0.30, 0.63, 0.66, 0.32])
-    inset.plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.0)
-    inset.plot(tp, lens_phase_cycles[one_p], color="#c0392b", lw=1.2)
-    inset.axhline(0.0, color="0.7", lw=0.5)
-    inset.set_ylim(-zoom, zoom)
-    inset.tick_params(labelsize=6)
-    inset.set_title(f"eje $y$ ampliado {NUMBERS['roemer_phase_ptp_cycles']/(2*zoom):.0f}"
-                    r"$\times$: la fase de lensing, resuelta", fontsize=7)
+    # Conjunction: where y(t) is smallest, i.e. where the pulses are. It is
+    # also the extremum of z_src, hence of the Roemer delay -- which is why
+    # the lensing lines up with the Roemer PEAK and not with its zero: the
+    # delay is extremal exactly where the line-of-sight VELOCITY vanishes.
+    # That coincidence is the reason the fixed-w approximation is safe here,
+    # so the figure marks it instead of leaving it to look like an accident.
+    t_conj = float(tp[int(np.argmax(np.abs(F_t[one_p])))])
+    for axk in axes:
+        axk.axvline(t_conj, color='0.55', lw=0.8, ls=':')
+        axk.axhline(0.0, color="0.85", lw=0.6)
+
+    axes[0].plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.6)
+    axes[0].set_ylabel("Roemer / Doppler\n[ciclos]")
+    axes[0].set_title("Caso B: las dos huellas de la misma órbita, a escala propia\n"
+                      f"{NUMBERS['roemer_phase_ptp_cycles']:.0f} ciclos contra "
+                      f"{NUMBERS['lens_phase_ptp_cycles']:.3f} — "
+                      f"{NUMBERS['roemer_over_lens_phase_ratio']:.0f}$\\times$",
+                      fontsize=10)
+
+    axes[1].plot(tp, lens_phase_cycles[one_p], color="#c0392b", lw=1.4)
+    axes[1].set_ylabel("lensing, $\\arg F/2\\pi$\n[ciclos]")
+    axes[1].set_xlabel("$t$ [días]")
+    axes[0].text(t_conj, axes[0].get_ylim()[1], " conjunción", fontsize=8,
+                 color="0.35", va="top", ha="left")
+    # Stated rather than left looking like a coincidence: the pulses land on
+    # the Roemer MAXIMUM, not on its zero, because the delay is extremal
+    # exactly where the line-of-sight velocity vanishes -- and that is the
+    # same instant the source passes behind the lens. It is also the reason
+    # evaluating F at a fixed w_B is safe here
+    # (claims.yaml::fixed_w_approximation_quantified).
+    fig.text(0.5, -0.01,
+             "Los pulsos caen en el máximo del retardo de Roemer, no en su cero: el "
+             "retardo es extremo justo donde la velocidad radial se anula,\nque es "
+             "cuando la fuente pasa por detrás del lente. Por eso evaluar $F$ a "
+             "$w_B$ fijo es seguro.",
+             ha="center", va="top", fontsize=8, color="0.3")
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
@@ -529,7 +539,7 @@ def main():
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))
     print("\nFigures written: caseB_repeated_pulses.png, "
-          "caseB_pattern_with_orbit.png, caseB_pattern_only.png, "
+          "caseB_pattern_only.png, "
           "caseB_detector_view.png, caseB_doppler_vs_lensing.png, "
           "caseB_animation_data.json")
 

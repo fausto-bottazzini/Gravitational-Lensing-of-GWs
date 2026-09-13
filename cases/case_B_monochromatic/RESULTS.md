@@ -54,8 +54,7 @@ Exactly **half** the orbit is lensed at all (`fraction_of_time_lensed
 (`D_LS<0`, `geometry.impact_parameter_of_time`) where there is no lensing
 geometry and F=1 by construction, not approximation; the impact parameter
 formally diverges (`y->infinity`) exactly at each front/back crossing,
-where `D_LS->0`. `caseB_pattern_with_orbit.png` (below) shows the lensed
-and unlensed halves of the orbit directly, distinguished by color.
+where `D_LS->0`.
 
 The minimum impact parameter reached, **y=1.589**, coincides with Case A's
 y_A to 4 significant figures — not a coincidence: both are the same
@@ -145,12 +144,16 @@ not applied (`src/gwlens/doppler.py::orbital_redshift_factor`).
 
 ## The extended pattern, and how a detector would see it
 
-`caseB_pattern_with_orbit.png` puts Case A's ring pattern and Case B's orbit
-together explicitly: the fixed |F(w_B,y)|² diffraction pattern (concentric
-rings, central Einstein-ring spike) with the source's actual sky-projected
-track overlaid, split into its lensed (cyan) and unlensed (dashed green)
-halves — this is the "extended, in-space" pattern and the trajectory a real
-triple would trace through it, in one figure.
+`caseB_pattern_only.png` is the fixed |F(w_B,y)|² diffraction pattern:
+concentric rings with the Einstein-ring peak at the centre, the same
+structure Case A shows at its own frequency. An earlier version of this
+figure drew the source's sky-projected orbit track on top of it. That is
+gone: the track is a near-straight line crossing rings whose spacing is
+the entire content of the figure, and drawing it over them hid exactly
+what it was supposed to locate. Where the source sits on the pattern is
+better said in time, which is `caseB_repeated_pulses.png`; the animated
+version in `report/report.html` puts the two together properly, with a
+moving marker over this same background.
 
 `caseB_detector_view.png` is the idealized-detector view asked for: top
 panel, the strain envelope over the full 12-day observation, showing three

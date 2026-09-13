@@ -188,11 +188,13 @@ figures:
   - file: caseA_F_of_f.png
     produced_by: run.py::main
     shows: >
-      The exact, constant envelope of |F(f)| across the whole chirp band
-      (top, shaded sqrt(mu_+)+-sqrt(|mu_-|) with the strong-image-only
-      value marked), |F(f)| zoomed to a 3 Hz window where individual
-      interference fringes are resolved (middle), and arg F(f) over that
-      same zoom (bottom).
+      |F(f)| over two 3 Hz windows at opposite ends of the chirp band --
+      at 10 Hz (w=62) and at f_isco (w=778) -- with the exact envelope
+      sqrt(mu_+)+-sqrt(|mu_-|) drawn on both, and arg F(f) over the first
+      window. Two windows rather than one: what has to be seen is that
+      the envelope width and the fringe period are the SAME at both ends,
+      which is the geometric-optics statement, and a single window cannot
+      show it.
     from_scratch: >
       Frequency array from the FFT of the generated chirp; the envelope
       bounds from image_positions/magnification at y_A; fringe
@@ -201,17 +203,24 @@ figures:
     from_library: >
       numpy.fft for the FFT/frequency grid, matplotlib for rendering.
     choices:
-      - "3 Hz zoom width, chosen to show ~10 resolved fringes without over-cropping."
-      - "Top panel shows the constant envelope band, not the raw oscillating |F(f)| curve directly: at full-band print resolution the raw curve is visually an unresolved, uninformative blob (an earlier version of this figure plotted it that way), while the envelope IS the actual content of a full-band view here (F is in the geometric-optics regime throughout, so the envelope is exactly two constant lines, not merely a visual summary of something more complicated)."
+      - "3 Hz window width, chosen to show ~10 resolved fringes without over-cropping. The same width at both ends of the band, so the two panels are directly comparable."
+      - "No full-band panel. A full-band view of |F(f)| is either an unresolved blob (400 fringes across the axis) or, if only the envelope is drawn, a featureless shaded rectangle -- which is what the previous version of this figure was: it ASSERTED that the envelope is constant instead of showing it. Two resolved windows at w=62 and w=778 show the same thing and can be checked by eye."
+      - "F evaluated on its own dense grid for these panels, not on the FFT grid the waveform uses: the fringe period is 0.29 Hz and the FFT bin spacing 0.04 Hz, so the curves were drawn from ~7 points per fringe and came out visibly polygonal. F(f) is a closed form, so the display grid costs nothing and need not inherit the waveform resolution."
     supports: [w_regime, dephasing_not_simple_amplification, caseA_is_pure_geometric_optics]
   - file: caseA_strain_time.png
     produced_by: run.py::main
     shows: >
-      Lensed vs. unlensed time-domain inspiral-merger-ringdown strain: a full
-      overview (top, extended past merger to include the echo), a zoomed
-      merger/ringdown panel (middle), and a zoomed echo panel (bottom) --
-      the latter a fainter but recognisable replay of the whole chirp/
-      merger/ringdown, as the geometric-optics image superposition predicts.
+      Four panels: the unlensed strain, the lensed strain on the same
+      scale, a zoom centred on the merger, and the DIFFERENCE of the two.
+      The first two are deliberately separate rather than overlaid: at
+      this time resolution the curves are indistinguishable, which is the
+      point, and drawing one over the other simply hid the lower one. The
+      difference panel is where the lensing becomes visible: in geometric
+      optics h_lensed - h_unlensed is (sqrt(mu_+)-1) times the signal plus
+      a full sqrt(|mu_-|) copy delayed by Delta_T, so the subtraction
+      leaves the second image alone -- its own inspiral, merger and
+      ringdown, replayed Delta_T late at 24% amplitude against a flat
+      zero.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
       shift; the zoom window choices; the empirical echo-peak search
@@ -220,7 +229,9 @@ figures:
     choices:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
-      - "Echo panel centered on the empirically-found peak; matches the naive t_peak_unlensed+ΔT prediction to within 4e-5s (see causality_and_echo)."
+      - "Merger zoom centred on t_peak (+-0.15 s), not starting at it: the previous -0.05/+0.30 window put the merger hard against the left edge."
+      - "The difference panel is windowed from 0.5 s before the merger to 0.5 s after the echo, not over the whole chirp: across the full 15 s the (sqrt(mu_+)-1) residual under the inspiral is a dense band that fills the panel and buries the feature the subtraction exists to expose."
+      - "Echo time is the empirically-found peak; it matches the naive t_peak_unlensed+ΔT prediction to within 4e-5 s (see causality_and_echo)."
     supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]
   - file: caseA_diffraction_pattern.png
     produced_by: run.py::main (make_ring_pattern)
@@ -232,7 +243,7 @@ figures:
       resolution chosen from the local fringe spacing 2*pi/(w*y).
     from_library: scipy.interpolate.interp1d, matplotlib (LogNorm colour scale).
     choices:
-      - "Radial/display grid resolution set from the fringe spacing at each w, after a first version aliased (see wiki/log.md). The left panel's DISPLAY grid was raised to n_grid=1201 on 2026-09-07: the fringe period in y shrinks with radius (0.050 at y=0.3, 0.028 at y=3), so the previous n_grid=481 gave dy=0.0125 -- only 2.2 samples per fringe on the outer rings, below what renders without moire. n_radial was already ample (dr=0.0011, ~26 per fringe); this was the display grid only."
+      - "Radial and display grid resolutions are both set from the local fringe spacing 2*pi/(w*y), which is what an earlier aliased version got wrong. Beyond resolution, both panels are now windowed so that the fringes are countable rather than merely present: the left panel to |y|<1.6 at n_grid=1601, the right to |Delta y|<0.02 at w=778, where the fringe period is ~0.003 and the previous 0.30-wide window packed a hundred rings into 500 pixels. Nothing is lost by cropping -- the pattern is axisymmetric and the outer rings are more of the same."
       - "savefig(bbox_inches='tight'): with set_aspect('equal') the axes are resized after tight_layout has computed positions, so both panels' x-axis label ($y_1$) was drawn below the canvas and cut off in the previously committed PNG. Fixed 2026-09-07."
       - "LogNorm color scale -- the central Einstein-ring spike otherwise saturates a linear scale."
       - "F_point_lens (exact) forced for r<0.5 regardless of w, not F_hybrid: at w=61.9 (left panel) F_hybrid always returns F_geometric_optics, which diverges as y->0 -- an earlier version of this figure plotted that divergence, cut off only by the innermost grid sample (1123 vs. the true finite pi*w=194.45), as if it were the regularized wave-optics value the caption describes; an independent review caught this (the figure demonstrated the opposite of its own caption). See wiki/log.md."
@@ -247,5 +258,7 @@ figures:
     from_library: scipy.signal.hilbert.
     choices:
       - "No noise, antenna pattern, or PSD -- explicitly an idealized/illustrative detector view, as scoped in wiki/conventions.md."
-      - "Log-scale y-axis: the echo is a factor ~4 (echo_to_unlensed_peak_ratio=0.24) below the merger peak, easy to under-sell on a linear scale (a prior version of this text said '~2 orders of magnitude' / the report said '~100x' -- both wrong by a factor of ~25, caught by an independent review; see wiki/log.md)."
+      - "Log-scale y-axis: the echo is a factor ~4 (echo_to_unlensed_peak_ratio=0.24) below the merger peak, easy to under-sell on a linear scale."
+      - "Legend lower left and no shaded echo band. Both used to sit in the upper right, which is exactly where the merger peak and the echo are: the legend covered them and the band shaded the feature it was pointing at."
+      - "Explicit y-limits, three decades below the peak and a factor 3 above it. The default limits clipped the merger peak off the top of the frame, and on the inspiral-only fallback path the post-merger tail decays to ~1e-27 and stretches the useful part of the plot into a few pixels."
     supports: [dephasing_not_simple_amplification, causality_and_echo]

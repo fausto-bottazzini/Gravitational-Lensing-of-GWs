@@ -366,31 +366,45 @@ def main():
     fringe_period_hz = 1.0 / NUMBERS["image_time_delay_seconds"]
     log("fringe_period_hz", float(fringe_period_hz))
 
-    # Three panels: constant-envelope overview, |F(f)| zoomed (fringes
-    # resolved), and arg F(f) over that same zoom -- an earlier version of
-    # this figure had only the two |F| panels while RESULTS.md/claims.yaml
-    # already described an "arg F" sub-panel that did not exist; an
-    # independent review caught the mismatch, see wiki/log.md.
-    fig, axes = plt.subplots(3, 1, figsize=(7, 9.2))
-    axes[0].axhspan(sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus,
-                     color="#2b6cb0", alpha=0.25,
-                     label=r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$ (envolvente exacta)")
-    axes[0].axhline(sqrt_mu_plus, color="#2b6cb0", lw=1.0, ls="--",
-                     label=r"$\sqrt{\mu_+}$ (sólo la imagen fuerte)")
-    axes[0].axvspan(f_zoom_lo, f_zoom_hi, color="gold", alpha=0.3)
-    axes[0].set_ylabel(r"$|F(f)|$")
-    axes[0].set_xlabel("$f$ [Hz]")
-    axes[0].set_xlim(system.F_A_START_HZ, system.F_ISCO_HZ)
-    axes[0].legend(fontsize=7, loc="lower right")
-    axes[0].set_title("Caso A: factor de amplificación a lo largo de todo el chirp\n"
-                       f"(lente estático, $y={y_A:.3f}$; la banda tiene exactamente este ancho a toda $f$; ampliación abajo)",
-                       fontsize=10)
-    axes[1].plot(freqs[zmask], np.abs(F[zmask]), lw=1.0, color="#2b6cb0")
-    axes[1].set_ylabel(r"$|F(f)|$")
-    axes[1].set_xlabel("$f$ [Hz]")
-    axes[1].set_title(f"Ampliación: {f_zoom_lo:.0f}–{f_zoom_hi:.0f} Hz (período de las franjas: "
-                       f"{fringe_period_hz:.2f} Hz, idéntico en cualquier punto de la banda)")
-    axes[2].plot(freqs[zmask], np.angle(F[zmask]), lw=1.0, color="#c05621")
+    # Two windows of equal width at OPPOSITE ends of the band, not one window
+    # plus a full-band overview. The old top panel drew the constant envelope
+    # as a shaded span across 10-125 Hz with no curve in it, which rendered
+    # as a featureless blue rectangle: it asserted the envelope is constant
+    # instead of showing it. Two resolved windows at 10 Hz and at f_isco show
+    # the same envelope and the same fringe period at w=62 and at w=778,
+    # which is the claim, made visible.
+    #
+    # F is evaluated on its own dense grid here, NOT on the FFT grid: the
+    # fringe period is 1/Delta_T = 0.29 Hz and the FFT bin spacing is
+    # ~0.04 Hz, i.e. 7 points per fringe, which drew visibly polygonal
+    # sinusoids. F(f) is a closed form, so the display grid costs nothing
+    # and need not inherit the waveform's resolution.
+    f_hi_lo = system.F_ISCO_HZ - (f_zoom_hi - f_zoom_lo)
+
+    def _F_dense(f_lo, f_hi, n=2000):
+        ff = np.linspace(f_lo, f_hi, n)
+        ww = wo.w_of_frequency(ff, system.M_LENS_MSUN)
+        return ff, np.array([wo.F_hybrid(w, y_A) for w in ww])
+
+    f_lo_grid, F_lo = _F_dense(f_zoom_lo, f_zoom_hi)
+    f_hi_grid, F_hi = _F_dense(f_hi_lo, system.F_ISCO_HZ)
+
+    fig, axes = plt.subplots(3, 1, figsize=(7, 8.4))
+    for axk, (ff, FF, w_here, etiqueta) in zip(
+            axes[:2],
+            [(f_lo_grid, F_lo, w_start, "inicio de banda"),
+             (f_hi_grid, F_hi, w_isco, "cerca del merger")]):
+        axk.plot(ff, np.abs(FF), lw=1.0, color="#2b6cb0")
+        axk.axhline(sqrt_mu_plus + sqrt_mu_minus, color="#c05621", lw=0.9, ls="--")
+        axk.axhline(sqrt_mu_plus - sqrt_mu_minus, color="#c05621", lw=0.9, ls="--")
+        axk.set_ylabel(r"$|F(f)|$")
+        axk.set_xlabel("$f$ [Hz]")
+        axk.set_title(f"{etiqueta}: {ff[0]:.0f}–{ff[-1]:.0f} Hz, $w={w_here:.0f}$",
+                      fontsize=9.5)
+    axes[0].text(0.985, 0.90, r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$",
+                 transform=axes[0].transAxes, ha="right", va="top",
+                 fontsize=8, color="#c05621")
+    axes[2].plot(f_lo_grid, np.angle(F_lo), lw=1.0, color="#c05621")
     axes[2].set_ylabel(r"$\arg F(f)$ [rad]")
     axes[2].set_xlabel("$f$ [Hz]")
     # F traces a circle of radius sqrt(mu_-) centered on sqrt(mu_+) in the
@@ -399,8 +413,13 @@ def main():
     # here, that circle does not enclose the origin, so arg F oscillates
     # (bounded, not a full 2*pi wrap) once per fringe, in phase with |F|
     # above.
-    axes[2].set_title("Misma ampliación: la fase — oscilación acotada, en fase con cada franja de arriba")
-    fig.tight_layout()
+    axes[2].set_title("la fase, sobre la misma ventana: oscilación acotada, "
+                      "una vuelta por franja", fontsize=9.5)
+    fig.suptitle(f"Caso A: franjas de interferencia en $F(f)$ (lente estático, $y={y_A:.3f}$)\n"
+                 f"mismo ancho de envolvente y mismo período de franja "
+                 f"({fringe_period_hz:.2f} Hz) en toda la banda",
+                 fontsize=10.5, y=0.998)
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.955))
     fig.savefig(OUT / "caseA_F_of_f.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
@@ -415,53 +434,84 @@ def main():
     # of this story, where an un-subtracted reference phase looked like a
     # genuine 0.6s early shift and was mis-attributed to interference.
     t_peak = t_peak_unlensed
-    fig, axes = plt.subplots(3, 1, figsize=(8, 9.0))
     t_hi = min(t[-1], echo_t + 1.0)
     view = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_hi)
-    axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888", label="sin lente")
-    axes[0].plot(t[view], h_lensed[view], lw=0.5, color="#2b6cb0", label="con lente", alpha=0.85)
-    axes[0].set_xlabel(f"$t$ [s] (merger en $t={t_peak:.2f}$ s)")
-    axes[0].set_ylabel("$h(t)$ [unidades arbitrarias]")
-    axes[0].axvspan(t_peak - 0.05, t_peak + 0.3, color="gold", alpha=0.3)
-    axes[0].axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.3)
+    # Four panels, in the order a reader needs them: the signal without the
+    # lens, the same signal with it, a zoom centred on the merger, and the
+    # DIFFERENCE. The first two were previously drawn on top of each other in
+    # one panel, where the lensed curve simply hid the unlensed one and
+    # nothing could be compared -- at this time resolution the two are
+    # indistinguishable by eye anyway, which is itself the point: what the
+    # lens does is not visible in the raw strain.
+    #
+    # The difference panel is where it becomes visible, and it is worth its
+    # own panel for a reason. In geometric optics F = sqrt(mu_+) - i
+    # sqrt(|mu_-|) exp(i w Delta_T), so h_lensed - h_unlensed is
+    # (sqrt(mu_+)-1) times the signal, plus a full sqrt(|mu_-|) copy of it
+    # delayed by Delta_T. The first term is 3% and rides under the chirp; the
+    # second is 24% and sits where the chirp has already ended, so the
+    # subtraction isolates the second image against nothing at all.
+    h_diff = h_lensed - h_unlensed
+    fig, axes = plt.subplots(4, 1, figsize=(8, 10.6))
+    y_span = 1.08 * float(np.max(np.abs(h_lensed[view])))
+    axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888")
+    axes[0].set_ylabel("$h(t)$ [u. arb.]")
+    axes[0].set_ylim(-y_span, y_span)
+    axes[0].set_title("sin lente", fontsize=9.5)
+    axes[1].plot(t[view], h_lensed[view], lw=0.5, color="#2b6cb0")
+    axes[1].set_xlabel(f"$t$ [s] (merger en $t={t_peak:.2f}$ s)")
+    axes[1].set_ylabel("$h(t)$ [u. arb.]")
+    axes[1].set_ylim(-y_span, y_span)
+    axes[1].set_title("con lente — misma escala; a simple vista, la misma señal",
+                      fontsize=9.5)
     # Only the model identity, not the full provenance string: everything
     # after the " -- " is an English descriptor that belongs in numbers.json
     # and RESULTS.md, not in a figure inside a Spanish document. Splitting
     # rather than hardcoding keeps the TaylorF2 fallback distinguishable
     # here too, without maintaining a second, translated copy of a label
     # whose authoritative version is `waveform_source`.
-    axes[0].set_title(f"Caso A: forma de onda con lente frente a sin lente\n"
-                       f"{NUMBERS['waveform_source'].split(' -- ')[0]}", fontsize=10)
-    axes[0].legend(loc="upper left", fontsize=8)
 
     # window wide enough to comfortably contain BOTH the unlensed peak (at
     # t_peak, by definition) and the lensed curve's own peak, which is not
     # guaranteed to sit at t_peak too -- F(f) dephases the lensed merger,
     # so its extremum can be offset from the unlensed one (an earlier,
     # narrower window here missed it; see wiki/log.md)
-    zoom = (t > t_peak - 0.05) & (t < t_peak + 0.3)
-    axes[1].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.0, color="#888888", label="sin lente")
-    axes[1].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.0, color="#2b6cb0", alpha=0.85, label="con lente")
-    axes[1].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
-    axes[1].set_ylabel("$h(t)$ [unidades arbitrarias]")
-    axes[1].set_title("Ampliación: merger y ringdown (banda dorada de arriba)", fontsize=10)
-    axes[1].legend(loc="upper right", fontsize=8)
-
-    echo_zoom = (t > echo_t - 0.3) & (t < echo_t + 0.3)
-    axes[2].plot(t[echo_zoom] - t_peak, h_unlensed[echo_zoom], lw=1.0, color="#888888", label="sin lente (debería ser ~0: la señal ya terminó)")
-    axes[2].plot(t[echo_zoom] - t_peak, h_lensed[echo_zoom], lw=1.0, color="#2ca02c", alpha=0.9, label="con lente (el eco)")
+    # Centred on the merger, not starting at it: a window running from -0.05
+    # to +0.30 s put the merger hard against the left edge with a quarter
+    # second of ringdown taking up the rest of the frame.
+    zoom = (t > t_peak - 0.15) & (t < t_peak + 0.15)
+    axes[2].plot(t[zoom] - t_peak, h_unlensed[zoom], lw=1.1, color="#888888", label="sin lente")
+    axes[2].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.1, color="#2b6cb0", alpha=0.9, label="con lente")
     axes[2].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
-    axes[2].set_ylabel("$h(t)$ [unidades arbitrarias]")
-    # Broken over two lines: as one line this title is wider than the axes,
-    # and with bbox_inches="tight" that widens the whole saved figure to fit
-    # it, leaving the three panels floating in a band of white space.
-    axes[2].set_title(
-        f"Ampliación: el eco de la segunda imagen, en $t_\\mathrm{{merger}}$"
-        f"+{echo_t - t_peak:.2f} s (banda verde de arriba)\n"
-        f"predicción de óptica geométrica: +{NUMBERS['image_time_delay_seconds']:.2f} s "
-        f"— la verificación de causalidad, hecha visible", fontsize=10)
-    axes[2].legend(loc="upper right", fontsize=8)
-    fig.tight_layout()
+    axes[2].set_ylabel("$h(t)$ [u. arb.]")
+    axes[2].set_title("ampliación centrada en la primera imagen (el merger)", fontsize=9.5)
+    axes[2].legend(loc="lower left", fontsize=8)
+
+    # Windowed on the merger and the echo, not on the whole chirp: over the
+    # full 15 s the (sqrt(mu_+)-1) residual under the inspiral is a dense
+    # green band that fills the panel and visually buries the very feature
+    # the subtraction exists to expose. From half a second before the merger
+    # to half a second after the echo, the two things left are the 3%
+    # residual of the merger itself and, Delta_T later, the second image at
+    # its full sqrt(|mu_-|) -- roughly 8x taller, against a flat zero.
+    dview = (t >= t_peak - 0.5) & (t <= echo_t + 0.5)
+    axes[3].plot(t[dview] - t_peak, h_diff[dview], lw=0.7, color="#2ca02c")
+    axes[3].axvline(NUMBERS["image_time_delay_seconds"], color="0.55", lw=0.9, ls=":")
+    axes[3].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
+    axes[3].set_ylabel("$h_{\\rm lente}-h_{\\rm sin}$ [u. arb.]")
+    axes[3].set_title(
+        f"la resta aísla la segunda imagen: su chirp entero, retrasado "
+        f"$\\Delta T={NUMBERS['image_time_delay_seconds']:.2f}$ s y escalado por "
+        f"$\\sqrt{{|\\mu_-|}}={sqrt_mu_minus:.2f}$",
+        fontsize=9.5)
+    fig.suptitle("Caso A: qué le hace el lente a la forma de onda",
+                 fontsize=11, y=0.997)
+    # Model identity as a footnote, not in the title: the string carries the
+    # approximant name and, on the fallback path, a parenthetical about why,
+    # which together are wider than the figure.
+    fig.text(0.5, 0.002, NUMBERS["waveform_source"].split(" -- ")[0],
+             ha="center", va="bottom", fontsize=8, color="0.35")
+    fig.tight_layout(rect=(0.0, 0.012, 1.0, 0.982))
     fig.savefig(OUT / "caseA_strain_time.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
@@ -487,19 +537,29 @@ def main():
     # 1201 gives dy=0.005, ~5.6 samples per fringe there. `n_radial` was
     # already fine (dr=0.0011, ~26 per fringe); this was the display grid
     # only, the same distinction the docstring above records.
-    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=3.0, n_grid=1201)
+    # y_max=1.6 rather than 3.0, and a finer display grid: the fringe period
+    # in y is ~0.03-0.05 here, so 3.0 across 1201 pixels left ~5 px per ring
+    # on the outer half and the rings read as moire rather than as rings.
+    # Nothing is lost: the source sits at y_A=1.589 and the pattern is
+    # axisymmetric, so the outer rings are more of the same.
+    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=1.6, n_grid=1601)
     im0 = axes[0].pcolormesh(axis0, axis0y, mag2_0, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_0.min(), 1e-3), vmax=mag2_0.max()))
     axes[0].set_title(f"inicio de banda, $f={system.F_A_START_HZ}$ Hz, $w={w_start:.1f}$", fontsize=9)
     cb0 = fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
     cb0.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
+    # half_width 0.02, not 0.15: the fringe period in y scales as 1/w, so at
+    # w=778 it is ~0.003 and a 0.30-wide window packed ~100 rings into 500
+    # pixels -- the moire the whole figure was accused of. 0.04 wide leaves
+    # ~13 fringes, which is what a fringe pattern has to look like to read as
+    # one.
     axis1, axis1y, mag2_1 = make_ring_pattern(
-        w_isco, n_grid=500, center=(y_A, 0.0), half_width=0.15, n_radial=6000)
+        w_isco, n_grid=500, center=(y_A, 0.0), half_width=0.02, n_radial=12000)
     im1 = axes[1].pcolormesh(axis1, axis1y, mag2_1, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_1.min(), 1e-3), vmax=mag2_1.max()))
-    axes[1].set_title(f"cerca del merger, $f=f_\\mathrm{{isco}}$, $w={w_isco:.1f}$\n"
-                       r"(ampliado a $|\Delta y|<0.15$ en torno a la fuente)", fontsize=9)
+    axes[1].set_title(f"cerca del merger, $f=f_\\mathrm{{isco}}$, $w={w_isco:.0f}$\n"
+                       r"(ampliado a $|\Delta y|<0.02$ en torno a la fuente)", fontsize=9)
     cb1 = fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
     cb1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
 
@@ -512,10 +572,9 @@ def main():
     # edges of this fairly narrow figure; shortened and set explicitly
     # inside the axes bounding box (independent review, see wiki/log.md).
     fig.suptitle("Caso A: patrón de amplificación en el plano de la fuente\n"
-                 "(anillos axisimétricos; el punto central es el pico de difracción "
-                 fr"del anillo de Einstein; la fuente está en $y_A={y_A:.3f}$, marcada)",
+                 fr"(anillos axisimétricos; la fuente, en $y_A={y_A:.3f}$, está marcada)",
                  fontsize=10)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.93))
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
     # bbox_inches="tight": with set_aspect("equal") the axes are resized AFTER
     # tight_layout has computed positions, so the x-axis label ended up drawn
     # below the figure canvas and was cut off in the committed PNG (both
@@ -532,16 +591,26 @@ def main():
     # -- clear on a log axis, easy to under-sell on a linear one.
     fig, ax = plt.subplots(figsize=(8, 3.6))
     # same window as Figure 2's overview panel above -- identical expression, reused rather than rebuilt
-    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="envolvente sin lente")
-    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="envolvente con lente")
-    ax.axvspan(echo_t - 0.3, echo_t + 0.3, color="mediumseagreen", alpha=0.25,
-               label=f"eco observado ($t_\\mathrm{{merger}}$+{echo_t - t_peak:.2f} s)")
+    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="sin lente")
+    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="con lente")
     ax.set_yscale("log")
     ax.set_xlabel("$t$ [s]")
-    ax.set_ylabel("envolvente del strain [unidades arbitrarias, escala log.]")
-    ax.set_title("Caso A: vista de detector idealizada (envolvente del strain; sin ruido ni patrón de antena)\n"
-                 "obsérvese el segundo pico, más débil: el eco de la segunda imagen", fontsize=10)
-    ax.legend(fontsize=8, loc="upper right")
+    ax.set_ylabel("envolvente de $h(t)$ [u. arb.]")
+    ax.set_title("Caso A: vista de detector idealizada — el segundo pico es el eco "
+                 "de la segunda imagen", fontsize=10)
+    # Lower left: the top right of this axes is where the merger peak and the
+    # echo both are, and a legend there covered them. The green band that
+    # used to mark the echo is gone for the same reason -- it shaded the
+    # feature it was pointing at.
+    ax.legend(fontsize=8, loc="lower left")
+    # Headroom above the merger peak (the default limits clipped it, so the
+    # tallest thing in the figure ran off the top of the frame) and a floor
+    # three decades down. Without the floor the axis auto-scales to whatever
+    # the post-merger tail decays to, which on the inspiral-only fallback
+    # path is ~1e-27 and stretches the useful part of the plot into a band a
+    # few pixels tall.
+    env_top = float(np.max(env_l[view]))
+    ax.set_ylim(env_top / 1.0e3, 3.0 * env_top)
     fig.tight_layout()
     fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
