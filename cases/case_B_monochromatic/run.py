@@ -323,14 +323,57 @@ def main():
     y2_traj = y_sky / system.D_L_PC / theta_E_traj
 
     lensed_traj = z_los > 0   # still needed by the animation export below
-    # The orbit track overlaid on the pattern was removed: the track is a
-    # near-straight line crossing rings whose spacing is what the figure is
-    # about, and drawing it on top hid exactly the structure it was meant to
-    # locate. The pattern alone is caseB_pattern_only.png; where the source
-    # sits on it is `caseB_repeated_pulses.png`, which says it in time, where
-    # it is legible. The animated version in report/report.html draws its own
-    # moving marker over caseB_pattern_only.png, which is the readable way to
-    # put the two together.
+
+    # Fig 3: the pattern, with axes, colour bar and caption -- but WITHOUT
+    # the orbit track that used to be drawn over it. The track is a
+    # near-straight line crossing rings whose spacing is the entire content
+    # of the figure, and it hid what it was meant to locate. Where the source
+    # sits on the pattern is said in time instead, in
+    # caseB_repeated_pulses.png, and the animation in report/report.html
+    # draws a moving marker over the bare render below.
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
+    im = ax.pcolormesh(axis, axis, pattern, shading="auto", cmap="inferno",
+                        norm=LogNorm(vmin=max(pattern.min(), 1e-2), vmax=pattern.max()))
+    ax.set_aspect("equal")
+    ax.set_xlim(-y_max, y_max)
+    ax.set_ylim(-y_max, y_max)
+    # One marker at the closest approach, not the whole track. This is the
+    # single piece of information the removed orbit line carried that the
+    # pattern itself does not: where on it the source actually gets to.
+    y_min_obs = float(np.min(y_t[lensed_mask]))
+    ax.plot(y_min_obs, 0.0, "w+", ms=11, mew=2)
+    # Label placed right beside the marker, with no leader line. Anchored up
+    # in the corner it needed an arrow, and that arrow was a white diagonal
+    # drawn straight across the rings -- doing to the figure exactly what the
+    # removed orbit track did.
+    ax.annotate(f"$y_\mathrm{{min}}={y_min_obs:.2f}$",
+                xy=(y_min_obs, 0.0), xytext=(8, 7),
+                textcoords="offset points", color="white", fontsize=8)
+    ax.set_xlabel(r"$y_1$")
+    ax.set_ylabel(r"$y_2$")
+    ax.set_title(f"Caso B: patrón de difracción en el plano de la fuente "
+                 f"($w_B={w_B:.2f}$)\n"
+                 "anillos concéntricos, con el pico del anillo de Einstein al centro",
+                 fontsize=10)
+    # Plain decimals on the colour bar. The whole range here is 1.0 to 1.55,
+    # inside a single decade, and matplotlib's default log formatter renders
+    # that as "1.1 x 10^0", "1.2 x 10^0" -- scientific notation carrying no
+    # information, since the exponent is zero on every tick.
+    import matplotlib.ticker as mticker
+    cb = fig.colorbar(im, ax=ax, shrink=0.85,
+                      label=r"$|F|^2$ (escala logarítmica)")
+    # Explicit ticks as well as an explicit format: inside a single decade the
+    # log locator puts exactly one major tick (at 1) and leaves the rest to the
+    # minor formatter, so silencing the minors without setting the majors
+    # leaves a colour bar with one label on it.
+    lo_cb, hi_cb = im.get_clim()
+    ticks = [v for v in np.arange(0.8, 1.61, 0.1) if lo_cb <= v <= hi_cb]
+    cb.set_ticks(ticks)
+    cb.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:.1f}"))
+    cb.ax.yaxis.set_minor_formatter(mticker.NullFormatter())
+    fig.tight_layout()
+    fig.savefig(OUT / "caseB_pattern.png", dpi=170, bbox_inches="tight")
+    plt.close(fig)
 
     # Fig 4: idealized detector view -- lensed vs unlensed strain envelope
     fig, axes = plt.subplots(2, 1, figsize=(8, 6))
@@ -344,9 +387,15 @@ def main():
     # a fixed 'upper right'/'best' location, in an earlier version of this
     # figure -- caught by eye, not by any check, since nothing here tests
     # figure legibility; see wiki/log.md).
-    y0, y1 = axes[0].get_ylim()
-    axes[0].set_ylim(y0, y0 + 1.28 * (y1 - y0))
-    axes[0].legend(fontsize=8, loc="upper right")
+    # A tight margin around the data instead of 28% of dead canvas above it:
+    # the pulses are the whole point and they were being drawn into the
+    # bottom half of the panel. The legend may overlap the curve; that is
+    # cheaper than shrinking the feature to avoid it.
+    lo = float(np.min(np.abs(z_lensed)))
+    hi = float(np.max(np.abs(z_lensed)))
+    pad = 0.10 * (hi - lo)
+    axes[0].set_ylim(lo - pad, hi + pad)
+    axes[0].legend(fontsize=8, loc="upper left")
 
     # The coarse t-grid above (3600 samples over 24 d, ~576 s spacing) is
     # fine for the slowly-varying envelope but wildly undersamples the
@@ -355,7 +404,16 @@ def main():
     # Build a dedicated fine grid around the first pulse instead.
     i_pulse = int(np.argmax(np.abs(F_t)))
     t_pulse = t[i_pulse]
-    t_fine = np.linspace(t_pulse - 200.0, t_pulse + 200.0, 4000)  # dt=0.1s, >>Nyquist for f_B=0.05Hz
+    # +-2500 s, not +-200 s. The pulse is 6653 s wide (FWHM), so over 200 s
+    # |F| changes by 0.2% of its peak height: the panel resolved carrier
+    # cycles beautifully and showed an amplification that was, correctly but
+    # uselessly, constant across the frame. At 2500 s the envelope moves
+    # through 28% of the pulse and the amplification visibly grows and
+    # fades, at the cost of the individual cycles becoming dense -- which is
+    # unavoidable, since the pulse is 333 carrier cycles wide and no single
+    # window can resolve both. The envelopes are drawn over the carrier so
+    # the pulse shape reads even where the cycles merge.
+    t_fine = np.linspace(t_pulse - 5000.0, t_pulse + 5000.0, 100000)  # dt=0.1 s
     y_fine, lensed_fine, _ = geo.impact_parameter_of_time(
         t_fine, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
         np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
@@ -365,7 +423,7 @@ def main():
     # Retarded emission time here too, for the same reason as the coarse grid
     # above -- and it matters more here, not less: this panel resolves
     # individual 20 s carrier cycles, and the Roemer delay slews by
-    # beta_los*400 s ~ 6.6 s across this +-200 s window, a third of a cycle.
+    # beta_los*10000 s ~ 165 s across this window, eight whole cycles.
     # Using the observation time directly would draw a carrier at the wrong
     # instantaneous frequency.
     t_em_fine, _ = dp.emission_time(t_fine, **orb)
@@ -375,21 +433,23 @@ def main():
     z_u_fine = amp_fine * np.exp(1j * phase_fine)
     z_l_fine = F_fine * z_u_fine
 
-    axes[1].plot(t_fine - t_pulse, z_u_fine.real, color="#888888", lw=0.9)
-    axes[1].plot(t_fine - t_pulse, z_l_fine.real, color="#2b6cb0", lw=0.9)
-    axes[1].set_xlabel("tiempo respecto del pico del pulso [s]")
+    tf = (t_fine - t_pulse) / 60.0
+    # One whole pulse, +-5000 s, with the carrier underneath and the envelopes
+    # drawn over it. The window has to be this wide for the point to land: the
+    # pulse is 6653 s across (FWHM), so a few hundred seconds of it is flat and
+    # the envelopes are then just horizontal rules. Here they rise and fall
+    # through the whole amplification. The cost is that 500 carrier cycles
+    # cannot be told apart individually -- they fill in as a band, whose
+    # outline is exactly the envelope, so nothing is lost.
+    axes[1].plot(tf, z_l_fine.real, color="#bcd4ea", lw=0.35)
+    axes[1].plot(tf, z_u_fine.real, color="#dddddd", lw=0.35)
+    axes[1].plot(tf, np.abs(z_u_fine), color="#777777", lw=1.4, label="sin lente")
+    axes[1].plot(tf, -np.abs(z_u_fine), color="#777777", lw=1.4)
+    axes[1].plot(tf, np.abs(z_l_fine), color="#2b6cb0", lw=1.4, label="con lente")
+    axes[1].plot(tf, -np.abs(z_l_fine), color="#2b6cb0", lw=1.4)
+    axes[1].set_xlabel("tiempo respecto del pico del pulso [min]")
     axes[1].set_ylabel("$h(t)$ [u. arb.]")
-    # Labels ON the curves rather than in a box: there are only two, they are
-    # concentric, and a box in any corner covers crests of the very sinusoid
-    # being compared. Anchored at the first crest to the right of centre.
-    k_crest = int(np.argmax(z_l_fine.real[len(t_fine) // 2:])) + len(t_fine) // 2
-    t_crest = t_fine[k_crest] - t_pulse
-    axes[1].annotate("con lente", xy=(t_crest, z_l_fine.real[k_crest]),
-                     xytext=(6, 4), textcoords="offset points",
-                     color="#2b6cb0", fontsize=9, fontweight="bold")
-    axes[1].annotate("sin lente", xy=(t_crest, z_u_fine.real[k_crest]),
-                     xytext=(6, -14), textcoords="offset points",
-                     color="#555555", fontsize=9)
+    axes[1].legend(fontsize=8, loc="upper right")
     # What this panel shows is the AMPLITUDE difference, |F|=1.177, i.e. 17.7%
     # taller crests. It does NOT show a dephasing: both curves are evaluated
     # at the same retarded time t_em, so the Roemer delay is common to them,
@@ -401,10 +461,19 @@ def main():
     # own truncation error (see system.T_OBS_B_S).
     # Nor is it a zoom on the pulse SHAPE: that (the sinc-like diffraction
     # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.
-    # This +-200 s window exists only to resolve individual 20 s carrier
-    # cycles at the instant of peak amplification.
-    axes[1].set_title("Ampliación en el pico: la señal es un $%.1f\\%%$ más alta"
-                       % (100 * (abs(F_t[i_pulse]) - 1.0)), fontsize=10)
+    # The window cannot show the pulse SHAPE and the carrier cycles at once,
+    # and the arithmetic says so: the pulse is 6653 s wide (FWHM) and the
+    # carrier is 20 s, i.e. 333 cycles per pulse. Measured across this
+    # figure's ~1360 usable pixels: at +-300 s the cycles get 45 px each and
+    # |F| moves 0.4% of its peak height; at +-2500 s |F| finally moves 29%
+    # but the cycles are down to 5 px and the carrier renders as a solid
+    # block. So this panel resolves cycles and says in its own title that
+    # the amplification is flat across it; the pulse shape is
+    # caseB_repeated_pulses.png's job.
+    # Short. Titles name the panel; the explanation of what is in it lives in
+    # cases/FIGURES.md, not inside the image.
+    axes[1].set_title("Ampliación sobre un pulso: envolvente y portadora",
+                      fontsize=10)
     # Centred on zero, with a symmetric margin: the curves are a symmetric
     # oscillation, so an asymmetric frame reads as an offset that is not
     # there. No legend box to displace them (labels are on the curves).
@@ -472,10 +541,8 @@ def main():
     # evaluating F at a fixed w_B is safe here
     # (claims.yaml::fixed_w_approximation_quantified).
     fig.text(0.5, -0.01,
-             "Los pulsos caen en el máximo del retardo de Roemer, no en su cero: el "
-             "retardo es extremo justo donde la velocidad radial se anula,\nque es "
-             "cuando la fuente pasa por detrás del lente. Por eso evaluar $F$ a "
-             "$w_B$ fijo es seguro.",
+             "Los pulsos caen en el máximo del retardo, donde la velocidad "
+             "radial se anula.",
              ha="center", va="top", fontsize=8, color="0.3")
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
@@ -539,7 +606,7 @@ def main():
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))
     print("\nFigures written: caseB_repeated_pulses.png, "
-          "caseB_pattern_only.png, "
+          "caseB_pattern.png, caseB_pattern_only.png, "
           "caseB_detector_view.png, caseB_doppler_vs_lensing.png, "
           "caseB_animation_data.json")
 

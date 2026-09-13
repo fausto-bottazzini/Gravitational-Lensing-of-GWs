@@ -401,6 +401,19 @@ def main():
         axk.set_xlabel("$f$ [Hz]")
         axk.set_title(f"{etiqueta}: {ff[0]:.0f}–{ff[-1]:.0f} Hz, $w={w_here:.0f}$",
                       fontsize=9.5)
+    # The overall title goes on the first panel rather than in a suptitle.
+    # A suptitle has to be positioned by hand relative to a layout that
+    # tight_layout computes afterwards, and every value either leaves a band
+    # of white or overlaps the first panel's own title; folding it in removes
+    # the guess entirely.
+    axes[0].set_title(
+        f"Caso A: franjas de interferencia en $F(f)$ (lente estático, "
+        f"$y={y_A:.3f}$)\n"
+        f"inicio de banda: {f_lo_grid[0]:.0f}–{f_lo_grid[-1]:.0f} Hz, "
+        f"$w={w_start:.0f}$", fontsize=10)
+    axes[1].set_title(
+        f"cerca del merger: {f_hi_grid[0]:.0f}–{f_hi_grid[-1]:.0f} Hz, "
+        f"$w={w_isco:.0f}$", fontsize=9.5)
     axes[0].text(0.985, 0.90, r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$",
                  transform=axes[0].transAxes, ha="right", va="top",
                  fontsize=8, color="#c05621")
@@ -415,11 +428,12 @@ def main():
     # above.
     axes[2].set_title("la fase, sobre la misma ventana: oscilación acotada, "
                       "una vuelta por franja", fontsize=9.5)
-    fig.suptitle(f"Caso A: franjas de interferencia en $F(f)$ (lente estático, $y={y_A:.3f}$)\n"
-                 f"mismo ancho de envolvente y mismo período de franja "
-                 f"({fringe_period_hz:.2f} Hz) en toda la banda",
-                 fontsize=10.5, y=0.998)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.955))
+    # tight_layout FIRST, suptitle after: tight_layout reserves vertical space
+    # for a suptitle even when that suptitle is placed outside the canvas, so
+    # calling it second leaves a band of white between the title and the top
+    # panel that bbox_inches="tight" does not crop. Placed afterwards, at
+    # y just above 1, the tight bounding box simply expands to include it.
+    fig.tight_layout()
     fig.savefig(OUT / "caseA_F_of_f.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
@@ -462,8 +476,7 @@ def main():
     axes[1].set_xlabel(f"$t$ [s] (merger en $t={t_peak:.2f}$ s)")
     axes[1].set_ylabel("$h(t)$ [u. arb.]")
     axes[1].set_ylim(-y_span, y_span)
-    axes[1].set_title("con lente — misma escala; a simple vista, la misma señal",
-                      fontsize=9.5)
+    axes[1].set_title("con lente, misma escala", fontsize=9.5)
     # Only the model identity, not the full provenance string: everything
     # after the " -- " is an English descriptor that belongs in numbers.json
     # and RESULTS.md, not in a figure inside a Spanish document. Splitting
@@ -484,7 +497,7 @@ def main():
     axes[2].plot(t[zoom] - t_peak, h_lensed[zoom], lw=1.1, color="#2b6cb0", alpha=0.9, label="con lente")
     axes[2].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
     axes[2].set_ylabel("$h(t)$ [u. arb.]")
-    axes[2].set_title("ampliación centrada en la primera imagen (el merger)", fontsize=9.5)
+    axes[2].set_title("ampliación: la primera imagen", fontsize=9.5)
     axes[2].legend(loc="lower left", fontsize=8)
 
     # Windowed on the merger and the echo, not on the whole chirp: over the
@@ -500,18 +513,16 @@ def main():
     axes[3].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
     axes[3].set_ylabel("$h_{\\rm lente}-h_{\\rm sin}$ [u. arb.]")
     axes[3].set_title(
-        f"la resta aísla la segunda imagen: su chirp entero, retrasado "
-        f"$\\Delta T={NUMBERS['image_time_delay_seconds']:.2f}$ s y escalado por "
-        f"$\\sqrt{{|\\mu_-|}}={sqrt_mu_minus:.2f}$",
-        fontsize=9.5)
+        f"la resta: la segunda imagen, en "
+        f"$+{NUMBERS['image_time_delay_seconds']:.2f}$ s", fontsize=9.5)
+    fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why
     fig.suptitle("Caso A: qué le hace el lente a la forma de onda",
-                 fontsize=11, y=0.997)
+                 fontsize=11, y=1.012)
     # Model identity as a footnote, not in the title: the string carries the
     # approximant name and, on the fallback path, a parenthetical about why,
     # which together are wider than the figure.
-    fig.text(0.5, 0.002, NUMBERS["waveform_source"].split(" -- ")[0],
-             ha="center", va="bottom", fontsize=8, color="0.35")
-    fig.tight_layout(rect=(0.0, 0.012, 1.0, 0.982))
+    fig.text(0.5, -0.006, NUMBERS["waveform_source"].split(" -- ")[0],
+             ha="center", va="top", fontsize=8, color="0.35")
     fig.savefig(OUT / "caseA_strain_time.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
@@ -519,14 +530,30 @@ def main():
     from matplotlib.colors import LogNorm
     import matplotlib.ticker as mticker
 
-    def _log_tick(value, _pos):
-        # "1" instead of matplotlib's default "10^0" for the unit-value
-        # tick -- correct either way, but "10^0" reads as unnecessary
-        # decoration for a tick that just means 1.
-        if abs(value - 1.0) < 1e-9:
-            return "1"
-        exp = round(np.log10(value))
-        return fr"$10^{{{exp}}}$"
+    def _label_colorbar(cb, im):
+        """Readable ticks on a log colour bar, whichever range it spans.
+
+        Two cases, and the default formatter is wrong for both. Over many
+        decades it writes 10^0 for the tick that just means 1; inside a
+        single decade the log locator places exactly one major tick and
+        leaves the rest to the minor formatter, which renders them as
+        "6 x 10^-1" -- scientific notation whose exponent carries nothing,
+        since every tick shares it. So: plain decimals and explicit ticks
+        when the span is narrow, plain powers of ten when it is wide.
+        """
+        lo, hi = im.get_clim()
+        if hi / max(lo, 1e-12) < 20.0:
+            step = 0.1 if hi - lo < 1.2 else 0.25
+            ticks = [round(v, 2) for v in np.arange(0.0, hi + step, step)
+                     if lo <= v <= hi]
+            cb.set_ticks(ticks)
+            cb.ax.yaxis.set_major_formatter(
+                mticker.FuncFormatter(lambda v, _: f"{v:.1f}"))
+            cb.ax.yaxis.set_minor_formatter(mticker.NullFormatter())
+        else:
+            cb.ax.yaxis.set_major_formatter(mticker.FuncFormatter(
+                lambda v, _: ("1" if abs(v - 1.0) < 1e-9
+                              else fr"$10^{{{round(np.log10(v))}}}$")))
 
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.4))
 
@@ -542,12 +569,15 @@ def main():
     # on the outer half and the rings read as moire rather than as rings.
     # Nothing is lost: the source sits at y_A=1.589 and the pattern is
     # axisymmetric, so the outer rings are more of the same.
-    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=1.6, n_grid=1601)
+    # y_max=2.0: at 1.6 the source marker at y_A=1.589 sat exactly on the
+    # frame edge and was drawn half outside it, while the caption said it
+    # was marked. 2.0 still leaves ~11 px per fringe at 1601 points.
+    axis0, axis0y, mag2_0 = make_ring_pattern(w_start, y_max=2.0, n_grid=1601)
     im0 = axes[0].pcolormesh(axis0, axis0y, mag2_0, shading="auto", cmap="inferno",
                               norm=LogNorm(vmin=max(mag2_0.min(), 1e-3), vmax=mag2_0.max()))
     axes[0].set_title(f"inicio de banda, $f={system.F_A_START_HZ}$ Hz, $w={w_start:.1f}$", fontsize=9)
     cb0 = fig.colorbar(im0, ax=axes[0], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
-    cb0.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
+    _label_colorbar(cb0, im0)
 
     # half_width 0.02, not 0.15: the fringe period in y scales as 1/w, so at
     # w=778 it is ~0.003 and a 0.30-wide window packed ~100 rings into 500
@@ -561,7 +591,7 @@ def main():
     axes[1].set_title(f"cerca del merger, $f=f_\\mathrm{{isco}}$, $w={w_isco:.0f}$\n"
                        r"(ampliado a $|\Delta y|<0.02$ en torno a la fuente)", fontsize=9)
     cb1 = fig.colorbar(im1, ax=axes[1], shrink=0.8, label=r"$|F|^2$ (escala logarítmica)")
-    cb1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_log_tick))
+    _label_colorbar(cb1, im1)
 
     for ax in axes:
         ax.set_aspect("equal")
@@ -571,10 +601,10 @@ def main():
     # A wider, single-line-per-row suptitle was getting clipped at both
     # edges of this fairly narrow figure; shortened and set explicitly
     # inside the axes bounding box (independent review, see wiki/log.md).
+    fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why
     fig.suptitle("Caso A: patrón de amplificación en el plano de la fuente\n"
                  fr"(anillos axisimétricos; la fuente, en $y_A={y_A:.3f}$, está marcada)",
-                 fontsize=10)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.96))
+                 fontsize=10, y=1.04)
     # bbox_inches="tight": with set_aspect("equal") the axes are resized AFTER
     # tight_layout has computed positions, so the x-axis label ended up drawn
     # below the figure canvas and was cut off in the committed PNG (both
@@ -596,8 +626,7 @@ def main():
     ax.set_yscale("log")
     ax.set_xlabel("$t$ [s]")
     ax.set_ylabel("envolvente de $h(t)$ [u. arb.]")
-    ax.set_title("Caso A: vista de detector idealizada — el segundo pico es el eco "
-                 "de la segunda imagen", fontsize=10)
+    ax.set_title("Caso A: vista de detector idealizada (envolvente)", fontsize=10)
     # Lower left: the top right of this axes is where the merger peak and the
     # echo both are, and a legend there covered them. The green band that
     # used to mark the echo is gone for the same reason -- it shaded the

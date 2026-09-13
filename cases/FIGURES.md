@@ -1,9 +1,13 @@
 # The figures, one by one
 
 What each figure is for, what it shows, and what it deliberately does not.
-Eight figures: four per case, plus one schematic in `theory/`. The figures
+Nine figures: four per case, plus one schematic in `theory/`. The figures
 themselves are in Spanish, because they go into `report.pdf`; this page is in
 English like the rest of the repo's own documentation.
+
+Panel titles in the figures are short labels, on purpose. A title names the
+panel; it is not a caption. Everything a reader needs beyond the label is
+here.
 
 Two of them answer the same question at different depths, and the difference
 is worth stating once here because it is the most common confusion:
@@ -67,7 +71,7 @@ of lensing, as directly as it can be drawn.
 
 `|F(w,y)|²` on the sky, at the two ends of the band. Concentric rings around
 the lens, with the source marked at `y_A`. Both panels are windowed so the
-fringes can be counted rather than merely be present: `|y| < 1.6` on the left,
+fringes can be counted rather than merely be present: `|y| < 2.0` on the left,
 and `|Δy| < 0.02` on the right, where `w = 778` makes the fringe period
 ~0.003 and a wider window packed a hundred rings into 500 pixels. Nothing is
 lost by cropping — the pattern is axisymmetric, and the outer rings are more
@@ -103,11 +107,22 @@ of a moving lens is legitimate.
 ### `caseB_detector_view.png` — the measured signal
 
 The same three pulses, now in the strain: the envelope over 12 days on top,
-and below a zoom on one pulse peak resolving individual 20 s carrier cycles.
+and below one whole pulse (±83 min) with the carrier drawn underneath and the
+two envelopes over it.
 
-The zoom shows an **amplitude** difference — crests 17.7% taller with the
-lens. It does not show a dephasing, and a previous version of this figure
-claimed it did. Both curves are evaluated at the same retarded time, so the
+The lower panel's width is forced, and the arithmetic is worth recording. The
+pulse is 6653 s wide (FWHM) and the carrier is 20 s: **333 cycles per pulse**.
+Across the figure's ~1360 usable pixels, a window narrow enough to resolve
+individual cycles (±300 s, 45 px per cycle) is one across which `|F|` moves
+0.4% of its peak height — so the amplification is flat and the envelopes are
+horizontal rules. A window wide enough for the pulse to rise and fall is one
+where the cycles merge into a band. There is no window that gives both, so
+this panel takes the second: the band's outline is the envelope, which is
+what the panel is about.
+
+What separates the two envelopes is **amplitude** — crests up to 17.7% taller
+with the lens. It is not a dephasing, and a previous version of this figure
+claimed it was. Both curves are evaluated at the same retarded time, so the
 90-cycle Roemer delay is common to them and cancels; all that remains between
 them is `F`, whose phase at the peak is `arg F = 1.01°`, a 0.056 s shift on a
 20 s carrier — under a tenth of a pixel.
@@ -130,15 +145,22 @@ line-of-sight velocity vanishes, and that is the same instant the source
 passes behind the lens. It is not a coincidence, and it is also the reason
 evaluating `F` at a fixed `w_B` is safe here.
 
-### `caseB_pattern_only.png` — the diffraction pattern
+### `caseB_pattern.png` — the diffraction pattern
 
 The fixed `|F(w_B,y)|²` pattern: concentric rings with the Einstein-ring peak
-at the centre. The source's orbit track used to be drawn on top of it; that is
-gone. The track is a near-straight line crossing rings whose spacing is the
-whole content of the figure, and it hid exactly what it was meant to locate.
-Where the source sits on the pattern is better said in time — that is
-`caseB_repeated_pulses.png` — and the animated version in `report/report.html`
-puts the two together properly, with a moving marker over this background.
+at the centre, axes, colour bar, and a single marker at the closest approach
+the source makes, `y = 1.59`.
+
+The source's whole orbit track used to be drawn over it. That is gone: the
+track is a near-straight line crossing rings whose spacing is the entire
+content of the figure, and it hid exactly what it was meant to locate. The
+marker is the one thing the track carried that the pattern does not say by
+itself. Where the source sits on the pattern over time is better said in time,
+which is `caseB_repeated_pulses.png`.
+
+`caseB_pattern_only.png` is the same pattern with no axes, labels or colour
+bar, on a square canvas. It is not a figure for the report: it is the
+background that `report/report.html` animates a moving marker over.
 
 ---
 
