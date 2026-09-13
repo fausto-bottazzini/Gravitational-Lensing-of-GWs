@@ -1,7 +1,7 @@
 {
   "los_velocity_matches_the_orbit_code": {
     "passed": true,
-    "message": "max relative |d(z_src)/dt - closed-form v_z| over e in [0,0.4] = 2.36e-10 (tol 1e-6)"
+    "message": "max relative |d(z_src)/dt - closed-form v_z| over e in [0,0.4] = 2.35e-10 (tol 1e-6)"
   },
   "retarded_time_is_the_whole_first_order_doppler": {
     "passed": true,

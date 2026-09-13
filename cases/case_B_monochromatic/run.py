@@ -257,8 +257,23 @@ def main():
 
     i_peak = int(np.argmax(abs_F2))
     t_peak_days = t[i_peak] / 86400.0
-    zoom = (np.abs(t / 86400.0 - t_peak_days) < 1.0)
-    axes[1].plot(t[zoom] / 86400.0 - t_peak_days, abs_F2[zoom], color="#c0392b", lw=1.0)
+    # Dedicated fine grid for the zoom, not a slice of the coarse one. The
+    # observation grid is 600 samples per outer period (576 s apart), which is
+    # right for three pulses across 12 days but leaves only ~300 points across
+    # this +-1 day window -- and the ringing oscillates fast enough there that
+    # the curve came out visibly polygonal. 6000 points is 29 s apart and costs
+    # about three seconds of F evaluation.
+    t_zoom = np.linspace(t[i_peak] - 86400.0, t[i_peak] + 86400.0, 6000)
+    y_zoom, lensed_zoom, _ = geo.impact_parameter_of_time(
+        t_zoom, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
+        np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
+        system.T_PERI_OUT, system.M_LENS_MSUN, system.D_L_PC)
+    abs_F2_zoom = np.ones_like(t_zoom)
+    near = lensed_zoom & (y_zoom < 60.0)
+    abs_F2_zoom[near] = np.abs(
+        [complex(wo.F_hybrid(w_B, yy)) for yy in y_zoom[near]]) ** 2
+    axes[1].plot((t_zoom - t[i_peak]) / 86400.0, abs_F2_zoom,
+                 color="#c0392b", lw=1.0)
     axes[1].set_xlabel(r"$t - t_\mathrm{pico}$ [días]")
     axes[1].set_ylabel(r"$|F(w_B,y(t))|^2$")
     axes[1].set_title("Ampliación: un pulso — el anillado de difracción que lo flanquea")
@@ -395,7 +410,7 @@ def main():
     hi = float(np.max(np.abs(z_lensed)))
     pad = 0.10 * (hi - lo)
     axes[0].set_ylim(lo - pad, hi + pad)
-    axes[0].legend(fontsize=8, loc="upper left")
+    axes[0].legend(fontsize=8, loc="upper right")
 
     # The coarse t-grid above (3600 samples over 24 d, ~576 s spacing) is
     # fine for the slowly-varying envelope but wildly undersamples the

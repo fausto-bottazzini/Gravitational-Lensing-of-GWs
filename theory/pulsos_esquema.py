@@ -64,7 +64,7 @@ def main():
     tp = t / P
 
     # one pulse, enlarged: conjunction sits at a quarter period
-    half = 0.075 * P
+    half = 0.105 * P
     t_z = np.linspace(0.25 * P - half, 0.25 * P + half, 4001)
     mag2_z = amplification(t_z)
     tz = (t_z - 0.25 * P) / P
