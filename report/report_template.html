@@ -475,7 +475,7 @@ window.__CASE_B__ = /*__CASE_B_DATA__*/;
     }
 
     function frameB(frac) {
-      const tCur = frac * tEnvMax; // full 6-period sweep
+      const tCur = frac * tEnvMax; // full 3-period sweep
       const tMod = tCur % CASE_B.P_days; // orbit repeats every period
 
       const oi = nearestIdx(orb.t_days, tMod);

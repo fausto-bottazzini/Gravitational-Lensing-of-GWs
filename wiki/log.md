@@ -122,18 +122,19 @@ The text was rewritten from a report into a textbook chapter over four days of
 annotate-and-correct rounds on the PDF. Errors of substance found and fixed in
 the process, all verified numerically before and after:
 
-- **The Mardling & Aarseth stability margin was computed with `q_out`
-  inverted.** Their Eq. 90 defines `q_out = m3/(m1+m2)`; the code uses the
-  reciprocal, which turns a threshold of 51 into 2.8 and a margin of 93x into
-  1694x. The text is fixed. **`tests/test_system.py:36` still has the inverted
-  ratio**, and `CHECKS_system.json` and this repo's other prose inherit the
-  wrong number from it.
+- **The Mardling & Aarseth stability margin was quoted with `q_out`
+  inverted.** Their Eq. 90 defines `q_out = m3/(m1+m2)`; the reciprocal turns
+  a threshold of 51 into 2.8 and a margin of 93x into 1694x. Resolved
+  2026-09-12: the CODE was right all along (`M_LENS/MTOT`, and it reports
+  93x); what carried the wrong number was `check_hierarchy`'s own docstring,
+  which described `q_out` backwards and quoted 1700x. Docstring corrected,
+  and it now names 1700x explicitly as the reading to watch for if this ever
+  regresses.
 - **The Kozai-Lidov comparison was stated backwards.** `t_KL = 16 yr` against
   240 d to merger is a factor 24 of *safety*; the text said it was "4% of the
-  time to merger" and the only condition not negligible on its own. The
-  computed ratio is `tau/t_KL`, and the message in `test_system.py` reads it
-  the other way. Same status: fixed in the text, **still wrong in the test's
-  message**.
+  time to merger" and the only condition not negligible on its own. Also
+  resolved 2026-09-12, the same way: the test's message was already reading
+  it correctly, and only the prose around it was stale.
 - `|F(w,0)|^2` was printed as `pi*w/2 / (1-e^{-pi*w/2})`; the identity
   `|Gamma(1+iz)|^2 = pi*z/sinh(pi*z)` gives `pi*w/(1-e^{-pi*w})`. The numbers
   quoted beside it were right; the formula was not.
@@ -156,6 +157,117 @@ Also added in the rewrite: an appendix deriving every result step by step,
 including the closed-form point-lens `F` (Weber-Sonine, Kummer), which had
 been cited and not derived; `y(theta)` in closed form; and the error budget of
 the whole treatment, which is 1-2%.
+
+## The behavioural audit of `src/` and `tests/` (2026-09-12)
+
+The question was whether the code does what it says, not whether it says
+something sensible, so the method was to probe behaviour and then to plant
+bugs. 21 deliberate faults in `src/` -- the conjugation dropped from
+`F_point_lens`, the literature sign on the SPA phase, `Delta_T` 1% long,
+`beta` read at `t_obs` instead of `t_em`, the chirp-mass exponent, `D_LS` set
+to `|z_los|`, and so on -- and then: which checks notice?
+
+20 of 21 were caught. The survivor was dropping the 3 from
+`orbital_redshift_factor`'s `(1-3GM/rc^2)^{-1/2}`, i.e. keeping the
+gravitational redshift and losing the transverse-Doppler piece. Nothing
+noticed, and the function's docstring claimed the split was "checked in
+tests/test_doppler.py" when it was only printed there. Closed with a sixth
+check that rebuilds the factor from `2GM/rc^2` and `(r Omega/c)^2` with
+`Omega^2 = GM/r^3`, so the 3 is a result rather than a literal. No other check
+could ever have caught it: a constant redshift produces no waveform feature.
+
+Two validity conditions `theory.pdf` states as governing had nothing behind
+them either, and both now do:
+
+- **Point source, in the wave-optics sense.** Sec. 1.3 derives `a_in << b`,
+  then says in as many words that this is "the weaker of the two" and that
+  what matters in wave optics is the source size against the Einstein radius.
+  It asserts the stronger condition holds "with room to spare" and gives no
+  number. It is `a_in/eta_0 = 6.4e-3` at Case B, against `a_in/a_out = 2.1e-4`
+  -- 30x tighter than what `check_hierarchy` was testing in its place.
+- **The adiabatic condition**, which is Case B's whole licence. An external
+  review reported it failing by a factor of 3. It does not: `|dln y/dt|^-1`
+  goes to zero at both ends of the lensed window for any system whatsoever
+  (`D_LS -> 0` there, so `y -> infinity`), and minimised over the whole lensed
+  half the number is the sampling grid's, not the system's -- 43 s at 2e4
+  samples per period, 0.26 s at 2e5, 0.03 s at 2e6. Evaluated where the
+  prescription does something, `|F| > 1.01`, the margin is 5844x, and the
+  check verifies it is the same at two grid densities.
+
+A third was added when the same question was asked of the deflection itself:
+no ray comes closer than the Einstein ring, `xi_0 = 121 r_g`, whatever `y`
+does -- as `y -> 0` the images move onto the ring, they do not fall inward --
+so the second-order Schwarzschild term is a fixed 2.4% there and 1.2% at the
+`y` actually used. It scales as `M_L^(-1/3)`, so a heavier lens is worse.
+
+`F_point_lens` was validated from first principles at exactly one point of the
+`(w,y)` plane, and `w=1` is the one place where "error `= O(eta)`" and the true
+"error `= O(eta w x_+^2)`" cannot be told apart. `F_radial_1d`'s docstring
+claimed the default `eta=0.01` gives ~1.3%; at `w=25` the same call is 49%
+off. The convergence check now also runs at `w=25`, just under `F_hybrid`'s
+`w<30` cut, which is the demanding end of the range `F_point_lens` is actually
+used over.
+
+## The observing baseline, and what it is limited by (2026-09-12)
+
+`T_OBS_B_S` went from six outer periods to three (24 d -> 12 d). The limit is
+not the lens, it is the waveform: Case B uses the leading-order quadrupole
+model, and the phase a 0PN model omits accumulates with the window while the
+phase the lens writes does not. At `f_B` the source is at `v/c = 0.030`, so
+the 1PN term is 5.8e-3 of the leading one -- but across tens of thousands of
+carrier cycles that is still large next to `arg F = 0.018 rad`, even after
+absorbing `phi_c`, `t_c` and `M_chirp`. Hence the framing: **Case B is an
+amplitude result.** `|F|` is untouched by phase truncation.
+
+The system itself was interrogated at the same time and left alone. Masses,
+lens mass, outer period and inclination are each pinned by constraints that
+pull against one another: lowering `f_B` kills the lensing (17.7% modulation
+to 2.4%) unless `M_L` rises in proportion, which worsens the weak-deflection
+term; growing the orbit improves nearly everything structural but lengthens
+the observation linearly and narrows the usable inclination window from 3.0 to
+1.0 degrees. The whole system lives inside 3 degrees of inclination.
+
+## The figures (2026-09-12..13)
+
+Redrawn so that each shows what its caption says. The ones that were not:
+
+- `caseB_detector_view.png`'s zoom panel was captioned as showing the lensed
+  and unlensed waveforms "visibly dephase over just a few carrier cycles".
+  They do not. Both are evaluated at the same retarded time, so the 90-cycle
+  Roemer delay is common to them and cancels, leaving only `F` -- whose phase
+  at the pulse peak is 1.01 degrees, a 0.056 s shift on a 20 s carrier, under
+  a tenth of a pixel. What the panel shows is amplitude: crests 17.7% taller.
+- `caseA_F_of_f.png`'s top panel shaded the envelope across the whole band
+  with no curve inside it, which rendered as a featureless rectangle: it
+  asserted that the envelope is constant instead of showing it. Replaced by
+  two resolved windows at `w=62` and `w=778`.
+- `caseA_strain_time.png` drew the lensed waveform over the unlensed one,
+  which simply hid the lower curve.
+
+Three decisions worth keeping, because each was reached by trying the
+alternative and looking at it:
+
+- **Envelope and carrier cannot share a panel in Case B.** A pulse is 6653 s
+  wide (FWHM) against a 20 s carrier: 333 cycles. Across ~1360 usable pixels,
+  +-300 s resolves the cycles (45 px each) but `|F|` moves 0.4% of its peak
+  height, so any envelope drawn on it is a horizontal rule; +-2500 s makes the
+  envelope move but drops the cycles to 5 px and the carrier fills in as a
+  block. Both were built. Shipped is the narrow one.
+- **The orbit track came off the diffraction pattern.** It is a near-straight
+  line crossing rings whose spacing is the entire content of the figure. A
+  single marker at closest approach carries what it carried.
+- **Titles are labels, not captions.** Several had grown into two-line
+  explanations inside the image. The explanations moved to `cases/FIGURES.md`,
+  which now has one entry per figure.
+
+`F(f)` is drawn on its own dense grid rather than the waveform's FFT grid: the
+fringe period is 0.29 Hz and the bin spacing 0.04 Hz, so the curves were being
+drawn from ~7 points per fringe and came out polygonal. Same fix, same reason,
+for the one-pulse zoom in `caseB_repeated_pulses.png`.
+
+Colour bars inside a single decade were rendering "1.1 x 10^0", "6 x 10^-1" --
+scientific notation whose exponent is identical on every tick. Both cases now
+choose plain decimals with explicit ticks when the span is narrow.
 
 ## Independent reviews
 

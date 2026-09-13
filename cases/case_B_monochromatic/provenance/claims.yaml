@@ -16,7 +16,7 @@ claims:
       crossing.
     evidence:
       - src/gwlens/geometry.py::impact_parameter_of_time
-      - caseB_pattern_with_orbit.png
+      - caseB_pattern.png
     numbers: [fraction_of_time_lensed]
   - id: y_min_crosscheck
     statement: >

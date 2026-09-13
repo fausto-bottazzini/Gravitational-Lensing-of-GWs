@@ -412,7 +412,7 @@ def main():
     axes[0].set_ylim(lo - pad, hi + pad)
     axes[0].legend(fontsize=8, loc="upper right")
 
-    # The coarse t-grid above (3600 samples over 24 d, ~576 s spacing) is
+    # The coarse t-grid above (1800 samples over 12 d, ~576 s spacing) is
     # fine for the slowly-varying envelope but wildly undersamples the
     # 1/f_B=20 s carrier -- plotting "raw waveform" from it just aliases
     # (an earlier version of this figure did exactly that; see wiki/log.md).

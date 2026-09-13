@@ -43,7 +43,7 @@ lens, a 4-day, near-edge-on outer orbit), at two epochs of its inspiral:
   amplification pattern on the source plane (and how finely it's resolved
   changes with frequency), and the lensed vs. unlensed chirp.
 - **Case B** (`cases/case_B_monochromatic/`): earlier, wider inspiral,
-  f=0.05 Hz and nearly constant over a 24-day (6 outer period) observation.
+  f=0.05 Hz and nearly constant over a 12-day (3 outer period) observation.
   The outer orbital motion *is* resolved: the impact parameter sweeps
   through the same diffraction pattern once per period, producing periodic
   "repeated lensing" amplification pulses — and exactly half of each orbit
