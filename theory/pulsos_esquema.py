@@ -64,7 +64,7 @@ def main():
     tp = t / P
 
     # one pulse, enlarged: conjunction sits at a quarter period
-    half = 0.30 * P
+    half = 0.075 * P
     t_z = np.linspace(0.25 * P - half, 0.25 * P + half, 4001)
     mag2_z = amplification(t_z)
     tz = (t_z - 0.25 * P) / P
@@ -80,17 +80,17 @@ def main():
             ha="center", va="bottom", fontsize=9)
     ax.set_xlabel(r"$t$")
     ax.set_ylabel(r"$|F(w,y(t))|^{2}$")
-    ax.set_xlim(-0.04, n_periods)
-    ax.set_ylim(0.86, 1.63)
+    ax.set_xlim(-0.05, 1.55)
+    ax.set_ylim(0.89, 1.56)
     esqueleto(ax)
 
     axz.plot(tz, mag2_z, color="black", lw=0.9)
-    axz.annotate("anillado de\ndifracción", xy=(0.050, 1.055),
-                 xytext=(0.068, 1.28), fontsize=8, ha="left",
+    axz.annotate("anillado de\ndifracción", xy=(0.030, 1.055),
+                 xytext=(0.040, 1.26), fontsize=8, ha="left",
                  arrowprops=dict(arrowstyle="->", color="black", lw=0.6))
     axz.set_xlabel(r"$t$ (ampliado)")
     axz.set_xlim(tz[0], tz[-1])
-    axz.set_ylim(0.86, 1.63)
+    axz.set_ylim(0.89, 1.56)
     esqueleto(axz)
 
     fig.tight_layout()
