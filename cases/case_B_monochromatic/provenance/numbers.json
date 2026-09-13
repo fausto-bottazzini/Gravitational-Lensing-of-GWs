@@ -4,7 +4,7 @@
   "min_y_during_observation": 1.5891701901729844,
   "n_outer_periods_observed": 3.0,
   "n_samples": 1800,
-  "F_evaluation_seconds": 0.7806491851806641,
+  "F_evaluation_seconds": 0.9793548583984375,
   "max_abs_F": 1.176640972493464,
   "mean_abs_F2_over_observation": 1.0060995149090306,
   "roemer_delay_ptp_s": 1809.8144721731337,

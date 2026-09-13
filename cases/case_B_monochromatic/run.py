@@ -413,7 +413,7 @@ def main():
     # unavoidable, since the pulse is 333 carrier cycles wide and no single
     # window can resolve both. The envelopes are drawn over the carrier so
     # the pulse shape reads even where the cycles merge.
-    t_fine = np.linspace(t_pulse - 5000.0, t_pulse + 5000.0, 100000)  # dt=0.1 s
+    t_fine = np.linspace(t_pulse - 300.0, t_pulse + 300.0, 6000)  # dt=0.1 s
     y_fine, lensed_fine, _ = geo.impact_parameter_of_time(
         t_fine, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
         np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
@@ -423,7 +423,7 @@ def main():
     # Retarded emission time here too, for the same reason as the coarse grid
     # above -- and it matters more here, not less: this panel resolves
     # individual 20 s carrier cycles, and the Roemer delay slews by
-    # beta_los*10000 s ~ 165 s across this window, eight whole cycles.
+    # beta_los*600 s ~ 9.9 s across this window, half a cycle.
     # Using the observation time directly would draw a carrier at the wrong
     # instantaneous frequency.
     t_em_fine, _ = dp.emission_time(t_fine, **orb)
@@ -433,7 +433,7 @@ def main():
     z_u_fine = amp_fine * np.exp(1j * phase_fine)
     z_l_fine = F_fine * z_u_fine
 
-    tf = (t_fine - t_pulse) / 60.0
+    tf = t_fine - t_pulse
     # One whole pulse, +-5000 s, with the carrier underneath and the envelopes
     # drawn over it. The window has to be this wide for the point to land: the
     # pulse is 6653 s across (FWHM), so a few hundred seconds of it is flat and
@@ -441,13 +441,16 @@ def main():
     # through the whole amplification. The cost is that 500 carrier cycles
     # cannot be told apart individually -- they fill in as a band, whose
     # outline is exactly the envelope, so nothing is lost.
-    axes[1].plot(tf, z_l_fine.real, color="#bcd4ea", lw=0.35)
-    axes[1].plot(tf, z_u_fine.real, color="#dddddd", lw=0.35)
-    axes[1].plot(tf, np.abs(z_u_fine), color="#777777", lw=1.4, label="sin lente")
-    axes[1].plot(tf, -np.abs(z_u_fine), color="#777777", lw=1.4)
-    axes[1].plot(tf, np.abs(z_l_fine), color="#2b6cb0", lw=1.4, label="con lente")
-    axes[1].plot(tf, -np.abs(z_l_fine), color="#2b6cb0", lw=1.4)
-    axes[1].set_xlabel("tiempo respecto del pico del pulso [min]")
+    # Carriers only. Envelopes were drawn here for a revision and taken out:
+    # they and the carrier cannot both be shown, since a pulse is 333 carrier
+    # cycles wide, so any window that resolves cycles has a flat |F| and the
+    # envelopes are horizontal rules, and any window where they move has the
+    # cycles merged into a band. The pulse SHAPE is caseB_repeated_pulses.png;
+    # this panel is the carrier, and what it shows is the crest height.
+    # Lensed first, unlensed over it, so the smaller stays visible inside.
+    axes[1].plot(tf, z_l_fine.real, color="#2b6cb0", lw=0.9, label="con lente")
+    axes[1].plot(tf, z_u_fine.real, color="#777777", lw=0.9, label="sin lente")
+    axes[1].set_xlabel("tiempo respecto del pico del pulso [s]")
     axes[1].set_ylabel("$h(t)$ [u. arb.]")
     axes[1].legend(fontsize=8, loc="upper right")
     # What this panel shows is the AMPLITUDE difference, |F|=1.177, i.e. 17.7%
@@ -461,19 +464,17 @@ def main():
     # own truncation error (see system.T_OBS_B_S).
     # Nor is it a zoom on the pulse SHAPE: that (the sinc-like diffraction
     # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.
-    # The window cannot show the pulse SHAPE and the carrier cycles at once,
-    # and the arithmetic says so: the pulse is 6653 s wide (FWHM) and the
-    # carrier is 20 s, i.e. 333 cycles per pulse. Measured across this
-    # figure's ~1360 usable pixels: at +-300 s the cycles get 45 px each and
-    # |F| moves 0.4% of its peak height; at +-2500 s |F| finally moves 29%
-    # but the cycles are down to 5 px and the carrier renders as a solid
-    # block. So this panel resolves cycles and says in its own title that
-    # the amplification is flat across it; the pulse shape is
-    # caseB_repeated_pulses.png's job.
-    # Short. Titles name the panel; the explanation of what is in it lives in
-    # cases/FIGURES.md, not inside the image.
-    axes[1].set_title("Ampliación sobre un pulso: envolvente y portadora",
-                      fontsize=10)
+    # Why +-300 s, measured rather than picked: across this figure's ~1360
+    # usable pixels the 20 s carrier gets 45 px per cycle there, and |F| moves
+    # 0.4% of its peak height, so the amplification is effectively constant
+    # and the panel is a clean comparison of two crest heights. Widening it
+    # until |F| visibly moves (+-2500 s, 29%) drops the cycles to 5 px and the
+    # carrier fills in as a block. The pulse is 333 cycles wide, so there is
+    # no window that does both; its shape is caseB_repeated_pulses.png's job.
+    # Titles name the panel and stop there; the rest is cases/FIGURES.md.
+    axes[1].set_title("Ampliación en el pico: las crestas con lente son un "
+                       "$%.1f\\%%$ más altas"
+                       % (100 * (abs(F_t[i_pulse]) - 1.0)), fontsize=10)
     # Centred on zero, with a symmetric margin: the curves are a symmetric
     # oscillation, so an asymmetric frame reads as an offset that is not
     # there. No legend box to displace them (labels are on the curves).

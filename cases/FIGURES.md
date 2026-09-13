@@ -107,25 +107,23 @@ of a moving lens is legitimate.
 ### `caseB_detector_view.png` — the measured signal
 
 The same three pulses, now in the strain: the envelope over 12 days on top,
-and below one whole pulse (±83 min) with the carrier drawn underneath and the
-two envelopes over it.
+and below a ±300 s window at one pulse's peak, resolving individual 20 s
+carrier cycles. The lensed crests are **17.7% taller**. That is the panel.
 
-The lower panel's width is forced, and the arithmetic is worth recording. The
-pulse is 6653 s wide (FWHM) and the carrier is 20 s: **333 cycles per pulse**.
-Across the figure's ~1360 usable pixels, a window narrow enough to resolve
-individual cycles (±300 s, 45 px per cycle) is one across which `|F|` moves
-0.4% of its peak height — so the amplification is flat and the envelopes are
-horizontal rules. A window wide enough for the pulse to rise and fall is one
-where the cycles merge into a band. There is no window that gives both, so
-this panel takes the second: the band's outline is the envelope, which is
-what the panel is about.
+It cannot also show the pulse's shape, and the arithmetic is why. The pulse
+is 6653 s wide (FWHM) against a 20 s carrier: **333 cycles per pulse**. Across
+the figure's ~1360 usable pixels, ±300 s gives 45 px per cycle and `|F|` moves
+0.4% of its peak height — clean cycles, flat amplification. Widening until
+`|F|` visibly rises and falls (±2500 s, 29%) drops the cycles to 5 px and the
+carrier fills in as a solid block; drawing envelopes over it then just adds
+four horizontal rules. Both were tried. Neither works, because no window does
+both — the pulse shape belongs to `caseB_repeated_pulses.png`.
 
-What separates the two envelopes is **amplitude** — crests up to 17.7% taller
-with the lens. It is not a dephasing, and a previous version of this figure
-claimed it was. Both curves are evaluated at the same retarded time, so the
-90-cycle Roemer delay is common to them and cancels; all that remains between
-them is `F`, whose phase at the peak is `arg F = 1.01°`, a 0.056 s shift on a
-20 s carrier — under a tenth of a pixel.
+What separates the two curves is **amplitude**. It is not a dephasing, and a
+previous version of this figure claimed it was. Both are evaluated at the same
+retarded time, so the 90-cycle Roemer delay is common to them and cancels; all
+that remains between them is `F`, whose phase at the peak is `arg F = 1.01°`,
+a 0.056 s shift on a 20 s carrier — under a tenth of a pixel.
 
 ### `caseB_doppler_vs_lensing.png` — the orbit's two imprints
 
