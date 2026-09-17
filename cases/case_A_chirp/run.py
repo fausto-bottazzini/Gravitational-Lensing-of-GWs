@@ -500,21 +500,31 @@ def main():
     axes[2].set_title("ampliación: la primera imagen", fontsize=9.5)
     axes[2].legend(loc="lower left", fontsize=8)
 
-    # Windowed on the merger and the echo, not on the whole chirp: over the
-    # full 15 s the (sqrt(mu_+)-1) residual under the inspiral is a dense
-    # green band that fills the panel and visually buries the very feature
-    # the subtraction exists to expose. From half a second before the merger
-    # to half a second after the echo, the two things left are the 3%
-    # residual of the merger itself and, Delta_T later, the second image at
-    # its full sqrt(|mu_-|) -- roughly 8x taller, against a flat zero.
-    dview = (t >= t_peak - 0.5) & (t <= echo_t + 0.5)
-    axes[3].plot(t[dview] - t_peak, h_diff[dview], lw=0.7, color="#2ca02c")
-    axes[3].axvline(NUMBERS["image_time_delay_seconds"], color="0.55", lw=0.9, ls=":")
+    # The RATIO of the envelopes, not their difference. The difference isolates
+    # the second image -- a delayed copy of the whole signal -- which is a
+    # statement about arrival times. The ratio is a statement about
+    # interference, which is what the lens actually does to the waveform here:
+    # dividing the lensed analytic signal by the unlensed one leaves |F|, and
+    # because the chirp sweeps frequency monotonically, plotting it against
+    # time sweeps out F's interference fringes. It oscillates between
+    # sqrt(mu_+) -/+ sqrt(|mu_-|) throughout, and the fringes crowd together
+    # towards the merger because df/dt does: measured, 1.0 fringes per second
+    # at 10 Hz against 93 per second at 36 Hz. The fringe period is constant
+    # in FREQUENCY (0.29 Hz, caseA_F_of_f.png); this is that same curve seen
+    # through f(t).
+    #
+    # Cut before the merger: past it the unlensed signal decays into the
+    # ringdown while the lensed one still carries the second image, so the
+    # ratio stops measuring interference and starts diverging.
+    rview = (t >= t_peak - NUMBERS["t_end_seconds"] + 1.0) & (t <= t_peak - 0.25)
+    ratio = np.abs(env_l[rview]) / np.abs(env_u[rview])
+    axes[3].plot(t[rview] - t_peak, ratio, lw=0.6, color="#6b46c1")
+    for lvl in (sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus):
+        axes[3].axhline(lvl, color="#c05621", lw=0.9, ls="--")
     axes[3].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
-    axes[3].set_ylabel("$h_{\\rm lente}-h_{\\rm sin}$ [u. arb.]")
-    axes[3].set_title(
-        f"la resta: la segunda imagen, en "
-        f"$+{NUMBERS['image_time_delay_seconds']:.2f}$ s", fontsize=9.5)
+    axes[3].set_ylabel("con lente / sin lente")
+    axes[3].set_title("el cociente: la interferencia entre las dos imágenes",
+                      fontsize=9.5)
     fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why
     fig.suptitle("Caso A: qué le hace el lente a la forma de onda",
                  fontsize=11, y=1.012)
@@ -623,10 +633,21 @@ def main():
     # same window as Figure 2's overview panel above -- identical expression, reused rather than rebuilt
     ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="sin lente")
     ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="con lente")
+    ax.annotate("1ra imagen", xy=(t_peak, float(np.max(env_l))),
+                xytext=(-46, -14), textcoords="offset points", fontsize=8,
+                color="#2b6cb0")
+    ax.annotate("2da imagen\n($+%.2f$ s)" % (echo_t - t_peak),
+                xy=(echo_t, NUMBERS["echo_peak_env_lensed"]),
+                xytext=(-8, 12), textcoords="offset points", fontsize=8,
+                color="#2b6cb0")
     ax.set_yscale("log")
     ax.set_xlabel("$t$ [s]")
-    ax.set_ylabel("envolvente de $h(t)$ [u. arb.]")
-    ax.set_title("Caso A: vista de detector idealizada (envolvente)", fontsize=10)
+    ax.set_ylabel("$|h(t)|$ [u. arb.]")
+    # Retitled: "vista de detector idealizada (envolvente)" said what the
+    # figure was made of, not what it shows. What it shows is that the lens
+    # turns one event into two arrivals.
+    ax.set_title("Caso A: con lente llegan dos pulsos, no uno\n"
+                 "(amplitud instantánea $|h(t)|$, escala logarítmica)", fontsize=10)
     # Lower left: the top right of this axes is where the merger peak and the
     # echo both are, and a legend there covered them. The green band that
     # used to mark the echo is gone for the same reason -- it shaded the

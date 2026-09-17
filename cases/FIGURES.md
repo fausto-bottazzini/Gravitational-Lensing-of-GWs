@@ -49,23 +49,31 @@ panels now use their own dense grid.
 ### `caseA_strain_time.png` — what the lens does to the waveform
 
 Four panels: unlensed strain, lensed strain **on the same scale**, a zoom
-centred on the merger, and the **difference**.
+centred on the merger, and the **ratio** of the two.
 
 The first two are separate panels rather than one overlay. At this time
 resolution the two curves are indistinguishable — which is the point, and is
 worth seeing — and drawing one on top of the other simply hid the lower one.
 
-The fourth panel is where the lensing becomes visible, and it is the answer to
-"does subtracting the two make sense?". It does, and for a specific reason. In
-geometric optics `F = √μ₊ − i√|μ₋| e^{iwΔT}`, so
+The fourth panel is where the lensing becomes visible. It is the **ratio**,
+not the difference, and the distinction matters. Dividing the lensed analytic
+signal by the unlensed one leaves `|F|`, and because the chirp sweeps
+frequency monotonically, plotting that against time sweeps out F's
+interference fringes. The curve oscillates between `√μ₊ ∓ √|μ₋|` (drawn as
+dashed lines) from end to end, and the fringes crowd together towards the
+merger because `df/dt` does: **1.0 fringes per second at 10 Hz against 93 per
+second at 36 Hz**. The fringe period is constant in *frequency* (0.29 Hz,
+`caseA_F_of_f.png`); this is the same curve seen through `f(t)`.
 
-    h_lensed − h_unlensed = (√μ₊ − 1)·h(t) + √|μ₋|·h(t − ΔT)
+A previous version plotted the difference instead. That is a different
+statement — `h_lensed − h_unlensed = (√μ₊−1)h(t) + √|μ₋|h(t−ΔT)`, so
+subtracting isolates the second image as a delayed copy — which is about
+arrival times, not about interference. The second image is already visible in
+the second panel and labelled in `caseA_detector_envelope.png`.
 
-The first term is 3% of the signal and rides under the chirp. The second is a
-**full copy** of the signal at 24%, delayed by `ΔT`. So the subtraction
-isolates the second image and shows it replaying the entire inspiral, merger
-and ringdown against a flat zero, `ΔT` late. That is the causality signature
-of lensing, as directly as it can be drawn.
+The panel stops before the merger. Past it the unlensed signal decays into
+the ringdown while the lensed one still carries the second image, so the
+ratio stops measuring interference and starts diverging.
 
 ### `caseA_diffraction_pattern.png` — the pattern in the source plane
 
@@ -77,11 +85,28 @@ and `|Δy| < 0.02` on the right, where `w = 778` makes the fringe period
 lost by cropping — the pattern is axisymmetric, and the outer rings are more
 of the same.
 
-### `caseA_detector_envelope.png` — what a detector would record
+### `caseA_detector_envelope.png` — two arrivals, not one
 
-The strain envelope, log scale, lensed against unlensed. Two peaks: the merger,
-and 3.43 s later the echo, a factor ~4 lower (`√|μ₋| = 0.24`). No noise, no
-antenna pattern, no PSD — an idealized view, and labelled as one.
+This is a **time-domain** figure, not a spectrum. It plots `|h(t)|`, the
+instantaneous amplitude: `h(t)` oscillates far too fast to draw over 20
+seconds, so what is drawn is the curve that runs along its peaks — the
+magnitude of the analytic signal, from a Hilbert transform. Log vertical
+axis.
+
+The point is the single sentence in the title: with the lens, a detector
+records **two arrivals** where there was one event. The first is the merger;
+3.43 s later comes the second image, a factor ~4 lower (`√|μ₋| = 0.24`), both
+now labelled on the figure. No noise, no antenna pattern, no PSD — an
+idealized view, and labelled as one.
+
+The small ripple on the **unlensed** curve early on is not physical. The
+waveform is generated in the frequency domain, band-limited with a hard start
+at `f_lower = 10 Hz`, and inverse-transformed; a chirp whose spectrum is cut
+off abruptly rings at the corresponding time. Measured: 20% peak-to-peak just
+after the signal turns on, decaying to 4.6% near the merger. It is not the
+Hilbert transform (building the analytic signal directly gives the same) and
+not insufficient padding (2x, 4x and 8x give 0.2795, 0.2776, 0.2771). A real
+inspiral envelope is monotonic, `h ∝ f^(2/3)`.
 
 ---
 

@@ -211,16 +211,20 @@ figures:
     produced_by: run.py::main
     shows: >
       Four panels: the unlensed strain, the lensed strain on the same
-      scale, a zoom centred on the merger, and the DIFFERENCE of the two.
+      scale, a zoom centred on the merger, and the RATIO of the two.
       The first two are deliberately separate rather than overlaid: at
       this time resolution the curves are indistinguishable, which is the
       point, and drawing one over the other simply hid the lower one. The
-      difference panel is where the lensing becomes visible: in geometric
-      optics h_lensed - h_unlensed is (sqrt(mu_+)-1) times the signal plus
-      a full sqrt(|mu_-|) copy delayed by Delta_T, so the subtraction
-      leaves the second image alone -- its own inspiral, merger and
-      ringdown, replayed Delta_T late at 24% amplitude against a flat
-      zero.
+      ratio panel is where the lensing becomes visible, and it is a ratio
+      rather than a difference on purpose. Dividing the lensed analytic
+      signal by the unlensed one leaves |F|; the chirp sweeps frequency
+      monotonically, so plotting that against time sweeps out F's
+      interference fringes, bounded by sqrt(mu_+) -/+ sqrt(|mu_-|) and
+      crowding towards the merger as df/dt grows (1.0 fringes per second
+      at 10 Hz, 93 per second at 36 Hz). A difference would instead
+      isolate the second image as a delayed copy, which is a statement
+      about arrival times rather than about interference, and the second
+      image is already labelled in caseA_detector_envelope.png.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
       shift; the zoom window choices; the empirical echo-peak search
@@ -230,7 +234,7 @@ figures:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
       - "Merger zoom centred on t_peak (+-0.15 s), not starting at it: the previous -0.05/+0.30 window put the merger hard against the left edge."
-      - "The difference panel is windowed from 0.5 s before the merger to 0.5 s after the echo, not over the whole chirp: across the full 15 s the (sqrt(mu_+)-1) residual under the inspiral is a dense band that fills the panel and buries the feature the subtraction exists to expose."
+      - "The ratio panel stops 0.25 s before the merger. Past it the unlensed signal decays into the ringdown while the lensed one still carries the second image, so the ratio stops measuring interference and starts diverging."
       - "Echo time is the empirically-found peak; it matches the naive t_peak_unlensed+ΔT prediction to within 4e-5 s (see causality_and_echo)."
     supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]
   - file: caseA_diffraction_pattern.png
@@ -251,9 +255,15 @@ figures:
   - file: caseA_detector_envelope.png
     produced_by: run.py::main
     shows: >
-      Idealized single-detector strain envelope (Hilbert transform), lensed
-      vs. unlensed, log-scale, extended to show both the merger peak and the
-      fainter second-image echo.
+      |h(t)|, the instantaneous amplitude (magnitude of the analytic signal,
+      via a Hilbert transform), lensed vs unlensed on a log scale. A
+      time-domain figure, not a spectrum. Both arrivals are labelled: the
+      merger, and the second image 3.43 s later at a quarter the amplitude.
+      The small ripple on the unlensed curve is an artefact of band-limiting
+      the waveform at f_lower=10 Hz in the frequency domain and transforming
+      back -- 20% peak-to-peak just after the signal starts, 4.6% near the
+      merger, unchanged by padding and unchanged if the analytic signal is
+      built without a Hilbert transform.
     from_scratch: Envelope comparison and the echo-window annotation.
     from_library: scipy.signal.hilbert.
     choices:
