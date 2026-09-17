@@ -93,6 +93,65 @@
   .badge.on { background: rgba(23,180,212,.18); color: #0a7387; }
   .badge.off { background: rgba(154,154,154,.22); color: #555; }
 
+  /* ---- deck: una diapositiva por pantalla ---- */
+  .deck { position: relative; }
+  .slide {
+    display: none; flex-direction: column; justify-content: center;
+    min-height: 100vh; max-width: 1060px; margin: 0 auto;
+    padding: 4.2rem 2rem 5.6rem;
+  }
+  .slide.active { display: flex; }
+  .slide > * { flex: 0 0 auto; }
+  .slide h2 {
+    font-size: 1.85rem; line-height: 1.25; margin: 0 0 1.1rem;
+    border: 0; padding: 0;
+  }
+  .slide h3 { font-size: 1.25rem; margin: 0 0 .9rem; }
+  .slide p, .slide ul, .slide ol { font-size: 1.06rem; }
+  .slide figure { margin: 0; }
+  .slide figure img { max-height: 60vh; width: auto; max-width: 100%; margin: 0 auto; }
+  .slide figcaption { font-size: .88rem; }
+  .slide .viz { margin: .6rem 0 0; }
+  .kicker {
+    font-family: -apple-system, sans-serif; text-transform: uppercase;
+    letter-spacing: .1em; font-size: .72rem; font-weight: 700;
+    color: var(--accent); margin-bottom: .5rem;
+  }
+  .slide.cover { text-align: center; }
+  .slide.cover h1 { font-size: 2.4rem; line-height: 1.25; margin: 0 0 .8rem; }
+  .slide.cover .subtitle { font-size: 1.3rem; color: var(--sub); margin-bottom: 1.4rem; }
+  .slide.cover .byline { font-family: -apple-system, sans-serif; font-size: 1rem; color: var(--sub); }
+  .agenda ol { font-size: 1.25rem; line-height: 2; }
+
+  /* ---- chrome ---- */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0;
+    background: var(--accent); z-index: 50; transition: width .18s ease;
+  }
+  .navbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: .9rem;
+    padding: .55rem 1rem; background: var(--bg);
+    border-top: 1px solid var(--rule);
+    font-family: -apple-system, sans-serif; font-size: .85rem;
+  }
+  .navbar button {
+    font: inherit; border: 1px solid var(--rule); background: var(--panel);
+    color: var(--ink); border-radius: 6px; padding: .3rem .8rem; cursor: pointer;
+  }
+  .navbar button:hover { border-color: var(--accent); }
+  .navbar .counter { font-variant-numeric: tabular-nums; color: var(--sub); min-width: 5.5em; text-align: center; }
+  .navbar .hint { color: var(--sub); font-size: .78rem; margin-left: .8rem; }
+  @media (max-width: 720px) { .navbar .hint { display: none; } }
+
+  /* ver todo de corrido: tecla A, y siempre al imprimir */
+  body.todo .slide { display: flex; min-height: auto; padding-top: 2.5rem; padding-bottom: 2.5rem; }
+  body.todo .slide + .slide { border-top: 1px solid var(--rule); }
+  @media print {
+    .slide { display: flex !important; min-height: auto; page-break-after: always; }
+    .progress, .navbar { display: none !important; }
+  }
+
   @media (prefers-color-scheme: dark) {
     :root { --ink: #e8e6e1; --sub: #a8a49c; --rule: #3a3733; --accent: #e0a458;
             --bg: #171614; --panel: #201f1c; --code-bg: #241f18; }
@@ -105,201 +164,243 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="progress" id="progress"></div>
 
-<header class="title">
+<div class="deck" id="deck">
+
+<section class="slide cover">
   <h1>Lente Gravitacional de Ondas Gravitacionales<br>en un Sistema Triple Jerárquico</h1>
-  <div class="subtitle">Tratamiento en óptica de ondas — resultados, versión interactiva</div>
+  <div class="subtitle">Tratamiento en óptica de ondas — resultados</div>
   <div class="byline">Trabajo final — Gravitational Waves and AI-Assisted Research · Septiembre 2026</div>
-</header>
+</section>
 
-<div class="abstract">
-  <span class="label">Resumen</span>
+<section class="slide">
+  <div class="kicker">Resumen</div>
   <p>Calculamos cómo una onda gravitacional (GW) de una binaria compacta es lensada, en óptica
   de ondas, por un tercer cuerpo del mismo sistema triple jerárquico — el mismo triple en dos
   épocas de su inspiral: un chirp tardío (lente congelado) y una fase temprana
-  cuasi-monocromática (el lente se mueve, y produce pulsos de lensing repetidos). Esta página es
-  la presentación visual; <a href="report.pdf"><code>report.pdf</code></a> tiene el mismo
-  contenido con más detalle en texto, y <a href="../theory/theory.pdf"><code>theory/theory.pdf</code></a>
-  la derivación completa. Todo viene de <a href="../cases/"><code>cases/</code></a>, verificado en
+  cuasi-monocromática (el lente se mueve, y produce pulsos de lensing repetidos).</p>
+  <p>Esta presentación es la versión visual; <a href="report.pdf"><code>report.pdf</code></a>
+  tiene el mismo contenido con más detalle en texto, y
+  <a href="../theory/theory.pdf"><code>theory/theory.pdf</code></a> la derivación completa. Todo
+  viene de <a href="../cases/"><code>cases/</code></a>, verificado en
   <a href="../tests/"><code>tests/</code></a> — nada acá está sin chequear.</p>
-</div>
+</section>
 
-<nav class="toc">
-  <span class="label">Contenidos</span>
+<section class="slide agenda">
+  <div class="kicker">Contenidos</div>
   <ol>
-    <li><a href="#sistema">El sistema</a></li>
-    <li><a href="#casoA">Caso A — el chirp</a></li>
-    <li><a href="#casoB">Caso B — cuasi-monocromático</a></li>
-    <li><a href="#junto">Lo que muestran juntos</a></li>
-    <li><a href="#alcance">Alcance y limitaciones</a></li>
+    <li>El sistema</li>
+    <li>Caso A — el chirp, lente estático</li>
+    <li>Caso B — cuasi-monocromático, lente en movimiento</li>
+    <li>Lo que muestran juntos</li>
+    <li>Alcance y limitaciones</li>
   </ol>
-</nav>
+</section>
 
-<h2 id="sistema">El sistema</h2>
-<p>Un triple jerárquico: una binaria interna (la fuente de GWs) orbita un tercer cuerpo mucho
-más masivo (el lente), lo bastante lejos como para que la marea sea despreciable. Seguimos el
-mismo sistema en dos momentos de la vida de la binaria interna:</p>
-<table>
-  <tr><th>Binaria interna (fuente)</th><td>m₁=20 M<sub>☉</sub>, m₂=15 M<sub>☉</sub> (masa de chirp 15.05 M<sub>☉</sub>)</td></tr>
-  <tr><th>Lente</th><td>M<sub>L</sub>=5×10⁴ M<sub>☉</sub>, a D<sub>L</sub>=5 kpc</td></tr>
-  <tr><th>Órbita externa</th><td>a<sub>out</sub>=1.82 UA, P<sub>out</sub>=4 d, i<sub>out</sub>=87°, circular</td></tr>
-</table>
+<section class="slide">
+  <h2>El sistema</h2>
+  <p>Un triple jerárquico: una binaria interna (la fuente de GWs) orbita un tercer cuerpo mucho
+  más masivo (el lente), lo bastante lejos como para que la marea sea despreciable. Seguimos el
+  mismo sistema en dos momentos de la vida de la binaria interna:</p>
+  <table>
+    <tr><th>Binaria interna (fuente)</th><td>m₁=20 M<sub>☉</sub>, m₂=15 M<sub>☉</sub> (masa de chirp 15.05 M<sub>☉</sub>)</td></tr>
+    <tr><th>Lente</th><td>M<sub>L</sub>=5×10⁴ M<sub>☉</sub>, a D<sub>L</sub>=5 kpc</td></tr>
+    <tr><th>Órbita externa</th><td>a<sub>out</sub>=1.82 UA, P<sub>out</sub>=4 d, i<sub>out</sub>=87°, circular</td></tr>
+  </table>
+</section>
 
-<h2 id="casoA">Caso A — el chirp, lente estático</h2>
-<p>La binaria interna hace inspiral de 10 Hz a 125.6 Hz en <span class="metric">15.2 s</span> —
-muchísimo más rápido que la órbita externa (4 días), así que el lente queda congelado en un
-único parámetro de impacto (y<sub>A</sub>=1.589) durante toda la señal. La forma de onda es
-<b>IMRPhenomD</b> real (inspiral+merger+ringdown), no una aproximación truncada.</p>
+<section class="slide">
+  <div class="kicker">Caso A</div>
+  <h2>El chirp, lente estático</h2>
+  <p>La binaria interna hace inspiral de 10 Hz a 125.6 Hz en <span class="metric">15.2 s</span> —
+  muchísimo más rápido que la órbita externa (4 días), así que el lente queda congelado en un
+  único parámetro de impacto (y<sub>A</sub>=1.589) durante toda la señal. La forma de onda es
+  <b>IMRPhenomD</b> real (inspiral+merger+ringdown), no una aproximación truncada.</p>
+</section>
 
-<div class="viz" id="vizA">
-  <div class="viz-grid">
-    <div class="viz-panel">
-      <h4>Envolvente de strain — lensada vs. no lensada</h4>
-      <canvas id="canvasA-wave" width="640" height="280"></canvas>
-    </div>
-    <div class="viz-panel">
-      <h4>F(f), ampliación de 3 Hz — el marcador sigue la frecuencia instantánea</h4>
-      <canvas id="canvasA-fringe" width="640" height="280"></canvas>
-    </div>
-  </div>
-  <div class="viz-controls">
-    <button id="playA">▶ reproducir</button>
-    <input type="range" id="scrubA" min="0" max="1000" value="0">
-    <span id="speedA" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
-    <button id="speedBtnA">velocidad</button>
-  </div>
-  <div class="viz-readout" id="readoutA">cargando…</div>
-</div>
-
-<figure>
-  <img src="../cases/case_A_chirp/caseA_diffraction_pattern.png" alt="Patrón de difracción extendido">
-  <figcaption><b>El patrón de difracción extendido</b> en el plano de la fuente: anillos
-  concéntricos alrededor del lente, con un pico brillante central (el anillo de Einstein,
-  regularizado por difracción — donde la óptica geométrica diverge). Izquierda: al inicio de la
-  banda (w=61.9). Derecha: cerca del merger (w=777.6), ampliado — mismos anillos, tan juntos que
-  parecen franjas rectas.</figcaption>
-</figure>
-
-<p>Amplificación de la muestra pico: <b>1.065</b>. Amplificación RMS: <b>1.056</b>. F(f)
-modula fase además de amplitud a través de la banda (visible en la figura de arriba como
-franjas de interferencia), así que la forma de onda lensada es una copia desfasada, no
-simplemente reescalada, de la no lensada.</p>
-
-<p>El pico lensado arriba llega exactamente al mismo tiempo que el no lensado (F está
-referida a la llegada de la imagen fuerte, sin desfasaje absoluto arbitrario — ver
-<code>wiki/log.md</code> para la normalización). Una segunda copia, ~4× más débil (no
-~2 órdenes de magnitud — la amplitud exacta coincide con la magnificación geométrica
-de la imagen débil, √|μ₋|, a menos del 1%), de todo el merger reaparece más tarde,
-exactamente en el retraso fijo que predice la óptica geométrica entre las dos imágenes
-(fuerte + débil, ambas construidas sólo del pasado de la fuente — la causalidad nunca
-estuvo en duda) — un <b>eco genuino</b>, visible en
-<code>cases/case_A_chirp/caseA_spectrogram.png</code> (tiempo-frecuencia) y
-explicado en detalle en <code>RESULTS.md</code>.</p>
-
-<h2 id="casoB">Caso B — cuasi-monocromático, lente en movimiento</h2>
-<p>Más temprano en el mismo inspiral: f=0.05 Hz, casi constante durante una observación de 24
-días (6 períodos externos). Acá el lente <i>sí</i> se mueve — el parámetro de impacto barre el
-mismo tipo de patrón de difracción una vez por período orbital externo, y produce pulsos de
-amplificación repetidos.</p>
-
-<div class="viz" id="vizB">
-  <div class="viz-grid">
-    <div class="viz-panel">
-      <h4>Órbita sobre el patrón de difracción (w<sub>B</sub>=0.31)</h4>
-      <div class="pattern-stage">
-        <img src="../cases/case_B_monochromatic/caseB_pattern_only.png" alt="Patrón de difracción">
-        <div class="marker" id="markerB"></div>
+<section class="slide">
+  <div class="kicker">Caso A</div>
+  <h2>La señal, y las franjas que la atraviesan</h2>
+  <div class="viz" id="vizA">
+    <div class="viz-grid">
+      <div class="viz-panel">
+        <h4>Envolvente de strain — lensada vs. no lensada</h4>
+        <canvas id="canvasA-wave" width="640" height="280"></canvas>
+      </div>
+      <div class="viz-panel">
+        <h4>F(f), ampliación de 3 Hz — el marcador sigue la frecuencia instantánea</h4>
+        <canvas id="canvasA-fringe" width="640" height="280"></canvas>
       </div>
     </div>
-    <div class="viz-panel">
-      <h4>|F(t)|² — pulsos de lensing repetido</h4>
-      <canvas id="canvasB-pulses" width="640" height="280"></canvas>
+    <div class="viz-controls">
+      <button id="playA">▶ reproducir</button>
+      <input type="range" id="scrubA" min="0" max="1000" value="0">
+      <span id="speedA" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
+      <button id="speedBtnA">velocidad</button>
     </div>
+    <div class="viz-readout" id="readoutA">cargando…</div>
   </div>
-  <div class="viz-controls">
-    <button id="playB">▶ reproducir</button>
-    <input type="range" id="scrubB" min="0" max="1000" value="0">
-    <span id="speedB" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
-    <button id="speedBtnB">velocidad</button>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso A</div>
+  <h2>El patrón de difracción</h2>
+  <figure>
+    <img src="../cases/case_A_chirp/caseA_diffraction_pattern.png" alt="Patrón de difracción extendido">
+    <figcaption>En el plano de la fuente: anillos concéntricos alrededor del lente, con un pico
+    brillante central (el anillo de Einstein, regularizado por difracción — donde la óptica
+    geométrica diverge). Izquierda: al inicio de la banda (w=61.9). Derecha: cerca del merger
+    (w=778), ampliado a |Δy|&lt;0.02 — los mismos anillos, tan juntos que parecen franjas
+    rectas.</figcaption>
+  </figure>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso A</div>
+  <h2>Lo que el lente le hace a la onda</h2>
+  <p>Amplificación de la muestra pico: <b>1.065</b>. Amplificación RMS: <b>1.056</b>. F(f)
+  modula fase además de amplitud a través de la banda, así que la forma de onda lensada es una
+  copia desfasada, no simplemente reescalada, de la no lensada.</p>
+  <p>El pico lensado llega exactamente al mismo tiempo que el no lensado (F está referida a la
+  llegada de la imagen fuerte, sin desfasaje absoluto arbitrario). Una segunda copia, ~4× más
+  débil — la amplitud exacta coincide con la magnificación geométrica de la imagen débil,
+  √|μ₋|, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
+  que predice la óptica geométrica entre las dos imágenes. Ambas construidas sólo del pasado de
+  la fuente: la causalidad nunca estuvo en duda. Un <b>eco genuino</b>, visible en
+  <code>caseA_spectrogram.png</code> como una segunda traza en el plano tiempo-frecuencia.</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso B</div>
+  <h2>Cuasi-monocromático, lente en movimiento</h2>
+  <p>Más temprano en el mismo inspiral: f=0.05 Hz, casi constante durante una observación de 12
+  días (3 períodos externos). Acá el lente <i>sí</i> se mueve — el parámetro de impacto barre el
+  mismo tipo de patrón de difracción una vez por período orbital externo, y produce pulsos de
+  amplificación repetidos.</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso B</div>
+  <h2>La órbita recorriendo el patrón</h2>
+  <div class="viz" id="vizB">
+    <div class="viz-grid">
+      <div class="viz-panel">
+        <h4>Órbita sobre el patrón de difracción (w<sub>B</sub>=0.31)</h4>
+        <div class="pattern-stage">
+          <img src="../cases/case_B_monochromatic/caseB_pattern_only.png" alt="Patrón de difracción">
+          <div class="marker" id="markerB"></div>
+        </div>
+      </div>
+      <div class="viz-panel">
+        <h4>|F(t)|² — pulsos de lensing repetido</h4>
+        <canvas id="canvasB-pulses" width="640" height="280"></canvas>
+      </div>
+    </div>
+    <div class="viz-controls">
+      <button id="playB">▶ reproducir</button>
+      <input type="range" id="scrubB" min="0" max="1000" value="0">
+      <span id="speedB" style="font-family:monospace;font-size:.8rem;color:var(--sub)">1×</span>
+      <button id="speedBtnB">velocidad</button>
+    </div>
+    <div class="viz-readout" id="readoutB">cargando…</div>
   </div>
-  <div class="viz-readout" id="readoutB">cargando…</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso B</div>
+  <h2>Media órbita no está lensada en absoluto</h2>
+  <p>Exactamente la mitad de la órbita resulta <b>no lensada</b>: cuando la fuente está delante
+  del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
+  F=1 por construcción, y se ve en la diapositiva anterior como el marcador saliendo del patrón
+  (cian/gris) durante la mitad "de adelante" de cada vuelta.</p>
+  <p>Esto es exactamente el origen de los pulsos periódicos: "lensing repetido", el análogo en
+  óptica de ondas de lo que D'Orazio &amp; Loeb (2020) encontraron en óptica geométrica.</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso B</div>
+  <h2>La órbita hace dos cosas, y el lensing es la más chica</h2>
+  <p>Todo lo anterior es lo que la órbita externa hace <i>ópticamente</i>. Pero la misma órbita
+  también arrastra a la fuente a lo largo de la línea de visión, a β<sub>los</sub>=0.0165, y el
+  retardo de Roemer que eso produce es de <b>1810 s pico a pico</b>: a f<sub>B</sub>, unos
+  <b>90.5 ciclos</b> de GW de fase escritos sobre la forma de onda. La fase que escribe el lente
+  mismo, arg F/2π, vale <b>0.017 ciclos</b>. Un factor <b>5206×</b>.</p>
+  <figure>
+    <img src="../cases/case_B_monochromatic/caseB_doppler_vs_lensing.png"
+         alt="Roemer/Doppler vs lensing, en ciclos de GW">
+    <figcaption>Las dos huellas de la <i>misma</i> órbita externa, en la unidad en que la forma
+    de onda está escrita, una por panel y cada una a su propia escala: un cociente de 5206 no se
+    puede dibujar en un eje común. La línea punteada marca la conjunción — los pulsos caen en el
+    <i>máximo</i> del retardo, que es donde la velocidad radial se anula.</figcaption>
+  </figure>
+</section>
+
+<section class="slide">
+  <div class="kicker">Caso B</div>
+  <h2>Y sin embargo no cambia ningún resultado de amplitud</h2>
+  <p>No es un defecto del cálculo de lensing — es cómo se ve realmente un triple jerárquico, y es
+  por eso que D'Orazio &amp; Loeb (2020), el mismo trabajo que este caso sigue para el lensing
+  repetido, modelan el Doppler <i>junto</i> con él (su Apéndice A).</p>
+  <p>El Doppler se aplica evaluando la forma de onda en el tiempo de emisión retardado, y por ser
+  puro <i>timing</i> deja la envolvente intacta a 1.2×10<sup>−5</sup>: todos los resultados de
+  amplitud quedan sin cambio, de manera demostrada.</p>
+</section>
+
+<section class="slide">
+  <h2>Lo que los dos casos muestran juntos</h2>
+  <ul>
+    <li><b>Caso A:</b> un patrón de difracción congelado, barrido en <i>frecuencia</i> por el
+    propio chirp — franjas de interferencia densas, acercándose al límite de óptica geométrica.</li>
+    <li><b>Caso B:</b> el mismo tipo de patrón, a frecuencia fija, barrido en <i>tiempo</i> por el
+    movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lensada.</li>
+    <li><b>Ambos:</b> el lensing no es sólo "más brillante" — F es complejo, y su fase deja una
+    marca real y verificable en la forma de onda.</li>
+    <li><b>Y la misma razón de escalas decide algo más</b>, que no es óptica sino cinemática:
+    cuánto de la <i>velocidad</i> de la fuente entra en la ventana de observación. En el Caso A,
+    15 s de una órbita de 4 días, casi todo es degenerado con t<sub>c</sub> y con la masa de chirp,
+    y lo que queda vale 0.0068 rad. En el Caso B, 3 períodos completos, nada es degenerado y el
+    mismo efecto vale 90 ciclos. La misma órbita, la misma velocidad.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Alcance y limitaciones</h2>
+  <div class="callout">
+  <ul>
+    <li>Sólo lente de masa puntual, sin distribución extendida.</li>
+    <li>IMRPhenomD es un modelo calibrado (no re-derivado acá); el generador de respaldo TaylorF2
+    (si <code>pycbc</code> no está disponible) no tiene merger ni ringdown.</li>
+    <li>Sin calibración absoluta de strain — sólo amplitudes relativas y el factor de
+    amplificación son afirmaciones físicas acá.</li>
+    <li>Detector idealizado: sin ruido, patrón de antena, ni filtrado adaptado.</li>
+    <li>La aproximación de lente delgado/paraxial se empuja cerca de cada cruce del Caso B —
+    cuantificado (ventana de ~60 s de 4 días) y mostrado que no afecta nada reportado.</li>
+    <li>La cinemática de la fuente se trata a primer orden en β<sub>los</sub>. Lo que queda más
+    allá (corrimiento gravitacional + Doppler transverso) es exactamente constante para una órbita
+    circular, 4.08×10<sup>−4</sup>, y por lo tanto exactamente degenerado con la masa de chirp: se
+    reporta como sesgo sobre 𝓜, no se aplica.</li>
+    <li>El Doppler entra en la forma de onda pero no en F, que se evalúa al w<sub>B</sub> nominal
+    fijo. Cuantificado: 1.0×10<sup>−4</sup> de error en |F| en el pulso, hasta
+    3.5×10<sup>−3</sup> en el peor punto de la mitad lensada.</li>
+  </ul>
+  </div>
+</section>
+
+<section class="slide cover">
+  <h2>Para seguir</h2>
+  <p>Derivación completa: <a href="../theory/theory.pdf">theory/theory.pdf</a><br>
+  Versión en PDF de este resultado: <a href="report.pdf">report.pdf</a><br>
+  Reproducir todo: <a href="../README.md">README.md</a> → <code>./reproduce.sh</code></p>
+</section>
+
 </div>
 
-<p>Exactamente la mitad de la órbita resulta <b>no lensada</b>: cuando la fuente está delante
-del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
-F=1 por construcción, y se ve arriba como el marcador saliendo del patrón (cian/gris) durante
-la mitad "de adelante" de cada vuelta. Esto es exactamente el origen de los pulsos periódicos:
-"lensing repetido", el análogo en óptica de ondas de lo que D'Orazio &amp; Loeb (2020)
-encontraron en óptica geométrica.</p>
-
-<h3>La órbita externa hace dos cosas, y el lensing es la más chica</h3>
-<p>Todo lo anterior es lo que la órbita externa hace <i>ópticamente</i>. Pero la misma órbita
-también arrastra a la fuente a lo largo de la línea de visión, a β<sub>los</sub>=0.0165, y el
-retardo de Roemer que eso produce es de <b>1810 s pico a pico</b>: a f<sub>B</sub>, unos
-<b>90.5 ciclos</b> de GW de fase escritos sobre la forma de onda. La fase que escribe el lente
-mismo, arg F/2π, vale <b>0.017 ciclos</b>. Un factor <b>5206×</b>.</p>
-
-<figure>
-  <img src="../cases/case_B_monochromatic/caseB_doppler_vs_lensing.png"
-       alt="Roemer/Doppler vs lensing, en ciclos de GW">
-  <figcaption>Las dos huellas de la <i>misma</i> órbita externa, en la unidad en que la forma de
-  onda está escrita. La curva de lensing sobre el eje cero no es una falla de renderizado: es el
-  resultado. El recuadro la muestra resuelta, a 3392× de ampliación vertical.</figcaption>
-</figure>
-
-<p>No es un defecto del cálculo de lensing — es cómo se ve realmente un triple jerárquico, y es
-por eso que D'Orazio &amp; Loeb (2020), el mismo trabajo que este caso sigue para el lensing
-repetido, modelan el Doppler <i>junto</i> con él (su Apéndice A). Hasta el 2026-09-07 este
-proyecto modelaba sólo el lensing y lo presentaba como <i>la</i> firma de la órbita externa;
-eso subestimaba la huella real de la órbita en dos o tres órdenes de magnitud. El Doppler se
-aplica evaluando la forma de onda en el tiempo de emisión retardado, y por ser puro
-<i>timing</i> deja la envolvente intacta a 1.2×10<sup>−5</sup>: todos los resultados de amplitud
-de arriba quedan sin cambio, de manera demostrada (las tres figuras de patrón regeneradas
-quedaron byte a byte idénticas).</p>
-
-<h2 id="junto">Lo que los dos casos muestran juntos</h2>
-<ul>
-  <li><b>Caso A:</b> un patrón de difracción congelado, barrido en <i>frecuencia</i> por el
-  propio chirp — franjas de interferencia densas, acercándose al límite de óptica geométrica.</li>
-  <li><b>Caso B:</b> el mismo tipo de patrón, a frecuencia fija, barrido en <i>tiempo</i> por el
-  movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lensada.</li>
-  <li><b>Ambos:</b> el lensing no es sólo "más brillante" — F es complejo, y su fase deja una
-  marca real y verificable en la forma de onda.</li>
-  <li><b>Y la misma razón de escalas decide algo más</b>, que no es óptica sino cinemática:
-  cuánto de la <i>velocidad</i> de la fuente entra en la ventana de observación. En el Caso A,
-  15 s de una órbita de 4 días, casi todo es degenerado con t<sub>c</sub> y con la masa de chirp,
-  y lo que queda vale 0.0068 rad. En el Caso B, 6 períodos completos, nada es degenerado y el
-  mismo efecto vale 90 ciclos. La misma órbita, la misma velocidad.</li>
-</ul>
-
-<h2 id="alcance">Alcance y limitaciones</h2>
-<div class="callout">
-<ul>
-  <li>Sólo lente de masa puntual, sin distribución extendida.</li>
-  <li>IMRPhenomD es un modelo calibrado (no re-derivado acá); el generador de respaldo TaylorF2
-  (si <code>pycbc</code> no está disponible) no tiene merger ni ringdown.</li>
-  <li>Sin calibración absoluta de strain — sólo amplitudes relativas y el factor de
-  amplificación son afirmaciones físicas acá.</li>
-  <li>Detector idealizado: sin ruido, patrón de antena, ni filtrado adaptado.</li>
-  <li>La aproximación de lente delgado/paraxial se empuja cerca de cada cruce del Caso B —
-  cuantificado (ventana de ~60 s de 4 días) y mostrado que no afecta nada reportado.</li>
-  <li>La cinemática de la fuente se trata a primer orden en β<sub>los</sub>. Lo que queda más
-  allá (corrimiento gravitacional + Doppler transverso) es exactamente constante para una órbita
-  circular, 4.08×10<sup>−4</sup>, y por lo tanto exactamente degenerado con la masa de chirp: se
-  reporta como sesgo sobre 𝓜, no se aplica.</li>
-  <li>El Doppler entra en la forma de onda pero no en F, que se evalúa al w<sub>B</sub> nominal
-  fijo. Cuantificado: 1.0×10<sup>−4</sup> de error en |F| en el pulso, hasta
-  6.4×10<sup>−3</sup> en el peor punto de la mitad lensada.</li>
-</ul>
-</div>
-
-<footer>
-  Derivación completa: <a href="../theory/theory.pdf">theory/theory.pdf</a>. Versión en PDF de
-  este resultado: <a href="report.pdf">report.pdf</a>. Reproducir todo:
-  <a href="../README.md">README.md</a> → <code>./reproduce.sh</code>.
-</footer>
-
+<div class="navbar">
+  <button id="navPrev">‹ anterior</button>
+  <span class="counter" id="navCounter">1 / 1</span>
+  <button id="navNext">siguiente ›</button>
+  <span class="hint">← → espacio para navegar · A para ver todo de corrido</span>
 </div>
 
 <script>
@@ -504,6 +605,68 @@ window.__CASE_B__ = /*__CASE_B_DATA__*/;
       document.getElementById("speedBtnB"), document.getElementById("speedB"),
       20000, frameB);
   }
+  // ================= deck: navegación por diapositivas =================
+  // Al final del script a propósito: las visualizaciones ya se inicializaron
+  // arriba, cada una dibujando en el buffer de su canvas (640x280 fijo), que
+  // no depende del layout -- así que inicializar con la diapositiva oculta y
+  // mostrarla después funciona sin volver a dibujar.
+  (() => {
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    if (!slides.length) return;
+    const prevBtn = document.getElementById("navPrev");
+    const nextBtn = document.getElementById("navNext");
+    const counter = document.getElementById("navCounter");
+    const progress = document.getElementById("progress");
+    let i = 0;
+
+    function pausarOcultas() {
+      // Una animación en una diapositiva que no se ve sigue consumiendo
+      // requestAnimationFrame. El botón es su propio estado, así que
+      // pulsarlo es la forma de pausar sin tocar el reproductor.
+      document.querySelectorAll(".viz").forEach(viz => {
+        if (viz.closest(".slide") === slides[i]) return;
+        viz.querySelectorAll("button").forEach(b => {
+          if (b.textContent.indexOf("pausar") !== -1) b.click();
+        });
+      });
+    }
+
+    function mostrar(n, empujarHash) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      slides.forEach((s, k) => s.classList.toggle("active", k === i));
+      counter.textContent = (i + 1) + " / " + slides.length;
+      progress.style.width = ((i + 1) / slides.length * 100) + "%";
+      prevBtn.disabled = (i === 0);
+      nextBtn.disabled = (i === slides.length - 1);
+      pausarOcultas();
+      window.scrollTo(0, 0);
+      if (empujarHash !== false) history.replaceState(null, "", "#" + (i + 1));
+    }
+
+    prevBtn.addEventListener("click", () => mostrar(i - 1));
+    nextBtn.addEventListener("click", () => mostrar(i + 1));
+
+    document.addEventListener("keydown", ev => {
+      // no robarle las teclas a un control (el scrubber usa las flechas)
+      const t = ev.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      switch (ev.key) {
+        case "ArrowRight": case "PageDown": case " ": mostrar(i + 1); ev.preventDefault(); break;
+        case "ArrowLeft": case "PageUp": mostrar(i - 1); ev.preventDefault(); break;
+        case "Home": mostrar(0); ev.preventDefault(); break;
+        case "End": mostrar(slides.length - 1); ev.preventDefault(); break;
+        case "a": case "A":
+          document.body.classList.toggle("todo");
+          if (!document.body.classList.contains("todo")) mostrar(i);
+          ev.preventDefault();
+          break;
+      }
+    });
+
+    const desdeHash = parseInt((location.hash || "").slice(1), 10);
+    mostrar(Number.isFinite(desdeHash) && desdeHash >= 1 ? desdeHash - 1 : 0, false);
+  })();
 })();
 </script>
 </body>

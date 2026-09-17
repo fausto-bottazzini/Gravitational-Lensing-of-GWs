@@ -630,7 +630,7 @@ def main():
     # inside the axes bounding box (independent review, see wiki/log.md).
     fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why
     fig.suptitle("Caso A: patrón de amplificación en el plano de la fuente\n"
-                 fr"(anillos axisimétricos; la fuente, en $y_A={y_A:.3f}$, está marcada)",
+                 fr"(anillos axisimétricos; la fuente, en $y_A={y_A:.3f}$, marcada)",
                  fontsize=10, y=1.04)
     # bbox_inches="tight": with set_aspect("equal") the axes are resized AFTER
     # tight_layout has computed positions, so the x-axis label ended up drawn
