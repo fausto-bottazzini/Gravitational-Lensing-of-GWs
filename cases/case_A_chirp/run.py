@@ -494,7 +494,7 @@ def main():
     # second is 24% and sits where the chirp has already ended, so the
     # subtraction isolates the second image against nothing at all.
     h_diff = h_lensed - h_unlensed
-    fig, axes = plt.subplots(4, 1, figsize=(8, 10.6))
+    fig, axes = plt.subplots(5, 1, figsize=(8, 12.6))
     y_span = 1.08 * float(np.max(np.abs(h_lensed[view])))
     axes[0].plot(t[view], h_unlensed[view], lw=0.5, color="#888888")
     axes[0].set_ylabel("$h(t)$ [u. arb.]")
@@ -534,42 +534,117 @@ def main():
     # interference, which is what the lens actually does to the waveform here:
     # dividing the lensed analytic signal by the unlensed one leaves |F|, and
     # because the chirp sweeps frequency monotonically, plotting it against
-    # time sweeps out F's interference fringes. It oscillates between
-    # sqrt(mu_+) -/+ sqrt(|mu_-|) throughout, and the fringes crowd together
-    # towards the merger because df/dt does: measured, 1.0 fringes per second
-    # at 10 Hz against 93 per second at 36 Hz. The fringe period is constant
-    # in FREQUENCY (0.29 Hz, caseA_F_of_f.png); this is that same curve seen
-    # through f(t).
+    # time sweeps out F's interference fringes.
     #
-    # The window is set by the envelope, not by taste. env_l and env_u are
-    # analytic-signal magnitudes, and an analytic-signal envelope can only
-    # follow a modulation SLOWER than its own carrier. The fringe rate here
-    # is Delta_T * df/dt, so the ratio Delta_T*(df/dt)/f is the figure of
-    # merit: it runs 0.10 at 13 s before the merger, 0.43 at 3 s, 0.86 at
-    # 1.5 s and 2.17 at 0.6 s. Past ~0.25 the drawn fringes are no longer the
-    # real ones -- they shrink, and an earlier version of this panel showed
-    # exactly that, an amplitude decaying into the merger that is a property
-    # of the Hilbert transform and not of the lens. Cut where the criterion
-    # says to.
+    # Two panels, not one, because "shouldn't the ratio just BE |F|?" has an
+    # answer you can look at: they agree until the envelope can no longer
+    # follow the fringes, and then they visibly stop agreeing.
+    #
+    # How far each one reaches is not a matter of taste:
+    #
+    #   - The measured ratio ends AT the merger. Not a little after: after
+    #     it there is no denominator. The unlensed signal dies in about 20 ms
+    #     (env_u is 1.6e-5 of its peak 50 ms later) and the quotient runs to
+    #     thousands -- that is no longer the ratio of two signals, it is the
+    #     second image divided by numerical noise.
+    #
+    #   - It does not start at the beginning either, and that one is not a
+    #     limitation but the physics. The beat needs TWO images, and the
+    #     second one is the first one delayed by Delta_T: for the first
+    #     Delta_T seconds of signal it has not arrived yet, so there is
+    #     nothing to interfere with and the ratio sits flat at sqrt(mu_+).
+    #     Measured: between 1.0041 and 1.0342 before t_peak-12 s, against
+    #     sqrt(mu_+)=1.0283, and the full 0.7895..1.2640 band from
+    #     t_peak-11.5 s on -- the signal starts 15.18 s before the merger and
+    #     the second image enters 3.43 s later, at -11.75. The closed form
+    #     knows nothing about this: |F(f)| is a frequency-domain statement
+    #     about the whole signal, so it oscillates there too. That is why the
+    #     two panels also disagree on the left, for a completely different
+    #     reason than they disagree on the right.
+    #
+    #   - And from a few seconds before the merger what it draws is no longer
+    #     the real fringes. env_l and env_u are analytic-signal magnitudes,
+    #     and an analytic envelope can only follow a modulation SLOWER than
+    #     its own carrier. The figure of merit is Delta_T*(df/dt)/f: 0.10 at
+    #     13 s before the merger, 0.43 at 3 s, 0.86 at 1.5 s, 2.17 at 0.6 s.
+    #     Past ~0.25 the drawn fringes shrink, and that shrinking is a
+    #     property of the Hilbert transform, not of the lens. This panel used
+    #     to be cut there; now it runs on and the limit is marked, which
+    #     shows the boundary instead of hiding it.
+    #
+    # Both are drawn as a min-max band per pixel column. Near the merger one
+    # column spans several fringes and a sampled curve would be pure alias.
     f_of_t = chirp.freq_of_time(t - (t_peak - NUMBERS["t_c_seconds"]),
                                 NUMBERS["t_c_seconds"], system.MCHIRP_MSUN)
     dfdt = np.gradient(f_of_t, t)
-    slow = NUMBERS["image_time_delay_seconds"] * np.abs(dfdt) < 0.40 * f_of_t
-    rview = ((t >= t_peak - NUMBERS["t_end_seconds"] + 1.0)
-             & (t <= t_peak) & slow)
-    t_cut = float(t[rview][-1] - t_peak)
-    log("ratio_panel_cut_before_merger_s", -t_cut)
-    ratio = np.abs(env_l[rview]) / np.abs(env_u[rview])
-    axes[3].plot(t[rview] - t_peak, ratio, lw=0.6, color="#6b46c1")
-    for lvl, lab in ((sqrt_mu_plus + sqrt_mu_minus,
-                      r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$"),
-                     (sqrt_mu_plus - sqrt_mu_minus, None)):
-        axes[3].axhline(lvl, color="#c05621", lw=0.9, ls="--", label=lab)
-    axes[3].legend(fontsize=8, loc="lower left")
-    axes[3].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
-    axes[3].set_ylabel("con lente / sin lente")
-    axes[3].set_title("el cociente: la interferencia entre las dos imágenes",
-                      fontsize=9.5)
+    lento = NUMBERS["image_time_delay_seconds"] * np.abs(dfdt) < 0.40 * f_of_t
+    r_lo, r_hi = t_peak - NUMBERS["t_end_seconds"] + 1.0, t_peak
+    valido = t[(t >= r_lo) & (t <= r_hi) & lento]
+    t_lim = float(valido[-1] - t_peak)
+    log("ratio_hilbert_validity_limit_s", -t_lim)
+    # antes de este instante hay una sola imagen: la segunda es la primera
+    # retrasada Delta_T, y todavía no entró
+    t_dos = float(-NUMBERS["t_end_seconds"] + NUMBERS["image_time_delay_seconds"])
+    log("second_image_enters_before_merger_s", -t_dos)
+
+    NCOL = 1200
+    bordes = np.linspace(r_lo, r_hi, NCOL + 1)
+    centros = 0.5 * (bordes[:-1] + bordes[1:]) - t_peak
+
+    # medido: minimo y maximo de las muestras que caen en cada columna
+    rmask = (t >= r_lo) & (t <= r_hi)
+    ratio = np.abs(env_l[rmask]) / np.abs(env_u[rmask])
+    col = np.clip(np.searchsorted(bordes, t[rmask], side="right") - 1, 0, NCOL - 1)
+    med_lo = np.full(NCOL, np.inf)
+    med_hi = np.full(NCOL, -np.inf)
+    np.minimum.at(med_lo, col, ratio)
+    np.maximum.at(med_hi, col, ratio)
+    hay = np.isfinite(med_lo) & np.isfinite(med_hi)
+
+    # exacto: w*Delta_T_hat = 2*pi*f*Delta_T, asi que la fase de franja es
+    # lineal en f y el minimo y el maximo del seno sobre cada columna salen
+    # en forma cerrada, sin muestrear
+    f_b = chirp.freq_of_time(bordes - (t_peak - NUMBERS["t_c_seconds"]),
+                             NUMBERS["t_c_seconds"], system.MCHIRP_MSUN)
+    f_b = np.minimum(np.nan_to_num(f_b, nan=system.F_ISCO_HZ), system.F_ISCO_HZ)
+    fase = 2.0 * np.pi * NUMBERS["image_time_delay_seconds"] * f_b
+    p0, p1 = fase[:-1], fase[1:]
+    dospi = 2.0 * np.pi
+    s_lo = np.minimum(np.sin(p0), np.sin(p1))
+    s_hi = np.maximum(np.sin(p0), np.sin(p1))
+    entera = (p1 - p0) >= dospi
+    s_hi = np.where(entera | (np.pi / 2 + dospi * np.ceil((p0 - np.pi / 2) / dospi) <= p1),
+                    1.0, s_hi)
+    s_lo = np.where(entera | (-np.pi / 2 + dospi * np.ceil((p0 + np.pi / 2) / dospi) <= p1),
+                    -1.0, s_lo)
+    mu_p, mu_m = sqrt_mu_plus ** 2, sqrt_mu_minus ** 2
+    ex_lo = np.sqrt(mu_p + mu_m + 2.0 * sqrt_mu_plus * sqrt_mu_minus * s_lo)
+    ex_hi = np.sqrt(mu_p + mu_m + 2.0 * sqrt_mu_plus * sqrt_mu_minus * s_hi)
+
+    for axk, (blo, bhi, msk), titulo, color in (
+            (axes[3], (med_lo, med_hi, hay),
+             "el cociente medido: envolvente con lente / sin lente", "#6b46c1"),
+            (axes[4], (ex_lo, ex_hi, np.ones(NCOL, bool)),
+             r"el mismo cociente en forma cerrada: $|F(f(t))|$", "#2b6cb0")):
+        axk.fill_between(centros[msk], blo[msk], bhi[msk],
+                         color=color, lw=0, alpha=0.95)
+        for lvl, lab in ((sqrt_mu_plus + sqrt_mu_minus,
+                          r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$"),
+                         (sqrt_mu_plus - sqrt_mu_minus, None)):
+            axk.axhline(lvl, color="#c05621", lw=0.9, ls="--", label=lab)
+        axk.axvspan(centros[0], t_dos, color="0.35", alpha=0.10, lw=0,
+                    label="la 2.ª imagen todavía no llegó")
+        axk.axvspan(t_lim, 0.0, color="0.5", alpha=0.18, lw=0,
+                    label=r"$\Delta T\,|df/dt| > 0.4\,f$")
+        axk.set_xlim(centros[0], 0.0)
+        # el piso queda holgado a propósito: la leyenda entra ahí abajo sin
+        # taparle la cota inferior a la curva
+        axk.set_ylim(0.68, 1.34)
+        axk.set_ylabel("con lente / sin lente")
+        axk.set_title(titulo, fontsize=9.5)
+        axk.legend(fontsize=7.5, loc="lower left", ncol=3, framealpha=0.92,
+                   borderpad=0.35, columnspacing=1.2, handlelength=1.4)
+    axes[4].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
     fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why
     fig.suptitle("Caso A: qué le hace el lente a la forma de onda",
                  fontsize=11, y=1.012)

@@ -210,8 +210,9 @@ figures:
   - file: caseA_strain_time.png
     produced_by: run.py::main
     shows: >
-      Four panels: the unlensed strain, the lensed strain on the same
-      scale, a zoom centred on the merger, and the RATIO of the two.
+      Five panels: the unlensed strain, the lensed strain on the same
+      scale, a zoom centred on the merger, the MEASURED ratio of the two
+      envelopes, and that same ratio IN CLOSED FORM directly below it.
       The first two are deliberately separate rather than overlaid: at
       this time resolution the curves are indistinguishable, which is the
       point, and drawing one over the other simply hid the lower one. The
@@ -225,6 +226,18 @@ figures:
       isolate the second image as a delayed copy, which is a statement
       about arrival times rather than about interference, and the second
       image is a whole second track in caseA_spectrogram.png.
+      The closed-form panel answers the obvious question about the
+      measured one -- shouldn't the ratio just BE |F|? It is, in the
+      middle; the two shaded regions are where it cannot be. Before
+      t - t_merger = -11.75 s there is only one image (the second is the
+      first delayed by 3.43 s and the signal starts 15.18 s before the
+      merger), so the measured ratio sits flat at sqrt(mu_+) -- 1.0041 to
+      1.0342 there against 1.0283, opening to the full 0.7895..1.2640 band
+      from -11.5 s on -- while |F(f)|, a frequency-domain statement about
+      the whole signal, oscillates anyway. After -3.22 s the analytic
+      envelope can no longer follow the fringes and they shrink toward
+      sqrt(mu_+), which is a property of the Hilbert transform and not of
+      the lens.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
       shift; the zoom window choices; the empirical echo-peak search
@@ -234,7 +247,9 @@ figures:
       - "D_eff = D_L = 5 kpc (same physical distance as the lens, not a separately fit source distance) -- an illustrative, unusually loud/nearby hypothetical event, stated explicitly."
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
       - "Merger zoom centred on t_peak (+-0.15 s), not starting at it: the previous -0.05/+0.30 window put the merger hard against the left edge."
-      - "The ratio panel stops 0.25 s before the merger. Past it the unlensed signal decays into the ringdown while the lensed one still carries the second image, so the ratio stops measuring interference and starts diverging."
+      - "Neither ratio panel runs past the merger, and that is forced, not chosen: after it there is no denominator. env_u falls to 1.6e-5 of its peak within 50 ms and the quotient runs to thousands -- the second image divided by numerical noise."
+      - "The measured ratio is no longer truncated at the Hilbert validity limit (Delta_T*(df/dt)/f = 0.4, at -3.22 s). An earlier version cut it there; now it runs to the merger and the limit is shaded, which shows the boundary instead of hiding it, with the closed-form panel underneath to make it legible."
+      - "Both ratio panels are drawn as a min-max band per pixel column rather than as sampled curves: near the merger one column spans dozens of fringes and point sampling would be pure alias. The closed-form extremes are exact (the fringe phase w*dT_hat = 2*pi*f*Delta_T is linear in f); the measured ones are the extremes of the samples in the column."
       - "Echo time is the empirically-found peak; it matches the naive t_peak_unlensed+ΔT prediction to within 4e-5 s (see causality_and_echo)."
     supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]
   - file: caseA_diffraction_pattern.png

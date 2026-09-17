@@ -56,8 +56,9 @@ the waveform's FFT grid, whose 0.031 Hz spacing is nine samples per fringe.
 
 ### `caseA_strain_time.png` — what the lens does to the waveform
 
-Four panels: unlensed strain, lensed strain **on the same scale**, a zoom
-centred on the merger, and the **ratio** of the two.
+Five panels: unlensed strain, lensed strain **on the same scale**, a zoom
+centred on the merger, the **measured ratio** of the two envelopes, and that
+same ratio **in closed form** directly below it.
 
 The first two are separate panels rather than one overlay. At this time
 resolution the two curves are indistinguishable — which is the point, and is
@@ -79,9 +80,42 @@ subtracting isolates the second image as a delayed copy — which is about
 arrival times, not about interference. The second image is already visible in
 the second panel and is a whole second track in `caseA_spectrogram.png`.
 
-The panel stops before the merger. Past it the unlensed signal decays into
-the ringdown while the lensed one still carries the second image, so the
-ratio stops measuring interference and starts diverging.
+**The fifth panel is the same quantity evaluated in closed form**, `|F(f(t))|`
+with `f(t)` the leading-order chirp. The obvious question about the fourth
+panel is whether the measured ratio simply *is* `|F|`; the answer is that it
+is, in the middle, and the two shaded regions are where it cannot be:
+
+- **Before `t − t_merger = −11.75 s`** there is only one image. The second is
+  the first delayed by `ΔT = 3.43 s`, the signal starts 15.18 s before the
+  merger, and until the copy arrives there is nothing to interfere with. The
+  measured ratio sits flat at `√μ₊`: between **1.0041 and 1.0342** there,
+  against `√μ₊ = 1.0283`, and it opens to the full **0.7895…1.2640** band from
+  −11.5 s on. The closed form knows nothing about this — `|F(f)|` is a
+  frequency-domain statement about the whole signal — so it oscillates there
+  anyway, and the two panels disagree.
+- **After `t − t_merger = −3.22 s`** the envelope can no longer follow the
+  fringes. `env_l` and `env_u` are analytic-signal magnitudes, and an analytic
+  envelope only tracks modulation *slower* than its own carrier. The figure of
+  merit is `ΔT·(df/dt)/f`: 0.10 at 13 s before the merger, 0.43 at 3 s, 0.86 at
+  1.5 s, 2.17 at 0.6 s. Past ~0.25 the drawn fringes shrink toward `√μ₊`, and
+  that shrinking is a property of the Hilbert transform, not of the lens. The
+  closed form keeps filling the band, which is what really happens.
+
+An earlier version simply truncated the fourth panel at −3.22 s. Showing the
+boundary is better than hiding it, and the closed-form panel underneath is
+what makes it legible.
+
+Neither panel runs past the merger, and that is not a choice: after it there is
+no denominator. The unlensed signal dies in about 20 ms — `env_u` is 1.6e-5 of
+its peak 50 ms later — and the quotient runs to thousands. That is no longer
+the ratio of two signals, it is the second image divided by numerical noise.
+
+Both are drawn as a **min–max band per pixel column**, not as sampled curves:
+near the merger one column spans dozens of fringes and point sampling there
+would be pure alias. For the closed form the per-column extremes are exact
+(the fringe phase `w·ΔT̂ = 2πfΔT` is linear in `f`, so the extremes of the sine
+over a column follow in closed form); for the measured one they are the
+extremes of the samples that fall in the column.
 
 ### `caseA_diffraction_pattern.png` — the pattern in the source plane
 
