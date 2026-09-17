@@ -713,9 +713,13 @@ def main():
     plt.close(fig)
 
     # ---- Animation data for report/report.html (JSON, reduced resolution) -
-    win = (t >= t_peak - 1.15 * NUMBERS["t_end_seconds"]) & (t <= t_peak + 0.3)
+    # La ventana llega hasta pasado el eco: la envolvente de la segunda imagen
+    # es parte de lo que las diapositivas muestran, y cortarla en t_peak+0.3
+    # dejaba afuera justamente eso.
+    win = ((t >= t_peak - 1.15 * NUMBERS["t_end_seconds"])
+           & (t <= t_peak + NUMBERS["image_time_delay_seconds"] + 0.9))
     idx = np.where(win)[0]
-    stride = max(1, len(idx) // 1400)
+    stride = max(1, len(idx) // 2000)
     idx = idx[::stride]
     f_isco = system.F_ISCO_HZ
     # (instantaneous frequency during inspiral, leading-order estimate, for
@@ -727,11 +731,39 @@ def main():
         f_inspiral = chirp.freq_of_time(t[idx], t_c_local, system.MCHIRP_MSUN)
     f_of_t = np.where(t[idx] < t_peak, np.minimum(f_inspiral, f_isco), f_isco)
 
+    # Ventana densa, para dibujar la SEÑAL y no su envolvente. La grilla de
+    # arriba tiene 1455 puntos en 17.7 s: 82 muestras por segundo contra una
+    # portadora que va de 10 a 126 Hz. Con eso solo se puede dibujar una
+    # envolvente; la onda sale aliaseada. Aca va h(t) a 1024 Hz sobre una
+    # ventana que llega hasta pasado el eco, normalizada al pico sin lente
+    # (la diapositiva dibuja formas, no unidades) y redondeada a cinco
+    # decimales para no inflar el HTML.
+    hi_lo = t_peak - 6.0
+    hi_hi = t_peak + NUMBERS["image_time_delay_seconds"] + 0.9
+    paso_hi = max(1, int(round(fs / 1024.0)))
+    hidx = np.where((t >= hi_lo) & (t <= hi_hi))[0][::paso_hi]
+    escala_hi = float(np.abs(h_unlensed[hidx]).max())
+    anim_wave_hi = {
+        "t0": float(t[hidx[0]] - t_peak),
+        "dt": float(paso_hi / fs),
+        "scale": escala_hi,
+        "h_unlensed": np.round(h_unlensed[hidx] / escala_hi, 5).tolist(),
+        "h_lensed": np.round(h_lensed[hidx] / escala_hi, 5).tolist(),
+    }
+
     zmask_idx = np.where(zmask)[0]
     anim = {
         "t_peak": float(t_peak),
         "t_end": float(NUMBERS["t_end_seconds"]),
         "f_isco": float(f_isco),
+        "f_start": 10.0,
+        "sqrt_mu_plus": sqrt_mu_plus,
+        "sqrt_mu_minus": sqrt_mu_minus,
+        # a_in va como f^(-2/3); alcanza con el valor en 1 Hz para que el
+        # esquema de la coalescencia lo reconstruya sin repetir constantes
+        "a_in_km_at_1hz": float(
+            system.inner_separation_m(1.0, system.M1_MSUN, system.M2_MSUN) / 1e3),
+        "wave_hi": anim_wave_hi,
         "f_zoom_lo": float(f_zoom_lo),
         "f_zoom_hi": float(f_zoom_hi),
         "image_time_delay_s": float(NUMBERS["image_time_delay_seconds"]),
