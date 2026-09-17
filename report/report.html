@@ -158,7 +158,8 @@
   /* la superficie del gráfico es el control: sin botones */
   .scrubline { height: 2px; background: var(--rule); margin-top: .7rem; border-radius: 2px; }
   .scrubline i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; }
-  .viz { cursor: ew-resize; }
+  .viz.pausado .scrubline i { background: var(--sub); }
+  .viz { cursor: ew-resize; -webkit-user-select: none; user-select: none; }
   .pat-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1rem; align-items: start; }
   @media (max-width: 720px) { .pat-grid { grid-template-columns: 1fr; } }
   /* El buffer del canvas y su tamano en pantalla tienen que coincidir. Con
@@ -481,7 +482,7 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
   // esa posición y la suelta al salir. Sin botones, sin barra de reproductor.
   const VIVOS = [];
   function vivo(surface, durationMs, onFrame) {
-    let raf = null, t0 = null, base = 0, frac = 0, manual = false;
+    let raf = null, t0 = null, base = 0, frac = 0, manual = false, pausado = false;
     const linea = document.createElement("div");
     linea.className = "scrubline";
     const relleno = document.createElement("i");
@@ -498,15 +499,43 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
       if (!manual) pintar(((base + (ts - t0)) % durationMs) / durationMs);
       raf = requestAnimationFrame(tick);
     }
-    function play() { if (raf === null) { t0 = null; base = frac * durationMs; raf = requestAnimationFrame(tick); } }
+    function play() {
+      // volver a la diapositiva la reanuda: una pausa hecha hace tres
+      // diapositivas no es una intención vigente
+      pausado = false; manual = false; surface.classList.remove("pausado");
+      if (raf === null) { t0 = null; base = frac * durationMs; raf = requestAnimationFrame(tick); }
+    }
     function pause() { if (raf !== null) { cancelAnimationFrame(raf); raf = null; } }
 
-    surface.addEventListener("pointermove", ev => {
+    // Arrastrar para buscar, click para pausar o seguir. Pasar el puntero por
+    // encima NO hace nada: con el movimiento pasivo el gráfico saltaba a donde
+    // estuviera el mouse, y cruzar la pantalla presentando lo dejaba en
+    // cualquier lado.
+    let arrastrando = false, x0 = 0, movio = false;
+    function aFrac(ev) {
       const r = surface.getBoundingClientRect();
+      return (ev.clientX - r.left) / r.width;
+    }
+    surface.addEventListener("pointerdown", ev => {
+      arrastrando = true; movio = false; x0 = ev.clientX;
       manual = true;
-      pintar((ev.clientX - r.left) / r.width);
+      try { surface.setPointerCapture(ev.pointerId); } catch (e) {}
+      ev.preventDefault();
     });
-    surface.addEventListener("pointerleave", () => { manual = false; t0 = null; base = frac * durationMs; });
+    surface.addEventListener("pointermove", ev => {
+      if (!arrastrando) return;
+      if (!movio && Math.abs(ev.clientX - x0) > 3) movio = true;
+      if (movio) pintar(aFrac(ev));
+    });
+    surface.addEventListener("pointerup", ev => {
+      if (!arrastrando) return;
+      arrastrando = false;
+      try { surface.releasePointerCapture(ev.pointerId); } catch (e) {}
+      if (!movio) pausado = !pausado;      // click limpio: alterna
+      manual = pausado;
+      if (!manual) { t0 = null; base = frac * durationMs; }
+      surface.classList.toggle("pausado", pausado);
+    });
 
     pintar(0);
     VIVOS.push({ el: surface, play, pause });
@@ -569,13 +598,21 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
     // de esta figura mostraba. Se guardan los indices de inicio y fin; el
     // promedio se hace por cuadro con una suma acumulada.
     const paso = (rMax - rMin) / (N - 1);
-    const semi = Math.max(1, Math.round((halfWidth / W) / paso));
-    const i0 = new Int32Array(W * H), i1 = new Int32Array(W * H);
-    for (let k = 0; k < W * H; k++) {
-      const c = Math.round((radios[k] - rMin) / (rMax - rMin) * (N - 1));
-      i0[k] = Math.min(N - 1, Math.max(0, c - semi));
-      i1[k] = Math.min(N - 1, Math.max(0, c + semi));
+    const semiPix = Math.max(1, Math.round((halfWidth / W) / paso));
+    const cIdx = new Int32Array(W * H);
+    for (let k = 0; k < W * H; k++)
+      cIdx[k] = Math.min(N - 1, Math.max(0, Math.round((radios[k] - rMin) / (rMax - rMin) * (N - 1))));
+    // El periodo de anillo en y es 2 pi / (w sqrt(y^2+4)) y se achica con la
+    // frecuencia: cerca del merger cae por debajo de dos pixeles, y ahi ningun
+    // promedio del ancho de un pixel salva nada -- lo que se puede mostrar es
+    // el valor MEDIO, no anillos inventados. La ventana es entonces la mayor
+    // de las dos: un pixel, o medio periodo local.
+    const sRad = new Float64Array(N);
+    for (let i = 0; i < N; i++) {
+      const y = rMin + (rMax - rMin) * i / (N - 1);
+      sRad[i] = Math.sqrt(y * y + 4);
     }
+    const win = new Int32Array(N);
     const cum = new Float64Array(N + 1);
 
     // Rango fijo (sin parpadeo al barrer) y ajustado a donde vive |F|^2
@@ -590,8 +627,19 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
       perfilRadial(w, rMin, rMax, N, tabla);
       cum[0] = 0;
       for (let i = 0; i < N; i++) cum[i + 1] = cum[i] + Math.min(1e4, tabla[i]);
+      // Si el periodo del anillo entra holgado en mas de dos pixeles, los
+      // anillos SE resuelven y la ventana es un pixel: ensancharla ahi los
+      // borraba, que es lo que le pasaba al panel ampliado. Solo cuando el
+      // periodo cae por debajo de dos pixeles se promedia un periodo
+      // entero, que es el valor medio y no anillos inventados.
+      const pix = 2 * semiPix;
+      for (let i = 0; i < N; i++) {
+        const per = 2 * Math.PI / (w * sRad[i]) / paso;
+        win[i] = per > 2 * pix ? semiPix : Math.max(semiPix, Math.ceil(per / 2));
+      }
       for (let k = 0; k < W * H; k++) {
-        const a = i0[k], b = i1[k];
+        const ci = cIdx[k], d = win[ci];
+        const a = Math.max(0, ci - d), b = Math.min(N - 1, ci + d);
         const v = Math.log(Math.max(1e-3, (cum[b + 1] - cum[a]) / (b - a + 1)));
         const c = color((v - LO) / (HI - LO));
         const p = k * 4;
@@ -769,17 +817,25 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
     // el período de anillo en y alrededor de la fuente, como lectura
     const yA = P.y_A, sA = Math.sqrt(yA * yA + 4);
     const ddT = sA;   // d(Delta_T)/dy = sqrt(y^2+4), exacto
+    // Barrido uniforme en log f, no en tiempo. Un barrido en tiempo es lo que
+    // el chirp hace de verdad, pero el chirp pasa casi toda su vida abajo en
+    // la banda: cruza 20 Hz en el último tercio y 100 Hz en el último 2%, así
+    // que el 95% de la animación se queda quieta y los anillos sólo se
+    // aprietan en el último instante. En log f el apretamiento es parejo y se
+    // ve; el instante correspondiente va en la lectura, que es donde el
+    // tiempo importa.
     vivo(document.getElementById("vizPat"), 14000, frac => {
-      const tCur = tIni + frac * (tFin - tIni);
-      let i = 0;
-      while (i < tA.length - 1 && tA[i] < tCur) i++;
-      const f = Math.min(fA[i], P.f_isco);
+      const f = P.f_start * Math.pow(P.f_isco / P.f_start, frac);
       const w = P.w_start * f / P.f_start;
+      let i = 0;
+      while (i < fA.length - 1 && fA[i] < f) i++;
+      const tCur = tA[i] - CASE_A.t_peak;
       pintarZoom(w);
       pintarFull(w);
       readout.textContent =
         "f = " + f.toFixed(1) + " Hz     w = " + w.toFixed(0) +
-        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y";
+        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y" +
+        "     (t − t_merger = " + tCur.toFixed(2) + " s)";
     });
   }
 
