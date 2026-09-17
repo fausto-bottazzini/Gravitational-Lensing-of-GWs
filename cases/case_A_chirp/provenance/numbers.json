@@ -15,7 +15,7 @@
   "waveform_source": "IMRPhenomD (pycbc/LALSimulation, Khan et al. 2016) -- full inspiral-merger-ringdown",
   "merger_time_target_s": 27.2,
   "D_eff_Mpc": 0.005,
-  "F_evaluation_seconds": 1.473264217376709,
+  "F_evaluation_seconds": 1.453949213027954,
   "peak_time_unlensed_s": 27.1982421875,
   "w_at_f_start": 61.89554471412633,
   "w_at_f_isco": 777.615791359739,
@@ -43,5 +43,6 @@
   "sqrt_mu_minus_geometric": 0.23959975032394432,
   "echo_ratio_vs_sqrt_mu_minus_relerr": 0.0005204103584993091,
   "fringe_period_hz": 0.2911952309583697,
-  "ratio_panel_cut_before_merger_s": 3.2197265625
+  "ratio_panel_cut_before_merger_s": 3.2197265625,
+  "pattern_closed_form_vs_evaluator_relerr": 6.345684734550058e-15
 }

@@ -718,7 +718,34 @@ def main():
             "freqs": freqs[zmask_idx].tolist(),
             "F_abs": np.abs(F[zmask_idx]).tolist(),
         },
+        # Parameters only, no grid: across this whole band w > 30, so the
+        # pattern is the two-image geometric-optics form and report.html
+        # evaluates it directly rather than being shipped a sampled one --
+        # |F|^2 = mu_+ + |mu_-| + 2 sqrt(mu_+|mu_-|) sin(w Delta_T(y)), with
+        # mu_+-(y) and Delta_T(y) elementary. Same expression as
+        # waveoptics.F_geometric_optics; agreement checked below.
+        "pattern": {
+            "y_A": float(y_A),
+            "w_start": float(w_start),
+            "w_isco": float(w_isco),
+            "f_start": float(system.F_A_START_HZ),
+            "f_isco": float(f_isco),
+            "y_max": 2.0,
+            "zoom_half_width": 0.05,
+        },
     }
+    # The closed form report.html will evaluate, checked here against this
+    # repo's own evaluator so the page cannot quietly drift from it.
+    _r = np.linspace(0.05, 2.0, 400)
+    _worst = 0.0
+    for _w in (w_start, 0.5 * (w_start + w_isco), w_isco):
+        _xp, _xm = wo.image_positions(_r)
+        _mp, _mm = wo.magnification(_xp), np.abs(wo.magnification(_xm))
+        _dT = wo.time_delay_difference(_r)
+        _closed = _mp + _mm + 2.0 * np.sqrt(_mp * _mm) * np.sin(_w * _dT)
+        _ref = np.array([abs(complex(wo.F_geometric_optics(_w, rr))) ** 2 for rr in _r])
+        _worst = max(_worst, float(np.max(np.abs(_closed - _ref) / _ref)))
+    log("pattern_closed_form_vs_evaluator_relerr", _worst)
     with open(OUT / "caseA_animation_data.json", "w") as fh:
         json.dump(anim, fh)
 
