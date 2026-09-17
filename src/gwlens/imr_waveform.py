@@ -45,6 +45,7 @@ def get_unlensed_htilde_fd(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower,
         H = _taylorf2_banded(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower)
         label = ("TaylorF2 2PN inspiral-only (pycbc not available in this "
                  "environment -- fallback, see wiki/log.md; no merger/ringdown)")
+    H = _taper_low_edge(freqs, H, f_lower)
 
     if merger_time is not None:
         n_pad = 2 * (len(freqs) - 1)
@@ -56,6 +57,39 @@ def get_unlensed_htilde_fd(freqs, m1_msun, m2_msun, t_c, d_eff_mpc, f_lower,
         H = H * np.exp(-1j * 2.0 * np.pi * freqs * delta)
 
     return H, label
+
+
+LOW_EDGE_TAPER_HZ = 0.5
+
+
+def _taper_low_edge(freqs, H, f_lower, width_hz=LOW_EDGE_TAPER_HZ):
+    """Half-cosine ramp over the first `width_hz` above `f_lower`.
+
+    A waveform built in the frequency domain and cut off abruptly at
+    `f_lower` rings in the time domain around the instant the chirp passes
+    that frequency -- the signal's own onset. Measured on this project's
+    Case A, against the leading-order PN envelope h ~ f^(2/3) that the
+    inspiral must follow: the amplitude scatters by 4.0% of itself with a
+    hard edge and 2.0% with this ramp, and the ringing reaches 20%
+    peak-to-peak just after the signal starts. It is not a Hilbert artefact
+    (building the analytic signal directly gives the same) and not a padding
+    artefact (2x, 4x and 8x agree to three digits).
+
+    0.5 Hz, and the width matters in both directions: narrower leaves the
+    ringing, wider starts eating real amplitude -- the same scatter measure
+    runs 4.0%, 2.4%, 2.0%, 5.0%, 22%, 34% for no taper, 0.3, 0.5, 1, 2 and
+    3.5 Hz. At 0.5 Hz the lensed/unlensed envelope ratio also lands inside
+    the geometric-optics bounds sqrt(mu_+) -/+ sqrt(|mu_-|) everywhere it is
+    measured, which a hard edge does not.
+    """
+    if width_hz <= 0:
+        return H
+    out = H.copy()
+    ramp = (freqs >= f_lower) & (freqs < f_lower + width_hz)
+    x = (freqs[ramp] - f_lower) / width_hz
+    out[ramp] *= 0.5 * (1.0 - np.cos(np.pi * x))
+    out[freqs < f_lower] = 0.0
+    return out
 
 
 def _pycbc_imrphenomd(freqs, m1_msun, m2_msun, d_eff_mpc, f_lower):

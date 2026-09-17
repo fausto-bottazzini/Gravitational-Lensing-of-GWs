@@ -533,8 +533,9 @@ def main():
     # That coincidence is the reason the fixed-w approximation is safe here,
     # so the figure marks it instead of leaving it to look like an accident.
     t_conj = float(tp[int(np.argmax(np.abs(F_t[one_p])))])
-    for axk in axes:
-        axk.axvline(t_conj, color='0.55', lw=0.8, ls=':')
+    for k, axk in enumerate(axes):
+        axk.axvline(t_conj, color='0.55', lw=0.8, ls=':',
+                    label='conjunción' if k == 0 else None)
         axk.axhline(0.0, color="0.85", lw=0.6)
 
     axes[0].plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.6)
@@ -548,18 +549,12 @@ def main():
     axes[1].plot(tp, lens_phase_cycles[one_p], color="#c0392b", lw=1.4)
     axes[1].set_ylabel("lensing, $\\arg F/2\\pi$\n[ciclos]")
     axes[1].set_xlabel("$t$ [días]")
-    axes[0].text(t_conj, axes[0].get_ylim()[1], " conjunción", fontsize=8,
-                 color="0.35", va="top", ha="left")
-    # Stated rather than left looking like a coincidence: the pulses land on
-    # the Roemer MAXIMUM, not on its zero, because the delay is extremal
-    # exactly where the line-of-sight velocity vanishes -- and that is the
-    # same instant the source passes behind the lens. It is also the reason
-    # evaluating F at a fixed w_B is safe here
-    # (claims.yaml::fixed_w_approximation_quantified).
-    fig.text(0.5, -0.01,
-             "Los pulsos caen en el máximo del retardo, donde la velocidad "
-             "radial se anula.",
-             ha="center", va="top", fontsize=8, color="0.3")
+    # The dotted line marks conjunction, and it is in a legend rather than a
+    # floating caption: the pulses land on the Roemer MAXIMUM, not on its
+    # zero, because the delay is extremal exactly where the line-of-sight
+    # velocity vanishes. That is said in cases/FIGURES.md, not written across
+    # the plot.
+    axes[0].legend(fontsize=8, loc="lower left")
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
     plt.close(fig)

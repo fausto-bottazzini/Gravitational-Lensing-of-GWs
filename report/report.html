@@ -194,7 +194,7 @@ de la imagen débil, √|μ₋|, a menos del 1%), de todo el merger reaparece m�
 exactamente en el retraso fijo que predice la óptica geométrica entre las dos imágenes
 (fuerte + débil, ambas construidas sólo del pasado de la fuente — la causalidad nunca
 estuvo en duda) — un <b>eco genuino</b>, visible en
-<code>cases/case_A_chirp/caseA_detector_envelope.png</code> (escala logarítmica) y
+<code>cases/case_A_chirp/caseA_spectrogram.png</code> (tiempo-frecuencia) y
 explicado en detalle en <code>RESULTS.md</code>.</p>
 
 <h2 id="casoB">Caso B — cuasi-monocromático, lente en movimiento</h2>
@@ -412,7 +412,7 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
     // earlier version plotted raw h(t) here and it came out as aliased
     // noise near the merger (caught by an independent review; see
     // wiki/log.md). The envelope is smooth by construction (it is what
-    // caseA_detector_envelope.png already shows statically) and needs no
+    // caseA_spectrogram.png already shows statically) and needs no
     // such resolution.
     const wavePlot = makePlot(waveCanvas, tArr,
       [{ data: wf.env_unlensed, color: "#9a9a9a", lw: 1 },

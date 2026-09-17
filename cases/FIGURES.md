@@ -69,7 +69,7 @@ A previous version plotted the difference instead. That is a different
 statement — `h_lensed − h_unlensed = (√μ₊−1)h(t) + √|μ₋|h(t−ΔT)`, so
 subtracting isolates the second image as a delayed copy — which is about
 arrival times, not about interference. The second image is already visible in
-the second panel and labelled in `caseA_detector_envelope.png`.
+the second panel and is a whole second track in `caseA_spectrogram.png`.
 
 The panel stops before the merger. Past it the unlensed signal decays into
 the ringdown while the lensed one still carries the second image, so the
@@ -85,28 +85,28 @@ and `|Δy| < 0.02` on the right, where `w = 778` makes the fringe period
 lost by cropping — the pattern is axisymmetric, and the outer rings are more
 of the same.
 
-### `caseA_detector_envelope.png` — two arrivals, not one
+### `caseA_spectrogram.png` — the chirp in time-frequency
 
-This is a **time-domain** figure, not a spectrum. It plots `|h(t)|`, the
-instantaneous amplitude: `h(t)` oscillates far too fast to draw over 20
-seconds, so what is drawn is the curve that runs along its peaks — the
-magnitude of the analytic signal, from a Hilbert transform. Log vertical
-axis.
+The chirp drawn the way a chirp is normally drawn: time across, frequency up
+(log), colour for amplitude. Unlensed above, lensed below, one colour scale.
 
-The point is the single sentence in the title: with the lens, a detector
-records **two arrivals** where there was one event. The first is the merger;
-3.43 s later comes the second image, a factor ~4 lower (`√|μ₋| = 0.24`), both
-now labelled on the figure. No noise, no antenna pattern, no PSD — an
-idealized view, and labelled as one.
+The unlensed panel is one track sweeping up to the merger. The lensed panel
+has **two** — the same sweep repeated `ΔT = 3.43 s` later at `√|μ₋| = 0.24`
+of the amplitude. Two images become two tracks. That is the whole of
+geometric-optics lensing in one picture, and it is the figure to show first.
 
-The small ripple on the **unlensed** curve early on is not physical. The
-waveform is generated in the frequency domain, band-limited with a hard start
-at `f_lower = 10 Hz`, and inverse-transformed; a chirp whose spectrum is cut
-off abruptly rings at the corresponding time. Measured: 20% peak-to-peak just
-after the signal turns on, decaying to 4.6% near the merger. It is not the
-Hilbert transform (building the analytic signal directly gives the same) and
-not insufficient padding (2x, 4x and 8x give 0.2795, 0.2776, 0.2771). A real
-inspiral envelope is monotonic, `h ∝ f^(2/3)`.
+The stipple along the lensed track at low frequency is the interference
+between the two images — the same fringes `caseA_strain_time.png`'s ratio
+panel measures, here seen as a texture rather than a curve.
+
+Window: 0.5 s (`nperseg=1024` at `fs=2048`), which is five cycles at the
+10 Hz band start — the shortest that still localises the low end, and short
+enough that the 0.29 Hz fringes do not resolve into the picture. Hann rather
+than scipy's default Tukey(0.25): its sidelobes are ~30 dB lower, and the
+Tukey ones were drawing a fan of spurious arcs above the real track.
+
+It replaces an amplitude-vs-time plot of the same two waveforms, which added
+nothing to the strain figure. No noise, no antenna pattern, no PSD.
 
 ---
 

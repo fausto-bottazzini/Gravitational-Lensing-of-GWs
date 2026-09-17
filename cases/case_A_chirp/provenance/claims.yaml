@@ -141,7 +141,7 @@ claims:
       - tests/test_waveoptics.py::check_causality_of_lensed_pulse
       - tests/test_waveoptics.py::check_causality_of_lensed_pulse_low_w
       - caseA_strain_time.png (third panel: echo zoom)
-      - caseA_detector_envelope.png (log-scale, both peaks visible)
+      - caseA_spectrogram.png (both tracks visible)
     numbers: [peak_time_lensed_minus_unlensed_s, image_time_delay_seconds,
       echo_peak_time_s, echo_peak_time_minus_prediction_s,
       echo_peak_env_lensed, echo_time_env_unlensed,
@@ -224,7 +224,7 @@ figures:
       at 10 Hz, 93 per second at 36 Hz). A difference would instead
       isolate the second image as a delayed copy, which is a statement
       about arrival times rather than about interference, and the second
-      image is already labelled in caseA_detector_envelope.png.
+      image is a whole second track in caseA_spectrogram.png.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
       shift; the zoom window choices; the empirical echo-peak search
@@ -252,23 +252,23 @@ figures:
       - "LogNorm color scale -- the central Einstein-ring spike otherwise saturates a linear scale."
       - "F_point_lens (exact) forced for r<0.5 regardless of w, not F_hybrid: at w=61.9 (left panel) F_hybrid always returns F_geometric_optics, which diverges as y->0 -- an earlier version of this figure plotted that divergence, cut off only by the innermost grid sample (1123 vs. the true finite pi*w=194.45), as if it were the regularized wave-optics value the caption describes; an independent review caught this (the figure demonstrated the opposite of its own caption). See wiki/log.md."
     supports: [y_A_value, w_regime]
-  - file: caseA_detector_envelope.png
+  - file: caseA_spectrogram.png
     produced_by: run.py::main
     shows: >
-      |h(t)|, the instantaneous amplitude (magnitude of the analytic signal,
-      via a Hilbert transform), lensed vs unlensed on a log scale. A
-      time-domain figure, not a spectrum. Both arrivals are labelled: the
-      merger, and the second image 3.43 s later at a quarter the amplitude.
-      The small ripple on the unlensed curve is an artefact of band-limiting
-      the waveform at f_lower=10 Hz in the frequency domain and transforming
-      back -- 20% peak-to-peak just after the signal starts, 4.6% near the
-      merger, unchanged by padding and unchanged if the analytic signal is
-      built without a Hilbert transform.
-    from_scratch: Envelope comparison and the echo-window annotation.
-    from_library: scipy.signal.hilbert.
+      The chirp in time-frequency, the way a chirp is normally shown:
+      spectrogram amplitude, log frequency, unlensed above and lensed
+      below on one colour scale. The unlensed panel is a single track
+      sweeping up to the merger; the lensed panel has TWO, the same sweep
+      repeated Delta_T=3.43 s later at sqrt(|mu_-|)=0.24 of the amplitude.
+      Two images become two tracks, which is geometric-optics lensing in
+      one picture. The stipple along the lensed track at low frequency is
+      the interference between them -- the same fringes the ratio panel of
+      caseA_strain_time.png measures.
+    from_scratch: The lensed waveform; the window and dynamic-range choices.
+    from_library: scipy.signal.spectrogram, matplotlib (LogNorm).
     choices:
-      - "No noise, antenna pattern, or PSD -- explicitly an idealized/illustrative detector view, as scoped in wiki/conventions.md."
-      - "Log-scale y-axis: the echo is a factor ~4 (echo_to_unlensed_peak_ratio=0.24) below the merger peak, easy to under-sell on a linear scale."
-      - "Legend lower left and no shaded echo band. Both used to sit in the upper right, which is exactly where the merger peak and the echo are: the legend covered them and the band shaded the feature it was pointing at."
-      - "Explicit y-limits, three decades below the peak and a factor 3 above it. The default limits clipped the merger peak off the top of the frame, and on the inspiral-only fallback path the post-merger tail decays to ~1e-27 and stretches the useful part of the plot into a few pixels."
-    supports: [dephasing_not_simple_amplification, causality_and_echo]
+      - "Replaces an amplitude-vs-time plot of the same two waveforms, which said nothing caseA_strain_time.png did not already say. A spectrogram says something neither says: that the lens puts a second track on the time-frequency plane."
+      - "nperseg=1024 at fs=2048, i.e. a 0.5 s window: five cycles at the 10 Hz band start, the least that still localises the low end, and short enough that the 0.29 Hz interference fringes do not resolve into the picture (they are caseA_F_of_f.png's subject)."
+      - "Hann window rather than scipy's default Tukey(0.25): ~30 dB lower sidelobes. With three decades of colour range the Tukey sidelobes drew a fan of spurious arcs above the real track; the range is now two decades and the window is Hann."
+      - "No noise, antenna pattern, or PSD -- an idealized view, as scoped in wiki/conventions.md."
+    supports: [causality_and_echo, dephasing_not_simple_amplification]

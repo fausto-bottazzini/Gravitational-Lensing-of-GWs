@@ -513,14 +513,31 @@ def main():
     # in FREQUENCY (0.29 Hz, caseA_F_of_f.png); this is that same curve seen
     # through f(t).
     #
-    # Cut before the merger: past it the unlensed signal decays into the
-    # ringdown while the lensed one still carries the second image, so the
-    # ratio stops measuring interference and starts diverging.
-    rview = (t >= t_peak - NUMBERS["t_end_seconds"] + 1.0) & (t <= t_peak - 0.25)
+    # The window is set by the envelope, not by taste. env_l and env_u are
+    # analytic-signal magnitudes, and an analytic-signal envelope can only
+    # follow a modulation SLOWER than its own carrier. The fringe rate here
+    # is Delta_T * df/dt, so the ratio Delta_T*(df/dt)/f is the figure of
+    # merit: it runs 0.10 at 13 s before the merger, 0.43 at 3 s, 0.86 at
+    # 1.5 s and 2.17 at 0.6 s. Past ~0.25 the drawn fringes are no longer the
+    # real ones -- they shrink, and an earlier version of this panel showed
+    # exactly that, an amplitude decaying into the merger that is a property
+    # of the Hilbert transform and not of the lens. Cut where the criterion
+    # says to.
+    f_of_t = chirp.freq_of_time(t - (t_peak - NUMBERS["t_c_seconds"]),
+                                NUMBERS["t_c_seconds"], system.MCHIRP_MSUN)
+    dfdt = np.gradient(f_of_t, t)
+    slow = NUMBERS["image_time_delay_seconds"] * np.abs(dfdt) < 0.40 * f_of_t
+    rview = ((t >= t_peak - NUMBERS["t_end_seconds"] + 1.0)
+             & (t <= t_peak) & slow)
+    t_cut = float(t[rview][-1] - t_peak)
+    log("ratio_panel_cut_before_merger_s", -t_cut)
     ratio = np.abs(env_l[rview]) / np.abs(env_u[rview])
     axes[3].plot(t[rview] - t_peak, ratio, lw=0.6, color="#6b46c1")
-    for lvl in (sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus):
-        axes[3].axhline(lvl, color="#c05621", lw=0.9, ls="--")
+    for lvl, lab in ((sqrt_mu_plus + sqrt_mu_minus,
+                      r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$"),
+                     (sqrt_mu_plus - sqrt_mu_minus, None)):
+        axes[3].axhline(lvl, color="#c05621", lw=0.9, ls="--", label=lab)
+    axes[3].legend(fontsize=8, loc="lower left")
     axes[3].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
     axes[3].set_ylabel("con lente / sin lente")
     axes[3].set_title("el cociente: la interferencia entre las dos imágenes",
@@ -624,45 +641,47 @@ def main():
     fig.savefig(OUT / "caseA_diffraction_pattern.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
-    # ---- Figure 4: simple idealized detector view -------------------------
-    # Log-scale y-axis and a window extended past the echo: the echo is
-    # ~4x (0.6 dex) below the merger peak envelope
-    # (echo_to_unlensed_peak_ratio, matching sqrt(|mu_-|) to <1%, see above)
-    # -- clear on a log axis, easy to under-sell on a linear one.
-    fig, ax = plt.subplots(figsize=(8, 3.6))
-    # same window as Figure 2's overview panel above -- identical expression, reused rather than rebuilt
-    ax.plot(t[view], env_u[view], color="#888888", lw=1.0, label="sin lente")
-    ax.plot(t[view], env_l[view], color="#2b6cb0", lw=1.0, label="con lente")
-    ax.annotate("1ra imagen", xy=(t_peak, float(np.max(env_l))),
-                xytext=(-46, -14), textcoords="offset points", fontsize=8,
-                color="#2b6cb0")
-    ax.annotate("2da imagen\n($+%.2f$ s)" % (echo_t - t_peak),
-                xy=(echo_t, NUMBERS["echo_peak_env_lensed"]),
-                xytext=(-8, 12), textcoords="offset points", fontsize=8,
-                color="#2b6cb0")
-    ax.set_yscale("log")
-    ax.set_xlabel("$t$ [s]")
-    ax.set_ylabel("$|h(t)|$ [u. arb.]")
-    # Retitled: "vista de detector idealizada (envolvente)" said what the
-    # figure was made of, not what it shows. What it shows is that the lens
-    # turns one event into two arrivals.
-    ax.set_title("Caso A: con lente llegan dos pulsos, no uno\n"
-                 "(amplitud instantánea $|h(t)|$, escala logarítmica)", fontsize=10)
-    # Lower left: the top right of this axes is where the merger peak and the
-    # echo both are, and a legend there covered them. The green band that
-    # used to mark the echo is gone for the same reason -- it shaded the
-    # feature it was pointing at.
-    ax.legend(fontsize=8, loc="lower left")
-    # Headroom above the merger peak (the default limits clipped it, so the
-    # tallest thing in the figure ran off the top of the frame) and a floor
-    # three decades down. Without the floor the axis auto-scales to whatever
-    # the post-merger tail decays to, which on the inspiral-only fallback
-    # path is ~1e-27 and stretches the useful part of the plot into a band a
-    # few pixels tall.
-    env_top = float(np.max(env_l[view]))
-    ax.set_ylim(env_top / 1.0e3, 3.0 * env_top)
-    fig.tight_layout()
-    fig.savefig(OUT / "caseA_detector_envelope.png", dpi=170, bbox_inches="tight")
+    # ---- Figure 4: time-frequency, the way a chirp is usually shown -------
+    # Replaces an amplitude-vs-time plot of the same two waveforms, which
+    # said nothing the strain figure above did not already say. A
+    # spectrogram does: the inspiral is a track sweeping up in frequency,
+    # and lensing puts a SECOND track on the plane, the same sweep displaced
+    # by Delta_T. Two images become two tracks, which is the whole of
+    # geometric-optics lensing in one picture.
+    from scipy.signal import spectrogram
+
+    # nperseg=1024 at fs=2048 is a 0.5 s window: five cycles at the 10 Hz
+    # band start, which is the least it can be and still localise the low
+    # end, and short enough that the 0.29 Hz fringes do not resolve into the
+    # picture (they are caseA_F_of_f.png's subject, not this one's).
+    nperseg, noverlap = 1024, 1024 - 64
+    tf_view = (t >= t_peak - NUMBERS["t_end_seconds"]) & (t <= echo_t + 0.6)
+    fig, axes = plt.subplots(2, 1, figsize=(8, 6.2), sharex=True, sharey=True)
+    espectros = []
+    for h_sig in (h_unlensed[tf_view], h_lensed[tf_view]):
+        # Hann, not the default Tukey(0.25): its sidelobes are ~30 dB
+        # lower, and with three decades of colour range the Tukey ones
+        # drew a fan of spurious arcs above the real track.
+        f_sp, t_sp, S = spectrogram(h_sig, fs=fs, window="hann",
+                                    nperseg=nperseg, noverlap=noverlap,
+                                    scaling="spectrum", mode="magnitude")
+        espectros.append((f_sp, t_sp, S))
+    vmax = max(S.max() for _, _, S in espectros)
+    for axk, (f_sp, t_sp, S), etiqueta in zip(
+            axes, espectros, ("sin lente", "con lente")):
+        band = (f_sp >= 8.0) & (f_sp <= 400.0)
+        im = axk.pcolormesh(t_sp + t[tf_view][0] - t_peak, f_sp[band],
+                            S[band], shading="auto", cmap="magma",
+                            norm=LogNorm(vmin=vmax / 2.0e2, vmax=vmax))
+        axk.set_yscale("log")
+        axk.set_ylabel("$f$ [Hz]")
+        axk.set_title(etiqueta, fontsize=9.5)
+    axes[1].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
+    cb = fig.colorbar(im, ax=axes, shrink=0.85, pad=0.02)
+    cb.set_label("amplitud espectral [u. arb.]")
+    fig.suptitle("Caso A: el chirp en tiempo-frecuencia — el lente lo duplica",
+                 fontsize=11, y=0.975)
+    fig.savefig(OUT / "caseA_spectrogram.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     # ---- Animation data for report/report.html (JSON, reduced resolution) -
@@ -708,7 +727,7 @@ def main():
     print(json.dumps(NUMBERS, indent=2))
     print("\nFigures written:",
           "caseA_F_of_f.png, caseA_strain_time.png, "
-          "caseA_diffraction_pattern.png, caseA_detector_envelope.png")
+          "caseA_diffraction_pattern.png, caseA_spectrogram.png")
 
 
 if __name__ == "__main__":
