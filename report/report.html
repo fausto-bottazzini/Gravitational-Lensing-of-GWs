@@ -164,8 +164,14 @@
   .scrubline i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; }
   .viz.pausado .scrubline i { background: var(--sub); }
   .viz { cursor: ew-resize; -webkit-user-select: none; user-select: none; }
-  .pat-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1rem; align-items: start; }
+  .pat-grid { display: grid; grid-template-columns: max-content max-content;
+              gap: 1rem; align-items: start; justify-content: center; }
+  /* Estos dos canvas se dibujan pixel por pixel y traen su propio
+     antialiasing radial; estirarlos con width:100% lo deshace y devuelve
+     el moiré. Van a tamaño natural, centrados. */
+  .pat-grid canvas { width: auto; max-width: 100%; margin: 0 auto; }
   @media (max-width: 720px) { .pat-grid { grid-template-columns: 1fr; } }
+  .pat-mod { margin-top: 1rem; }
   /* El buffer del canvas y su tamano en pantalla tienen que coincidir. Con
      440 px de buffer dibujados en 330 el navegador reescala por un factor
      no entero, y sobre un patron de cientos de anillos eso vuelve a meter
@@ -318,7 +324,10 @@
   <div class="kicker">Caso A</div>
   <h2>El patrón se aprieta mientras el chirp sube</h2>
   <p>La fuente está quieta en y<sub>A</sub>=1.589; lo que cambia es la frecuencia, y con ella
-  el espaciado de los anillos — 12.5× más finos entre el inicio de la banda y el merger.</p>
+  el espaciado de los anillos — 12.5× más finos entre el inicio de la banda y el merger. La fuente
+  los cruza cada vez más rápido, y eso es la modulación que el lente le imprime a la amplitud:
+  sobre el final pasan decenas de franjas por segundo, así que en la señal del merger ya no se
+  alcanza a ver.</p>
   <div class="viz" id="vizPat">
     <div class="pat-grid">
       <div class="viz-panel">
@@ -329,6 +338,10 @@
         <h4>El patrón completo</h4>
         <canvas id="canvasA-full" width="380" height="380"></canvas>
       </div>
+    </div>
+    <div class="viz-panel pat-mod">
+      <h4>La modulación que ve la fuente</h4>
+      <canvas id="canvasA-mod" width="1040" height="150"></canvas>
     </div>
     <div class="viz-readout" id="readoutPat">cargando…</div>
   </div>
@@ -1358,6 +1371,95 @@
     // el período de anillo en y alrededor de la fuente, como lectura
     const yA = P.y_A, sA = Math.sqrt(yA * yA + 4);
     const ddT = sA;   // d(Delta_T)/dy = sqrt(y^2+4), exacto
+
+    // ---- la modulación: lo que la fuente ve mientras los anillos le pasan --
+    // Es el mismo patrón de los paneles de arriba, leído en el punto donde
+    // está la fuente. Misma forma cerrada que perfilRadial y que
+    // waveoptics.F_geometric_optics, evaluada en y_A.
+    const modCv = document.getElementById("canvasA-mod");
+    const modCtx = modCv.getContext("2d");
+    const MW = modCv.width, MH = modCv.height;
+    const MM = { l: 48, r: 16, t: 16, b: 28 };
+    const qA = (yA * yA + 2) / (2 * yA * sA);
+    const muP = 0.5 + qA, muM = Math.abs(0.5 - qA);
+    const dos = 2 * Math.sqrt(muP * muM);
+    const dTh = yA * sA / 2 + Math.log((sA + yA) / (sA - yA));
+    const KF = (P.w_start / P.f_start) * dTh;      // fase de franja por Hz
+    const Fmin = Math.sqrt(muP + muM - dos), Fmax = Math.sqrt(muP + muM + dos);
+
+    // f en cada columna de píxel, una sola vez
+    const NCOL = MW - MM.l - MM.r;
+    const fCol = new Float64Array(NCOL + 1);
+    for (let c = 0, j = 0; c <= NCOL; c++) {
+      const tc = tIni + (tFin - tIni) * c / NCOL;
+      while (j < tA.length - 1 && tA[j] < tc) j++;
+      fCol[c] = Math.min(fA[j], P.f_isco);
+    }
+    const dtCol = (tFin - tIni) / NCOL;
+
+    // Mínimo y máximo de sin sobre un intervalo de fase, exactos. Hacen falta
+    // porque sobre el final una sola columna de píxel cubre decenas de
+    // franjas: ahí lo único que se puede dibujar honestamente es la banda que
+    // la curva llena, no una curva muestreada que sería alias puro.
+    function extremos(p0, p1) {
+      if (p1 - p0 >= TAU) return [-1, 1];
+      let lo = Math.min(Math.sin(p0), Math.sin(p1));
+      let hi = Math.max(Math.sin(p0), Math.sin(p1));
+      if (Math.PI / 2 + TAU * Math.ceil((p0 - Math.PI / 2) / TAU) <= p1) hi = 1;
+      if (-Math.PI / 2 + TAU * Math.ceil((p0 + Math.PI / 2) / TAU) <= p1) lo = -1;
+      return [lo, hi];
+    }
+
+    function modulacion(frac) {
+      modCtx.clearRect(0, 0, MW, MH);
+      const x0 = MM.l, x1 = MW - MM.r, y0 = MM.t, y1 = MH - MM.b;
+      const LO = 0.70, HI = 1.36;
+      const Y = v => y1 - (v - LO) / (HI - LO) * (y1 - y0);
+      const Xt = tr => x0 + (tr - (tIni - tFin)) / (tFin - tIni) * NCOL;
+
+      modCtx.strokeStyle = SUAVE; modCtx.lineWidth = 1;
+      modCtx.beginPath();
+      modCtx.moveTo(x0, y0); modCtx.lineTo(x0, y1); modCtx.lineTo(x1, y1);
+      modCtx.stroke();
+      modCtx.strokeStyle = REJILLA;
+      modCtx.beginPath(); modCtx.moveTo(x0, Y(1)); modCtx.lineTo(x1, Y(1)); modCtx.stroke();
+      modCtx.strokeStyle = OCRE; modCtx.setLineDash([4, 3]);
+      for (const v of [Fmin, Fmax]) {
+        modCtx.beginPath(); modCtx.moveTo(x0, Y(v)); modCtx.lineTo(x1, Y(v)); modCtx.stroke();
+      }
+      modCtx.setLineDash([]);
+
+      const cCur = Math.max(1, Math.round(frac * NCOL));
+      modCtx.strokeStyle = CYAN; modCtx.lineWidth = 1;
+      modCtx.beginPath();
+      for (let c = 0; c < cCur; c++) {
+        const e = extremos(KF * fCol[c], KF * fCol[c + 1]);
+        const a = Math.sqrt(muP + muM + dos * e[0]);
+        const b = Math.sqrt(muP + muM + dos * e[1]);
+        modCtx.moveTo(x0 + c + 0.5, Y(a) + 0.5);
+        modCtx.lineTo(x0 + c + 0.5, Y(b) - 0.5);
+      }
+      modCtx.stroke();
+
+      modCtx.strokeStyle = ROJO; modCtx.lineWidth = 1.2;
+      modCtx.beginPath();
+      modCtx.moveTo(x0 + cCur, y0); modCtx.lineTo(x0 + cCur, y1);
+      modCtx.stroke();
+
+      modCtx.font = "11px -apple-system,sans-serif";
+      modCtx.fillStyle = SUAVE;
+      modCtx.fillText("|F| en la fuente", 4, y0 - 4);
+      modCtx.fillStyle = OCRE;
+      modCtx.fillText(Fmax.toFixed(3), 6, Y(Fmax) + 4);
+      modCtx.fillText(Fmin.toFixed(3), 6, Y(Fmin) + 4);
+      modCtx.fillStyle = SUAVE;
+      // el rótulo del eje no entra en una segunda fila: el alto del panel da
+      // para una sola, así que la unidad va pegada a cada marca
+      for (const d of [-15, -10, -5, 0]) {
+        modCtx.fillText(d + " s", Xt(d) - 10, y1 + 16);
+      }
+      modCtx.fillText("t − t_merger", x1 - 68, y0 - 4);
+    }
     // Barrido lineal en TIEMPO: es la evolución del chirp, y el eje es el
     // tiempo físico. Eso significa que casi toda la animación transcurre abajo
     // en la banda -- el chirp cruza 20 Hz en su último tercio y 100 Hz en el
@@ -1371,10 +1473,20 @@
       const w = P.w_start * f / P.f_start;
       pintarZoom(w);
       pintarFull(w);
+      modulacion(frac);
+      // franjas por segundo: es el número que explica por qué la modulación
+      // no se ve en la señal del merger
+      // La diferencia de UNA columna salta: la grilla de f viene cada 10.7 ms
+      // y una columna mide 17.9, así que columnas vecinas caen a veces sobre
+      // la misma muestra. Se mide sobre dieciséis, que ya es suave.
+      const c = Math.min(NCOL, Math.max(0, Math.round(frac * NCOL)));
+      const cA = Math.max(0, c - 8), cB = Math.min(NCOL, c + 8);
+      const franjas = (fCol[cB] - fCol[cA]) / ((cB - cA) * dtCol) / (TAU / KF);
       readout.textContent =
         "t − t_merger = " + (tCur - CASE_A.t_peak).toFixed(2) + " s" +
         "     f = " + f.toFixed(1) + " Hz     w = " + w.toFixed(0) +
-        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y";
+        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y" +
+        "     " + franjas.toFixed(franjas < 10 ? 2 : 0) + " franjas/s";
     });
   }
 
