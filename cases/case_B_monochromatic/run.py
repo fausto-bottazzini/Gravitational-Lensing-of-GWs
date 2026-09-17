@@ -362,7 +362,7 @@ def main():
     # drawn straight across the rings -- doing to the figure exactly what the
     # removed orbit track did.
     ax.annotate(f"$y_\mathrm{{min}}={y_min_obs:.2f}$",
-                xy=(y_min_obs, 0.0), xytext=(8, -14),
+                xy=(y_min_obs, 0.0), xytext=(14, -14),   # media cruz (ms=11) a la derecha
                 textcoords="offset points", color="white", fontsize=8)
     ax.set_xlabel(r"$y_1$")
     ax.set_ylabel(r"$y_2$")
