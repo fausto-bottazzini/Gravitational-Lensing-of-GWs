@@ -22,7 +22,7 @@ about *reproducing* those two documents, not about the physics itself.
 
 | | |
 |---|---|
-| `report/` | the results: `report.html` (interactive, presentation-style) and `report.pdf` (full detail), the two documents this project is presented from. `report_template.html` + `build_report.py` generate `report.html` by inlining `cases/*/caseX_animation_data.json` |
+| `report/` | the results: `report.html` (a slide deck with live figures) and `report.pdf` (full detail), the two documents this project is presented from. `report.html` is the file itself, not a build artefact; `update_report_data.py` refreshes the animation data embedded in it from `cases/*/caseX_animation_data.json` |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
 | `src/gwlens/` | the physics library: wave optics (`waveoptics.py`), orbits (`geometry.py`), the source's line-of-sight kinematics (`doppler.py`), the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
 | `cases/case_A_chirp/` | the static-lens case: script, figures, `RESULTS.md`, `provenance/` |

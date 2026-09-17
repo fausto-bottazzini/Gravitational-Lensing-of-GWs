@@ -83,7 +83,7 @@ run_html() {
   # independent review caught `all`/`cases` leaving report.html out of sync
   # with the JSON it inlines; see wiki/log.md).
   echo "== rebuilding report/report.html (inlines cases/*/caseX_animation_data.json) =="
-  "$PY" report/build_report.py
+  "$PY" report/update_report_data.py
 }
 
 run_theory() {

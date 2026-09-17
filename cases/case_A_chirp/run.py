@@ -706,6 +706,7 @@ def main():
         "f_isco": float(f_isco),
         "f_zoom_lo": float(f_zoom_lo),
         "f_zoom_hi": float(f_zoom_hi),
+        "image_time_delay_s": float(NUMBERS["image_time_delay_seconds"]),
         "waveform": {
             "t": t[idx].tolist(),
             "h_unlensed": h_unlensed[idx].tolist(),
@@ -717,6 +718,10 @@ def main():
         "fringes": {
             "freqs": freqs[zmask_idx].tolist(),
             "F_abs": np.abs(F[zmask_idx]).tolist(),
+            # La fase, para que report.html dibuje el lugar geometrico de
+            # F en el plano complejo a partir de los datos y no de una
+            # formula reescrita ahi.
+            "F_arg": np.angle(F[zmask_idx]).tolist(),
         },
         # Parameters only, no grid: across this whole band w > 30, so the
         # pattern is the two-image geometric-optics form and report.html
