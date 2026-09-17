@@ -548,40 +548,48 @@ def main():
     #     thousands -- that is no longer the ratio of two signals, it is the
     #     second image divided by numerical noise.
     #
-    #   - It does not start at the beginning either, and that one is not a
-    #     limitation but the physics. The beat needs TWO images, and the
-    #     second one is the first one delayed by Delta_T: for the first
-    #     Delta_T seconds of signal it has not arrived yet, so there is
-    #     nothing to interfere with and the ratio sits flat at sqrt(mu_+).
-    #     Measured: between 1.0041 and 1.0342 before t_peak-12 s, against
-    #     sqrt(mu_+)=1.0283, and the full 0.7895..1.2640 band from
-    #     t_peak-11.5 s on -- the signal starts 15.18 s before the merger and
-    #     the second image enters 3.43 s later, at -11.75. The closed form
-    #     knows nothing about this: |F(f)| is a frequency-domain statement
-    #     about the whole signal, so it oscillates there too. That is why the
-    #     two panels also disagree on the left, for a completely different
-    #     reason than they disagree on the right.
+    #   - It does not start at the beginning, and it closes back up towards
+    #     the merger, and those are the SAME fact rather than two separate
+    #     limitations. In geometric optics the lensed signal is two copies,
+    #     h_l(t) = sqrt(mu_+) h(t) + sqrt(|mu_-|) h(t - Delta_T) up to the
+    #     Morse phase, and the analytic signal is linear, so the ratio of
+    #     envelopes is EXACTLY
     #
-    #   - And from a few seconds before the merger what it draws is no longer
-    #     the real fringes. env_l and env_u are analytic-signal magnitudes,
-    #     and an analytic envelope can only follow a modulation SLOWER than
-    #     its own carrier. The figure of merit is Delta_T*(df/dt)/f: 0.10 at
-    #     13 s before the merger, 0.43 at 3 s, 0.86 at 1.5 s, 2.17 at 0.6 s.
-    #     Past ~0.25 the drawn fringes shrink, and that shrinking is a
-    #     property of the Hilbert transform, not of the lens. This panel used
-    #     to be cut there; now it runs on and the limit is marked, which
-    #     shows the boundary instead of hiding it.
+    #         env_l/env_u = | sqrt(mu_+) + sqrt(|mu_-|) q(t) e^{i dphi(t)} |,
+    #         with  q(t) = A(t - Delta_T) / A(t)
+    #
+    #     The modulation DEPTH is sqrt(|mu_-|) q(t), not sqrt(|mu_-|). The
+    #     closed form is the q = 1 limit: in the frequency domain both images
+    #     contribute at the same f with the same |H(f)|, which in the time
+    #     domain means the chirp amplitude must barely change over Delta_T.
+    #
+    #     q -> 0 at both ends, the same mechanism seen twice. At the start
+    #     the delayed copy does not exist yet -- the signal begins 15.18 s
+    #     before the merger and the copy enters 3.43 s later, at -11.75 --
+    #     so the ratio sits flat at sqrt(mu_+): measured 1.0041 to 1.0342
+    #     there, against 1.0283, opening to the full 0.7895..1.2640 band from
+    #     -11.5 s on. Towards the merger A(t) runs away while A(t-Delta_T) is
+    #     still inspiral, so q falls (0.91 at -7 s, 0.83 at -2.7 s, 0.72 at
+    #     -1.1 s, 0.41 at -0.07 s) and the band closes back towards
+    #     sqrt(mu_+) = 1.028, which is very nearly 1. Both ends read as "the
+    #     lens does nothing" for the same reason: there is only one image
+    #     worth speaking of at that instant.
+    #
+    #     Measured, not asserted: ratio_depth_model_max_relerr compares the
+    #     predicted half-depth sqrt(|mu_-|) q(t) against the measured extremes
+    #     over windows that each contain several fringes, and it agrees to
+    #     about 1% from -8 s to 60 ms before the merger. An earlier version of
+    #     this comment blamed the closing-up on the Hilbert transform "not
+    #     being able to follow" fringes faster than its own carrier. That was
+    #     wrong, and this number is what showed it: the envelope follows them
+    #     fine, there is simply less modulation left to follow. The
+    #     Delta_T*(df/dt)/f criterion still marks roughly where the two panels
+    #     visibly part company, which is what the shading is for, but it is
+    #     not the cause.
     #
     # Both are drawn as a min-max band per pixel column. Near the merger one
     # column spans several fringes and a sampled curve would be pure alias.
-    f_of_t = chirp.freq_of_time(t - (t_peak - NUMBERS["t_c_seconds"]),
-                                NUMBERS["t_c_seconds"], system.MCHIRP_MSUN)
-    dfdt = np.gradient(f_of_t, t)
-    lento = NUMBERS["image_time_delay_seconds"] * np.abs(dfdt) < 0.40 * f_of_t
     r_lo, r_hi = t_peak - NUMBERS["t_end_seconds"] + 1.0, t_peak
-    valido = t[(t >= r_lo) & (t <= r_hi) & lento]
-    t_lim = float(valido[-1] - t_peak)
-    log("ratio_hilbert_validity_limit_s", -t_lim)
     # antes de este instante hay una sola imagen: la segunda es la primera
     # retrasada Delta_T, y todavía no entró
     t_dos = float(-NUMBERS["t_end_seconds"] + NUMBERS["image_time_delay_seconds"])
@@ -621,21 +629,35 @@ def main():
     ex_lo = np.sqrt(mu_p + mu_m + 2.0 * sqrt_mu_plus * sqrt_mu_minus * s_lo)
     ex_hi = np.sqrt(mu_p + mu_m + 2.0 * sqrt_mu_plus * sqrt_mu_minus * s_hi)
 
+    # q(t) = A(t-Delta_T)/A(t), y el chequeo de que la profundidad medida es
+    # sqrt(|mu_-|) q(t). Cada ventana contiene varias franjas -- comparar
+    # columna por columna mediría el trozo de franja que entra en la columna,
+    # no la profundidad.
+    q_t = (np.interp(t - NUMBERS["image_time_delay_seconds"], t, env_u,
+                     left=0.0, right=0.0) / np.maximum(env_u, 1e-300))
+    ratio_full = np.abs(env_l) / np.maximum(np.abs(env_u), 1e-300)
+    errs = []
+    for a, b in ((-8.0, -6.0), (-5.0, -4.0), (-3.0, -2.5), (-2.0, -1.7),
+                 (-1.2, -1.0), (-0.7, -0.6), (-0.4, -0.35), (-0.2, -0.17),
+                 (-0.08, -0.06)):
+        m = (t - t_peak >= a) & (t - t_peak <= b)
+        pred = sqrt_mu_minus * float(np.median(q_t[m]))
+        med = 0.5 * float(ratio_full[m].max() - ratio_full[m].min())
+        errs.append(abs(med - pred) / pred)
+    log("ratio_depth_model_max_relerr", float(max(errs)))
+    log("ratio_q_at_merger", float(np.interp(t_peak - 0.07, t, q_t)))
+    q_col = np.interp(centros + t_peak, t, q_t)
+
     for axk, (blo, bhi, msk), titulo, color in (
-            (axes[3], (med_lo, med_hi, hay),
-             "el cociente medido: envolvente con lente / sin lente", "#6b46c1"),
+            (axes[3], (med_lo, med_hi, hay), "el cociente medido", "#6b46c1"),
             (axes[4], (ex_lo, ex_hi, np.ones(NCOL, bool)),
              r"el mismo cociente en forma cerrada: $|F(f(t))|$", "#2b6cb0")):
         axk.fill_between(centros[msk], blo[msk], bhi[msk],
                          color=color, lw=0, alpha=0.95)
         for lvl, lab in ((sqrt_mu_plus + sqrt_mu_minus,
-                          r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$"),
+                          r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$   ($q=1$)"),
                          (sqrt_mu_plus - sqrt_mu_minus, None)):
             axk.axhline(lvl, color="#c05621", lw=0.9, ls="--", label=lab)
-        axk.axvspan(centros[0], t_dos, color="0.35", alpha=0.10, lw=0,
-                    label="la 2.ª imagen todavía no llegó")
-        axk.axvspan(t_lim, 0.0, color="0.5", alpha=0.18, lw=0,
-                    label=r"$\Delta T\,|df/dt| > 0.4\,f$")
         axk.set_xlim(centros[0], 0.0)
         # el piso queda holgado a propósito: la leyenda entra ahí abajo sin
         # taparle la cota inferior a la curva
@@ -643,6 +665,18 @@ def main():
         axk.set_ylabel("con lente / sin lente")
         axk.set_title(titulo, fontsize=9.5)
         axk.legend(fontsize=7.5, loc="lower left", ncol=3, framealpha=0.92,
+                   borderpad=0.35, columnspacing=1.2, handlelength=1.4)
+    # Las cotas que predice q(t), sobre la curva medida: la banda las llena de
+    # punta a punta, y eso dice solo lo que hay que decir -- la modulación se
+    # cierra en los dos extremos porque q se va a cero, no porque la medición
+    # falle. Sin sombreados: los que había marcaban regiones "malas" y se
+    # leían como un problema numérico, que es justo lo que no pasa.
+    for signo in (+1, -1):
+        axes[3].plot(centros, sqrt_mu_plus + signo * sqrt_mu_minus * q_col,
+                     color="#17b4d4", lw=1.3, ls="--",
+                     label=(r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}\,q(t)$,"
+                            r"   $q=A(t-\Delta T)/A(t)$") if signo > 0 else None)
+    axes[3].legend(fontsize=7.5, loc="lower left", ncol=2, framealpha=0.92,
                    borderpad=0.35, columnspacing=1.2, handlelength=1.4)
     axes[4].set_xlabel(r"$t - t_\mathrm{merger}$ [s]")
     fig.tight_layout()   # before the suptitle; see caseA_F_of_f above for why

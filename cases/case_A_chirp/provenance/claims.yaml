@@ -228,16 +228,20 @@ figures:
       image is a whole second track in caseA_spectrogram.png.
       The closed-form panel answers the obvious question about the
       measured one -- shouldn't the ratio just BE |F|? It is, in the
-      middle; the two shaded regions are where it cannot be. Before
-      t - t_merger = -11.75 s there is only one image (the second is the
-      first delayed by 3.43 s and the signal starts 15.18 s before the
-      merger), so the measured ratio sits flat at sqrt(mu_+) -- 1.0041 to
-      1.0342 there against 1.0283, opening to the full 0.7895..1.2640 band
-      from -11.5 s on -- while |F(f)|, a frequency-domain statement about
-      the whole signal, oscillates anyway. After -3.22 s the analytic
-      envelope can no longer follow the fringes and they shrink toward
-      sqrt(mu_+), which is a property of the Hilbert transform and not of
-      the lens.
+      middle, and one quantity explains both ends at once. The lensed
+      signal is two copies, sqrt(mu_+) h(t) + sqrt(|mu_-|) h(t - dT), and
+      the analytic signal is linear, so the envelope ratio is exactly
+      |sqrt(mu_+) + sqrt(|mu_-|) q(t) exp(i dphi)| with q = A(t-dT)/A(t):
+      the modulation DEPTH is sqrt(|mu_-|) q(t), and the closed form is the
+      q = 1 limit. q -> 0 at both ends. Before t - t_merger = -11.75 s the
+      delayed copy does not exist yet (the signal starts 15.18 s before the
+      merger and the copy enters 3.43 s later), so the ratio sits flat at
+      sqrt(mu_+) -- 1.0041 to 1.0342 there against 1.0283, opening to the
+      full 0.7895..1.2640 band from -11.5 s on. Towards the merger A(t)
+      runs away while A(t-dT) is still inspiral, so q falls (0.91 at -7 s,
+      0.72 at -1.1 s, 0.41 at -0.07 s) and the band closes back towards
+      sqrt(mu_+) = 1.028. Both ends read as "the lens does nothing" because
+      at that instant there is effectively only one image.
     from_scratch: >
       Frequency-domain lensing via FFT/IFFT; the merger-time alignment
       shift; the zoom window choices; the empirical echo-peak search
@@ -248,7 +252,7 @@ figures:
       - "Merger placed at 85% of the FFT window (arbitrary but documented) so inspiral and ringdown both stay comfortably inside it."
       - "Merger zoom centred on t_peak (+-0.15 s), not starting at it: the previous -0.05/+0.30 window put the merger hard against the left edge."
       - "Neither ratio panel runs past the merger, and that is forced, not chosen: after it there is no denominator. env_u falls to 1.6e-5 of its peak within 50 ms and the quotient runs to thousands -- the second image divided by numerical noise."
-      - "The measured ratio is no longer truncated at the Hilbert validity limit (Delta_T*(df/dt)/f = 0.4, at -3.22 s). An earlier version cut it there; now it runs to the merger and the limit is shaded, which shows the boundary instead of hiding it, with the closed-form panel underneath to make it legible."
+      - "The measured ratio runs to the merger and carries the predicted bounds sqrt(mu_+) -/+ sqrt(|mu_-|) q(t) drawn over it, which the band fills end to end. Two earlier versions were worse: one truncated the panel at -3.22 s; the other ran to the merger but shaded both ends as untrustworthy and blamed the closing-up on the Hilbert transform being unable to follow fast fringes. That reads as a numerical problem and is not one -- ratio_depth_model_max_relerr shows the measured depth equals sqrt(|mu_-|) q(t) to 1.3% from -8 s to 60 ms before the merger."
       - "Both ratio panels are drawn as a min-max band per pixel column rather than as sampled curves: near the merger one column spans dozens of fringes and point sampling would be pure alias. The closed-form extremes are exact (the fringe phase w*dT_hat = 2*pi*f*Delta_T is linear in f); the measured ones are the extremes of the samples in the column."
       - "Echo time is the empirically-found peak; it matches the naive t_peak_unlensed+ΔT prediction to within 4e-5 s (see causality_and_echo)."
     supports: [dephasing_not_simple_amplification, imr_waveform_and_bugs_fixed, causality_and_echo]

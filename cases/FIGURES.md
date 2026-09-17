@@ -82,28 +82,52 @@ the second panel and is a whole second track in `caseA_spectrogram.png`.
 
 **The fifth panel is the same quantity evaluated in closed form**, `|F(f(t))|`
 with `f(t)` the leading-order chirp. The obvious question about the fourth
-panel is whether the measured ratio simply *is* `|F|`; the answer is that it
-is, in the middle, and the two shaded regions are where it cannot be:
+panel is whether the measured ratio simply *is* `|F|`. It is, in the middle,
+and where it is not, one quantity explains both ends at once.
 
-- **Before `t − t_merger = −11.75 s`** there is only one image. The second is
-  the first delayed by `ΔT = 3.43 s`, the signal starts 15.18 s before the
-  merger, and until the copy arrives there is nothing to interfere with. The
-  measured ratio sits flat at `√μ₊`: between **1.0041 and 1.0342** there,
-  against `√μ₊ = 1.0283`, and it opens to the full **0.7895…1.2640** band from
-  −11.5 s on. The closed form knows nothing about this — `|F(f)|` is a
-  frequency-domain statement about the whole signal — so it oscillates there
-  anyway, and the two panels disagree.
-- **After `t − t_merger = −3.22 s`** the envelope can no longer follow the
-  fringes. `env_l` and `env_u` are analytic-signal magnitudes, and an analytic
-  envelope only tracks modulation *slower* than its own carrier. The figure of
-  merit is `ΔT·(df/dt)/f`: 0.10 at 13 s before the merger, 0.43 at 3 s, 0.86 at
-  1.5 s, 2.17 at 0.6 s. Past ~0.25 the drawn fringes shrink toward `√μ₊`, and
-  that shrinking is a property of the Hilbert transform, not of the lens. The
-  closed form keeps filling the band, which is what really happens.
+In geometric optics the lensed signal is two copies, `h_l(t) = √μ₊·h(t) +
+√|μ₋|·h(t−ΔT)` up to the Morse phase, and the analytic signal is linear, so
+the ratio of envelopes is *exactly*
 
-An earlier version simply truncated the fourth panel at −3.22 s. Showing the
-boundary is better than hiding it, and the closed-form panel underneath is
-what makes it legible.
+    env_l/env_u = |√μ₊ + √|μ₋|·q(t)·e^{iΔφ(t)}|,   q(t) = A(t−ΔT)/A(t)
+
+The modulation **depth** is `√|μ₋|·q(t)`, not `√|μ₋|`. The closed form is the
+`q = 1` limit: in the frequency domain both images contribute at the same `f`
+with the same `|H(f)|`, which in the time domain means the chirp amplitude must
+barely change over `ΔT`.
+
+`q → 0` at both ends, the same mechanism seen twice:
+
+- **Before `t − t_merger = −11.75 s`** the delayed copy does not exist yet. The
+  signal starts 15.18 s before the merger and the copy enters `ΔT = 3.43 s`
+  later, so there is nothing to interfere with and the ratio sits flat at
+  `√μ₊`: between **1.0041 and 1.0342** there, against `√μ₊ = 1.0283`, opening to
+  the full **0.7895…1.2640** band from −11.5 s on.
+- **Towards the merger** `A(t)` runs away while `A(t−ΔT)` is still inspiral, so
+  `q` falls — **0.91 at −7 s, 0.83 at −2.7 s, 0.72 at −1.1 s, 0.41 at −0.07 s**
+  — and the band closes back towards `√μ₊ = 1.028`, which is very nearly 1.
+
+Both ends read as "the lens does nothing" for the same reason: at that instant
+there is effectively only one image. The closed form knows nothing about either
+— `|F(f)|` is a frequency-domain statement about the whole signal — so it keeps
+filling the full band, and the two panels part company.
+
+This is measured rather than asserted: `ratio_depth_model_max_relerr` compares
+the predicted half-depth `√|μ₋|·q(t)` against the measured extremes over windows
+that each hold several fringes, and it agrees to **1.3 %** from −8 s to 60 ms
+before the merger.
+
+So the fourth panel carries `√μ₊ ± √|μ₋|·q(t)` drawn over the measured band,
+which fills it from end to end. That is the whole explanation and it needs no
+words on the figure.
+
+Two earlier versions got this wrong in ways worth recording. The first
+truncated the panel at −3.22 s. The second ran it to the merger but shaded the
+two ends as regions where the measurement "could not be trusted", and blamed
+the closing-up on the Hilbert transform being unable to follow fringes faster
+than its own carrier — which reads as a numerical problem, and is not what
+happens. The envelope follows the fringes fine; there is simply less modulation
+left to follow.
 
 Neither panel runs past the merger, and that is not a choice: after it there is
 no denominator. The unlensed signal dies in about 20 ms — `env_u` is 1.6e-5 of
