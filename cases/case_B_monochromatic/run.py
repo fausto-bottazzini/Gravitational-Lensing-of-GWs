@@ -428,7 +428,7 @@ def main():
     # unavoidable, since the pulse is 333 carrier cycles wide and no single
     # window can resolve both. The envelopes are drawn over the carrier so
     # the pulse shape reads even where the cycles merge.
-    t_fine = np.linspace(t_pulse - 300.0, t_pulse + 300.0, 6000)  # dt=0.1 s
+    t_fine = np.linspace(t_pulse - 50.0, t_pulse + 50.0, 4000)   # dt=0.025 s
     y_fine, lensed_fine, _ = geo.impact_parameter_of_time(
         t_fine, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
         np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
@@ -449,18 +449,10 @@ def main():
     z_l_fine = F_fine * z_u_fine
 
     tf = t_fine - t_pulse
-    # One whole pulse, +-5000 s, with the carrier underneath and the envelopes
-    # drawn over it. The window has to be this wide for the point to land: the
-    # pulse is 6653 s across (FWHM), so a few hundred seconds of it is flat and
-    # the envelopes are then just horizontal rules. Here they rise and fall
-    # through the whole amplification. The cost is that 500 carrier cycles
-    # cannot be told apart individually -- they fill in as a band, whose
-    # outline is exactly the envelope, so nothing is lost.
-    # Carriers only. Envelopes were drawn here for a revision and taken out:
-    # they and the carrier cannot both be shown, since a pulse is 333 carrier
-    # cycles wide, so any window that resolves cycles has a flat |F| and the
-    # envelopes are horizontal rules, and any window where they move has the
-    # cycles merged into a band. The pulse SHAPE is caseB_repeated_pulses.png;
+    # Carriers only, no envelopes. A pulse is 333 carrier cycles wide, so any
+    # window that resolves cycles has a flat |F| and the envelopes over it are
+    # just horizontal rules, and any window where they move has the cycles
+    # merged into a band. The pulse SHAPE is caseB_repeated_pulses.png's job;
     # this panel is the carrier, and what it shows is the crest height.
     # Lensed first, unlensed over it, so the smaller stays visible inside.
     axes[1].plot(tf, z_l_fine.real, color="#2b6cb0", lw=0.9, label="con lente")
@@ -468,24 +460,35 @@ def main():
     axes[1].set_xlabel("tiempo respecto del pico del pulso [s]")
     axes[1].set_ylabel("$h(t)$ [u. arb.]")
     axes[1].legend(fontsize=8, loc="upper right")
-    # What this panel shows is the AMPLITUDE difference, |F|=1.177, i.e. 17.7%
-    # taller crests. It does NOT show a dephasing: both curves are evaluated
-    # at the same retarded time t_em, so the Roemer delay is common to them,
-    # and all that is left between them is F itself -- whose phase at the
-    # pulse peak is arg F = 0.0176 rad = 1.01 deg, a shift of 0.056 s on a
-    # 20 s carrier, under a tenth of a pixel here. An earlier title claimed
-    # the dephasing was visible cycle-by-cycle; it is not, and at this
-    # observing baseline it is not even above the leading-order waveform's
-    # own truncation error (see system.T_OBS_B_S).
+    # What this panel shows is the AMPLITUDE difference: max_abs_F = 1.1766,
+    # i.e. 17.7% taller crests, and that is the whole of it.
+    #
+    # It does not show a dephasing, and -- worth being exact about, since an
+    # earlier title claimed it did -- it could not show one even if there were
+    # a bigger one to show. Both curves are evaluated at the same retarded
+    # time, so the Roemer delay is common to them and cancels; what is left is
+    # F, whose phase runs over lens_phase_ptp_cycles = 0.0174 cycles across
+    # the WHOLE observation. At this scale that is sub-pixel by construction,
+    # so crests that line up here are not evidence of anything. The evidence
+    # that the lens writes amplitude and not phase is the number itself, 0.017
+    # cycles against Roemer's 90.5, and its figure is
+    # caseB_doppler_vs_lensing.png.
     # Nor is it a zoom on the pulse SHAPE: that (the sinc-like diffraction
     # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.
-    # Why +-300 s, measured rather than picked: across this figure's ~1360
-    # usable pixels the 20 s carrier gets 45 px per cycle there, and |F| moves
-    # 0.4% of its peak height, so the amplification is effectively constant
-    # and the panel is a clean comparison of two crest heights. Widening it
-    # until |F| visibly moves (+-2500 s, 29%) drops the cycles to 5 px and the
-    # carrier fills in as a block. The pulse is 333 cycles wide, so there is
-    # no window that does both; its shape is caseB_repeated_pulses.png's job.
+    # Why +-50 s, i.e. FIVE cycles. The window has to be narrow enough that a
+    # 17.7% difference in crest height is legible, and that is a stronger
+    # constraint than it looks. At +-300 s (30 cycles, the previous choice)
+    # the two curves cross 60 times across the frame and read as one sinusoid
+    # drawn twice -- the figure looked like it was UNDERSTATING the
+    # amplification, which is how this got caught. At +-50 s each cycle gets
+    # ~270 px and the gap between the crests is unmistakable.
+    #
+    # Nothing is given up by narrowing, because |F| was already flat: it moves
+    # 0.064% of its peak across +-300 s and 0.002% across +-50 s. Going the
+    # other way, to where |F| really does move (+-2500 s, 4.4%), drops the
+    # cycles to 5 px and the carrier fills in as a solid block. The pulse is
+    # 333 cycles wide, so no window shows both; its shape belongs to
+    # caseB_repeated_pulses.png.
     # Titles name the panel and stop there; the rest is cases/FIGURES.md.
     axes[1].set_title("Ampliación en el pico: las crestas con lente son un "
                        "$%.1f\\%%$ más altas"

@@ -198,23 +198,37 @@ of a moving lens is legitimate.
 ### `caseB_detector_view.png` — the measured signal
 
 The same three pulses, now in the strain: the envelope over 12 days on top,
-and below a ±300 s window at one pulse's peak, resolving individual 20 s
-carrier cycles. The lensed crests are **17.7% taller**. That is the panel.
+and below a ±50 s window at one pulse's peak — **five carrier cycles**. The
+lensed crests are **17.7% taller** (`max_abs_F = 1.1766`). That is the panel.
 
-It cannot also show the pulse's shape, and the arithmetic is why. The pulse
-is 6653 s wide (FWHM) against a 20 s carrier: **333 cycles per pulse**. Across
-the figure's ~1360 usable pixels, ±300 s gives 45 px per cycle and `|F|` moves
-0.4% of its peak height — clean cycles, flat amplification. Widening until
-`|F|` visibly rises and falls (±2500 s, 29%) drops the cycles to 5 px and the
-carrier fills in as a solid block; drawing envelopes over it then just adds
-four horizontal rules. Both were tried. Neither works, because no window does
-both — the pulse shape belongs to `caseB_repeated_pulses.png`.
+**The baseline in the top panel drifts upward**, and that is the source, not
+the lens. "Quasi-monochromatic" is not monochromatic: over the 12 days the
+binary is still inspiralling, from 0.05000 to 0.05097 Hz (+1.94%), and the
+amplitude goes as `f^(2/3)`, so it rises **1.287%**. That matches
+`(t_c/(t_c−T))^(1/4) = 1.01287` to five digits. It is the only place in Case B
+where the "quasi" is visible.
 
-What separates the two curves is **amplitude**. It is not a dephasing, and a
-previous version of this figure claimed it was. Both are evaluated at the same
-retarded time, so the 90-cycle Roemer delay is common to them and cancels; all
-that remains between them is `F`, whose phase at the peak is `arg F = 1.01°`,
-a 0.056 s shift on a 20 s carrier — under a tenth of a pixel.
+The window was ±300 s (30 cycles) until it was noticed that the figure looked
+like it was *understating* the amplification: at that density the two curves
+cross sixty times and read as one sinusoid drawn twice. Nothing is given up by
+narrowing, because `|F|` was flat either way — it moves 0.064% of its peak
+across ±300 s and 0.002% across ±50 s. Going the other way, to where `|F|`
+really does move (±2500 s, 4.4%), drops the cycles to 5 px and the carrier
+fills in as a solid block; drawing envelopes over that just adds four
+horizontal rules. The pulse is 6653 s wide (FWHM) against a 20 s carrier —
+**333 cycles per pulse** — so no window shows both, and the pulse shape belongs
+to `caseB_repeated_pulses.png`.
+
+What separates the two curves is **amplitude**, and the panel cannot show a
+dephasing — not because there is none to see, but because there could not be
+one at this scale even if the effect were larger. Both curves are evaluated at
+the same retarded time, so the 90-cycle Roemer delay is common to them and
+cancels; what is left is `F`, whose phase runs over `lens_phase_ptp_cycles =
+0.0174` cycles across the *whole* observation, sub-pixel here by construction.
+Crests that line up in this panel are therefore not evidence of anything. The
+evidence that the lens writes amplitude and not phase is that number against
+Roemer's 90.5, and its figure is `caseB_doppler_vs_lensing.png`. An earlier
+title claimed the dephasing was visible cycle by cycle; it is not.
 
 ### `caseB_doppler_vs_lensing.png` — the orbit's two imprints
 

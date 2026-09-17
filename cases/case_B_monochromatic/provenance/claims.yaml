@@ -135,15 +135,21 @@ figures:
     produced_by: run.py::main
     shows: >
       Idealized detector strain envelope over the full observation, and a
-      fine-time-grid zoom on carrier cycles at one pulse's peak instant.
-      The zoom shows the AMPLITUDE difference, |F|=1.177: crests 17.7%
-      taller. It does not show a dephasing -- both curves share the same
-      retarded time, so the Roemer delay cancels between them and only F
-      is left, whose phase there is 1.01 deg, invisible at any plottable
-      resolution. Nor is it the pulse's own sinc-like ringing shape, which
-      lives on a ~day timescale and is caseB_repeated_pulses.png.
+      five-cycle zoom at one pulse's peak instant. The zoom shows the
+      AMPLITUDE difference, max_abs_F = 1.1766: crests 17.7% taller. It
+      does not show a dephasing, and could not show one at this scale even
+      if the effect were larger -- both curves share the same retarded
+      time, so the Roemer delay cancels between them and only F is left,
+      whose phase runs over 0.0174 cycles across the whole observation,
+      sub-pixel here by construction. Nor is it the pulse's own sinc-like
+      ringing shape, which lives on a ~day timescale and is
+      caseB_repeated_pulses.png. The top panel's baseline drifts upward by
+      1.287% over the 12 days: that is the source still inspiralling
+      (0.05000 to 0.05097 Hz, and amplitude goes as f^(2/3)), matching
+      (t_c/(t_c-T))^(1/4) = 1.01287, and it is the only place in Case B
+      where "quasi-monochromatic" is visible.
     choices:
-      - "Curve labels drawn on the curves, not in a legend box. There are only two and they are concentric, so a box in any corner covers crests of the very sinusoid being compared."
+      - "The zoom is five carrier cycles (+-50 s), not thirty (+-300 s). At thirty the two curves cross sixty times across the frame and read as one sinusoid drawn twice, and the figure looked like it was understating the amplification -- which is how the window got revisited. Nothing is lost by narrowing: |F| moves 0.064% of its peak across +-300 s and 0.002% across +-50 s, so it was flat either way. Widening to where |F| really moves (+-2500 s, 4.4%) drops the cycles to 5 px and the carrier fills in as a block."
       - "Zoom panel y-limits symmetric about zero. The curves are a symmetric oscillation, and the asymmetric frame left by the old legend-headroom hack read as an offset that is not there."
     from_scratch: The dedicated fine time grid (dt=0.1s) for the zoom panel, built separately from the coarse envelope grid after the first version aliased using the coarse grid directly (see wiki/log.md).
     from_library: numpy, matplotlib.
