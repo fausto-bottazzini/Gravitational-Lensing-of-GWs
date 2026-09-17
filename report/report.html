@@ -234,7 +234,7 @@
     <div class="viz-grid izq-ancha">
       <div class="viz-panel">
         <h4>Triple jerárquico, visto de costado</h4>
-        <canvas id="canvasSis" width="640" height="330"></canvas>
+        <canvas id="canvasSis" width="640" height="270"></canvas>
       </div>
       <div class="viz-panel">
         <h4>Parámetros</h4>
@@ -756,7 +756,9 @@
     if (!cv) return;
     const ctx = cv.getContext("2d");
     const W = cv.width, H = cv.height;
-    const cx = W * 0.5, cy = H * 0.44, A = W * 0.355, B = H * 0.215;
+    // la órbita, corrida a la izquierda: la dirección al observador sale
+    // por la derecha y necesita lugar propio fuera de la elipse
+    const cx = W * 0.40, cy = H * 0.50, A = W * 0.30, B = H * 0.24;
     const RING = 46;                       // radio de Einstein, a ojo
     const readout = document.getElementById("readoutSis");
     const P_DIAS = 4.0;
@@ -784,21 +786,20 @@
     }
 
     function marco(frac) {
-      const th = frac * TAU + Math.PI;        // arranca por delante del lente
+      const th = frac * TAU;                  // arranca por delante del lente
       const px = cx + A * Math.cos(th), py = cy - B * Math.sin(th);
-      const lejos = Math.sin(th) > 0;         // mitad de atrás: detrás del lente
-      const impacto = Math.abs(A * Math.cos(th)) / RING;   // |y| del esquema
-      const alineado = lejos && impacto < 1.0;
+      // Dos profundidades distintas, y conviene no confundirlas. `arriba` es
+      // respecto de QUIEN MIRA EL DIBUJO y sólo decide qué tapa a qué. Estar
+      // detrás del LENTE es otra cosa: el observador está a la derecha, así
+      // que eso pasa en el extremo izquierdo de la órbita.
+      const arriba = Math.sin(th) > 0;
+      const dth = 0.30;
+      const alineado = Math.abs(th - Math.PI) < dth;
 
       ctx.clearRect(0, 0, W, H);
 
-      arco(0, Math.PI, REJILLA, 1.4);                 // mitad de atrás
-      // El tramo de órbita donde hay lensing, marcado sobre la órbita misma:
-      // una versión anterior pintaba un "corredor" detrás del lente y se leía
-      // como un rectángulo dibujado encima del esquema, no como una región.
-      const dth = Math.acos(Math.min(1, RING / A));
-      arco(dth, Math.PI - dth, CYAN, 2.6);
-      if (lejos) fuente(px, py, frac * TAU * 37, alineado);
+      arco(0, Math.PI, REJILLA, 1.4);                 // la mitad de atrás
+      if (arriba) fuente(px, py, frac * TAU * 37, alineado);
 
       // el lente, y su radio de Einstein
       ctx.strokeStyle = alineado ? CYAN : SUAVE;
@@ -807,22 +808,41 @@
       ctx.setLineDash([]);
       disco(ctx, cx, cy, 15, AGUJERO, TINTA, 1.6);
 
-      arco(Math.PI, TAU, SUAVE, 1.6);                 // mitad de adelante
-      if (!lejos) fuente(px, py, frac * TAU * 37, false);
+      arco(Math.PI, TAU, SUAVE, 1.6);                 // la mitad de adelante
+      // El tramo de órbita donde hay lensing, marcado sobre la órbita misma:
+      // una versión anterior pintaba un "corredor" detrás del lente y se leía
+      // como un rectángulo dibujado encima del esquema, no como una región.
+      arco(Math.PI - dth, Math.PI + dth, CYAN, 2.6);
+      if (!arriba) fuente(px, py, frac * TAU * 37, false);
 
-      // hacia dónde mira el observador
+      // Hacia dónde está el observador: a la derecha, y CASI en el plano de la
+      // órbita. Ese "casi" es i_out = 87°, y es lo que hace que la fuente pase
+      // cerca del lente sin taparlo del todo; acá va exagerado a 11° porque a
+      // 3° la inclinación no se distingue de cero.
+      const INCL = 0.20;
+      const xo = cx + A + 8, largo = W - 18 - xo;
+      const ax = xo + largo * Math.cos(INCL), ay = cy - largo * Math.sin(INCL);
+      ctx.strokeStyle = REJILLA; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+      ctx.beginPath(); ctx.moveTo(xo, cy); ctx.lineTo(xo + largo, cy); ctx.stroke();
+      ctx.setLineDash([]);
       ctx.strokeStyle = alineado ? CYAN : SUAVE; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(cx, cy + 22); ctx.lineTo(cx, H - 26); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx, H - 18); ctx.lineTo(cx - 5, H - 28); ctx.lineTo(cx + 5, H - 28);
+      ctx.beginPath(); ctx.moveTo(xo, cy); ctx.lineTo(ax, ay); ctx.stroke();
+      ctx.save();
+      ctx.translate(ax, ay); ctx.rotate(-INCL);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-11, -4.5); ctx.lineTo(-11, 4.5);
       ctx.closePath(); ctx.fillStyle = alineado ? CYAN : SUAVE; ctx.fill();
+      ctx.restore();
 
       ctx.font = "11px -apple-system,sans-serif";
       ctx.fillStyle = SUAVE;
-      ctx.fillText("al observador", cx + 10, H - 20);
-      ctx.fillText("lente  5×10⁴ M☉", cx + RING + 12, cy + 4);
+      ctx.fillText("al observador", ax - 78, ay - 8);
+      ctx.fillText("i = 87°: casi de canto", xo + 6, cy + 16);
+      ctx.fillText("lente  5×10⁴ M☉", cx - RING - 80, cy + 4);
       ctx.fillStyle = CYAN;
-      ctx.fillText("binaria interna", px + 12, py + (lejos ? -10 : 16));
+      // a la derecha la fuente comparte espacio con la flecha: el cartel se
+      // pasa al otro lado en vez de encimarse
+      ctx.fillText("binaria interna", px + (Math.cos(th) > 0 ? -84 : 12),
+                   py + (arriba ? -10 : 16));
       ctx.fillStyle = SUAVE;
       ctx.fillText("órbita externa  a = 1.82 UA", 10, H - 10);
 
@@ -830,7 +850,7 @@
       readout.innerHTML = "día " + dia.toFixed(2) + " de " + P_DIAS.toFixed(0) +
         "   una vuelta cada 4 días   " +
         (alineado
-          ? '<span class="badge on">detrás del lente</span>'
+          ? '<span class="badge on">detrás del lente — con lensing</span>'
           : '<span class="badge off">fuera de alineación — sin lensing</span>');
     }
 
@@ -913,16 +933,28 @@
       const fundido = acotar((tRel + 0.02) / 0.06, 0, 1);   // 0 antes, 1 después
 
       // la espiral recorrida, de las mismas tablas
+      // La cola no llega hasta el principio: dibujada entera, sobre el final
+      // quedaba un anillo lleno alrededor del remanente, que no es lo que se
+      // quiere contar. Son las últimas vueltas nada más, apagándose hacia
+      // atrás en unos pocos tramos (uno por tramo, no uno por punto, que a
+      // 60 cuadros por segundo se nota).
+      const COLA = 150, TRAMOS = 6;
       coalCtx.lineWidth = 1;
       for (const [q, col, sgn] of [[Q1, GRIS, 1], [Q2, SUAVE, -1]]) {
-        coalCtx.strokeStyle = col; coalCtx.globalAlpha = 0.4;
-        coalCtx.beginPath();
-        for (let j = 0; j <= k; j += 2) {
-          const r = aTab[j] * q, ph = phiTab[j];
-          const px = ccx + sgn * r * Math.cos(ph), py = ccy + sgn * r * CHATO * Math.sin(ph);
-          j === 0 ? coalCtx.moveTo(px, py) : coalCtx.lineTo(px, py);
+        coalCtx.strokeStyle = col;
+        for (let s = 0; s < TRAMOS; s++) {
+          const j0 = Math.max(0, k - Math.round(COLA * (TRAMOS - s) / TRAMOS));
+          const j1 = Math.max(0, k - Math.round(COLA * (TRAMOS - s - 1) / TRAMOS));
+          if (j1 <= j0) continue;
+          coalCtx.globalAlpha = 0.5 * (s + 1) / TRAMOS;
+          coalCtx.beginPath();
+          for (let j = j0; j <= j1; j++) {
+            const r = aTab[j] * q, ph = phiTab[j];
+            const px = ccx + sgn * r * Math.cos(ph), py = ccy + sgn * r * CHATO * Math.sin(ph);
+            j === j0 ? coalCtx.moveTo(px, py) : coalCtx.lineTo(px, py);
+          }
+          coalCtx.stroke();
         }
-        coalCtx.stroke();
       }
       coalCtx.globalAlpha = 1;
 
