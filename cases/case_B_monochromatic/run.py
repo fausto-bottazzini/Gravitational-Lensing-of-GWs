@@ -231,6 +231,16 @@ def main():
     abs_F_fixed = np.abs(F_t[lensed_mask])
     relerr_w = np.abs(abs_F_true - abs_F_fixed) / abs_F_fixed
     log("abs_F_relerr_from_fixed_w_max", float(np.max(relerr_w)))
+    # Lo mismo para la FASE, que es lo que grafica caseB_doppler_vs_lensing y
+    # no estaba acotado. En ciclos, no relativo: arg F cruza cero, asi que un
+    # error relativo ahi no significa nada.
+    arg_F_true = np.array([np.angle(wo.F_hybrid(wj, yj))
+                           for wj, yj in zip(w_obs_t[lensed_mask], y_t[lensed_mask])])
+    arg_err_cycles = np.abs(np.angle(np.exp(1j * (arg_F_true - np.angle(
+        F_t[lensed_mask]))))) / (2.0 * np.pi)
+    log("arg_F_cycles_err_from_fixed_w_max", float(np.max(arg_err_cycles)))
+    log("arg_F_cycles_err_from_fixed_w_at_pulse",
+        float(arg_err_cycles[int(np.argmin(y_t[lensed_mask]))]))
     log("abs_F_relerr_from_fixed_w_at_pulse",
         float(relerr_w[int(np.argmax(abs_F_fixed))]))
 
@@ -537,27 +547,87 @@ def main():
     # so the figure marks it instead of leaving it to look like an accident.
     t_conj = float(tp[int(np.argmax(np.abs(F_t[one_p])))])
     for k, axk in enumerate(axes):
-        axk.axvline(t_conj, color='0.55', lw=0.8, ls=':',
-                    label='conjunción' if k == 0 else None)
+        h = axk.axvline(t_conj, color='0.55', lw=0.8, ls=':',
+                        label='conjunción')
+        if k == 0:
+            h_conj = h
         axk.axhline(0.0, color="0.85", lw=0.6)
 
-    axes[0].plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.6)
-    axes[0].set_ylabel("Roemer / Doppler\n[ciclos]")
+    # The label used to read "Roemer / Doppler", which conflates two things
+    # that sit a quarter period apart, and a reader who knows the geometry
+    # objects immediately: the Doppler SHIFT is largest at quadrature, with
+    # the source moving along the line of sight, and the lensing happens at
+    # conjunction. Both panels marking conjunction then looks like a claim
+    # that the two peak together.
+    #
+    # They do not, and the resolution is that this panel plots the DELAY, not
+    # the shift. The two are a derivative apart, so where one is extremal the
+    # other vanishes. Measured, at conjunction: the Roemer delay is +904.9 s,
+    # which is its extremum over the orbit (+-904.9), and |v_los|/c is
+    # 1.3e-6 against an orbital maximum of 1.645e-2. A quarter period away it
+    # is the other way round exactly. Rather than argue this in a caption,
+    # the panel now draws both, and the crossing pattern says it.
+    beta_los_one = dp.los_velocity(
+        t[one_p], system.A_OUT_M, system.E_OUT, system.P_OUT_S,
+        np.deg2rad(system.I_OUT_DEG), system.LITTLE_OMEGA_OUT,
+        system.T_PERI_OUT, system.M_LENS_MSUN, system.MTOT_MSUN) / units.C_SI
+
+    h_roe, = axes[0].plot(tp, roemer_cycles[one_p], color="#6b46c1", lw=1.6,
+                          label="retardo de Roemer")
+    axes[0].set_ylabel("retardo de Roemer\n[ciclos]", color="#6b46c1")
+    axes[0].tick_params(axis="y", labelcolor="#6b46c1")
+    ax_d = axes[0].twinx()
+    h_dop, = ax_d.plot(tp, 100.0 * beta_los_one, color="#1a7f5a", lw=1.4, ls="-",
+                       label="Doppler, $v_\\mathrm{los}/c$")
+    ax_d.set_ylabel("Doppler, $v_\\mathrm{los}/c$\n[%]", color="#1a7f5a")
+    ax_d.tick_params(axis="y", labelcolor="#1a7f5a")
+    ax_d.set_ylim(-1.05 * 100 * np.abs(beta_los_one).max(),
+                  1.05 * 100 * np.abs(beta_los_one).max())
     axes[0].set_title("Caso B: las dos huellas de la misma órbita, a escala propia\n"
                       f"{NUMBERS['roemer_phase_ptp_cycles']:.0f} ciclos contra "
                       f"{NUMBERS['lens_phase_ptp_cycles']:.3f} — "
                       f"{NUMBERS['roemer_over_lens_phase_ratio']:.0f}$\\times$",
                       fontsize=10)
 
-    axes[1].plot(tp, lens_phase_cycles[one_p], color="#c0392b", lw=1.4)
+    # Grilla propia para este panel. La del resto de la figura tiene 576 s de
+    # paso, que resuelve el ringing pero se come una oscilacion: cuenta 30
+    # cruces por cero contra 32 en una grilla 38x mas fina. F(w,y) es una
+    # forma cerrada, asi que la grilla de dibujo no tiene por que heredar la
+    # del muestreo de la onda -- el mismo argumento que en caseA_F_of_f.
+    t_ph = np.linspace(0.0, 1.5 * system.P_OUT_S, 8000)
+    y_ph, lensed_ph, _ = geo.impact_parameter_of_time(
+        t_ph, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
+        np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
+        system.T_PERI_OUT, system.M_LENS_MSUN, system.D_L_PC)
+    ph_dense = np.array([np.angle(wo.F_hybrid(w_B, yy)) / (2.0 * np.pi) if lm else 0.0
+                         for yy, lm in zip(y_ph, lensed_ph)])
+    axes[1].plot(t_ph / 86400.0, ph_dense, color="#c0392b", lw=1.0)
+
+    # Y su propia barra de error, que es lo que decide que se puede leer aca.
+    # Evaluar F a w_B fijo en vez de al w instantaneo observado corre arg F
+    # hasta arg_F_relerr_from_fixed_w_cycles. Contra eso: las dos excursiones
+    # grandes (0.0121 ciclos, en y ~ 3, a +-1.28 h de la conjuncion) valen 21
+    # veces el sistematico y son un resultado; el ringing lejano, por debajo
+    # de la banda, NO es uno -- ahi el efecto ya se fue a cero y el error se
+    # queda, que es exactamente por que no importaba que las aproximaciones se
+    # aflojaran lejos de la alineacion.
+    banda = NUMBERS["arg_F_cycles_err_from_fixed_w_max"]
+    axes[1].axhspan(-banda, banda, color="0.55", alpha=0.22, lw=0,
+                    label="error de $w$ fijo")
     axes[1].set_ylabel("lensing, $\\arg F/2\\pi$\n[ciclos]")
     axes[1].set_xlabel("$t$ [días]")
-    # The dotted line marks conjunction, and it is in a legend rather than a
-    # floating caption: the pulses land on the Roemer MAXIMUM, not on its
-    # zero, because the delay is extremal exactly where the line-of-sight
-    # velocity vanishes. That is said in cases/FIGURES.md, not written across
-    # the plot.
-    axes[0].legend(fontsize=8, loc="lower left")
+    # La punteada marca la conjunción, y va en leyenda y no en un cartel
+    # suelto. Lo que se lee del panel de arriba es que el retardo es extremal
+    # ahí y el Doppler pasa por cero: no pican juntos, están a un cuarto de
+    # período. El texto de todo esto vive en cases/FIGURES.md.
+    # Handles explícitos: get_lines() tambien devuelve el axhline del cero, que
+    # entraba a la leyenda como "_child1". Y arriba al centro en los dos
+    # paneles, que es donde los dos estan vacios -- abajo a la izquierda la
+    # caja le pasaba por encima al pozo de arg F y a la bajada del Doppler.
+    axes[0].legend([h_conj, h_roe, h_dop],
+                   [x.get_label() for x in (h_conj, h_roe, h_dop)],
+                   fontsize=8, loc="upper center", framealpha=0.92)
+    axes[1].legend(fontsize=8, loc="upper center", framealpha=0.92)
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
     plt.close(fig)

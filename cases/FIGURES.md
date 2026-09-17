@@ -236,17 +236,55 @@ The point of this figure is that the outer orbit does **two** things to the
 waveform, and the one this project is about is by far the smaller. In GW
 cycles: Roemer/Doppler writes 90.5, lensing writes 0.017 — a ratio of 5206.
 
-One curve per panel, on a shared time axis, each at its own scale. A ratio of
-5206 cannot be drawn on a common axis: either the small curve is a flat line
-at zero or the large one is off-screen. The previous version tried both at
-once plus an inset, and the inset covered the sinusoid it was an inset of.
+One mechanism per panel, on a shared time axis, each at its own scale. A ratio
+of 5206 cannot be drawn on a common axis: either the small curve is a flat line
+at zero or the large one is off-screen. An earlier version tried both at once
+plus an inset, and the inset covered the sinusoid it was an inset of.
 
-Conjunction is marked on both panels, because it answers the question the
-figure otherwise raises: **why do the lensing pulses land on the Roemer
-maximum?** Because the Roemer delay is extremal exactly where the
-line-of-sight velocity vanishes, and that is the same instant the source
-passes behind the lens. It is not a coincidence, and it is also the reason
-evaluating `F` at a fixed `w_B` is safe here.
+**Delay and shift are not the same thing, and they sit a quarter period apart.**
+The top panel's y-label used to read "Roemer / Doppler", which conflates them
+and invites a correct objection: the Doppler *shift* is largest at quadrature,
+with the source running along the line of sight, while the lensing happens at
+conjunction — so marking conjunction looked like a claim that the two peak
+together. They do not. What peaks at conjunction is the *delay*, and the two
+are a derivative apart, so where one is extremal the other vanishes. Measured,
+at conjunction: the Roemer delay is **+904.9 s**, its extremum over the orbit
+(±904.9), and `|v_los|/c` is **1.3×10⁻⁶** against an orbital maximum of
+**1.645×10⁻²**. A quarter period away it is exactly the other way round. The
+panel now draws both, on twin axes, and the crossing pattern says it without a
+caption. It is also why evaluating `F` at a fixed `w_B` is safe: the frequency
+shift is at its minimum precisely where `F` matters most.
+
+**What can be read off the lower panel, and what cannot.** Its dense ringing is
+real — a grid 38× finer reproduces it, 0.01738 cycles peak to peak against
+0.01733 on the old grid — but not all of it is above the systematics, and the
+panel now says so. Evaluating `F` at fixed `w_B` rather than at the true
+instantaneous observed `w` moves `arg F` by up to
+`arg_F_cycles_err_from_fixed_w_max = 5.6×10⁻⁴` cycles, drawn as the grey band.
+Against that:
+
+- the two large excursions (**0.0121 cycles**, at `y ≈ 3`, ±1.28 h either side
+  of conjunction) are **21× the systematic** and are a result;
+- the low ringing far from the pulses sits *inside* the band and is not. Out
+  there the lensing has already gone to zero while the error has not — which is
+  precisely why it never mattered that the approximations loosen away from
+  alignment.
+
+The lower panel gets its own grid for the same reason `caseA_F_of_f.png` does:
+`F(w,y)` is a closed form, so the drawing grid need not inherit the waveform's
+sampling. The shared 576 s grid resolved the ringing but swallowed one
+oscillation (30 zero crossings against 32).
+
+**Why the phase's shape differs from the amplitude's.** `caseB_repeated_pulses.png`
+shows a single upward peak at conjunction; this panel shows two deep troughs
+*flanking* conjunction with a local maximum between them. They are the same
+diffraction ringing seen in the two components of one complex `F` — over
+`y ∈ [1.55, 30]` both cross their asymptote **45 times** — but in quadrature
+with each other. At closest approach `|F|² = 1.383`, its maximum, while
+`arg F/2π = +0.0026`, essentially zero; `arg F`'s extremum (−0.0121) falls at
+`y ≈ 3`, which the source crosses twice, once on each side. That is the general
+rule: where `|F|` is stationary, `F` is nearly real, so its phase passes through
+zero there.
 
 ### `caseB_pattern.png` — the diffraction pattern
 

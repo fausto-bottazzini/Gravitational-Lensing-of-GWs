@@ -4,7 +4,7 @@
   "min_y_during_observation": 1.5891701901729844,
   "n_outer_periods_observed": 3.0,
   "n_samples": 1800,
-  "F_evaluation_seconds": 0.8615853786468506,
+  "F_evaluation_seconds": 0.8601930141448975,
   "max_abs_F": 1.176640972493464,
   "mean_abs_F2_over_observation": 1.0060995149090306,
   "roemer_delay_ptp_s": 1809.8144721731337,
@@ -26,5 +26,7 @@
   "roemer_over_image_delay_ratio": 526.9240847257842,
   "roemer_over_lens_phase_ratio": 5206.161054289095,
   "abs_F_relerr_from_fixed_w_max": 0.0035177536419356667,
+  "arg_F_cycles_err_from_fixed_w_max": 0.0005625660437152946,
+  "arg_F_cycles_err_from_fixed_w_at_pulse": 2.498555240137195e-05,
   "abs_F_relerr_from_fixed_w_at_pulse": 0.00010546134719840079
 }
