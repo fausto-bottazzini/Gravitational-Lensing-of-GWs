@@ -28,23 +28,31 @@ period. The lens does not move: the whole signal arrives at one fixed impact
 parameter, `y_A = 1.589`. `w` runs from 62 to 778, so this is geometric
 optics: two images, one delayed by `ΔT = 3.43 s`.
 
-### `caseA_F_of_f.png` — the amplification across the band
+### `caseA_F_of_f.png` — where the fringes come from
 
-Three panels. The first two are `|F(f)|` over 3 Hz windows at **opposite ends
-of the band**, at 10 Hz (`w = 62`) and at `f_isco` (`w = 778`); the third is
-`arg F(f)` over the first window.
+Two panels: `F` in the complex plane, and `arg F(f)`.
 
-Two windows rather than one because the claim being made is that the envelope
-width and the fringe period are *the same everywhere in the band* — that is
-the geometric-optics statement, and one window cannot show it. The dashed
-lines are the exact envelope `√μ₊ ± √|μ₋|`, and the fringe period is
-`1/ΔT = 0.29 Hz`, independent of `f`.
+Across the whole Case A band this is geometric optics, so
+`F = √μ₊ − i√|μ₋| e^{iwΔT}`: sweeping `f` walks the point around a **circle**
+of radius `√|μ₋| = 0.2396` centred on `√μ₊ = 1.0283`, one turn per fringe.
+Three facts come off that one picture:
 
-The previous version had a full-band panel instead, which came out as a
-featureless blue rectangle: it asserted that the envelope is constant rather
-than showing it. The curves were also drawn from the waveform's own FFT grid,
-7 points per fringe, and looked polygonal. `F(f)` is a closed form, so these
-panels now use their own dense grid.
+- `|F|` lies between the nearest and farthest points of the circle from the
+  origin, `0.789` and `1.268`;
+- `arg F` never winds, because the circle does not enclose the origin. The two
+  tangents from the origin (dashed) bound it by
+  `arcsin(√|μ₋|/√μ₊) = 0.2352 rad`, which is exactly what it reaches;
+- the fringe period is `1/ΔT = 0.2912 Hz` anywhere in the band, since `wΔT` is
+  linear in `f` and `ΔT` is fixed — the same 3.434 s as the echo.
+
+It replaces three panels of `|F(f)|` and `arg F(f)` in different windows,
+which measurement showed to be the same curve three times: the fringe period
+is 0.29120 Hz at 10 Hz, at 60 and at 123, and the `|F|` and `arg F` bounds
+agree to four decimals in all three. The circle is drawn over exactly one turn
+— the 3 Hz window holds ten fringes, so drawing the whole locus laid ten
+circles on top of each other and the chords between points nearly a turn apart
+cut straight across it. Both panels use a dense grid of their own rather than
+the waveform's FFT grid, whose 0.031 Hz spacing is nine samples per fringe.
 
 ### `caseA_strain_time.png` — what the lens does to the waveform
 

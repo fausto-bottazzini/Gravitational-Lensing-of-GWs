@@ -389,45 +389,73 @@ def main():
     f_lo_grid, F_lo = _F_dense(f_zoom_lo, f_zoom_hi)
     f_hi_grid, F_hi = _F_dense(f_hi_lo, system.F_ISCO_HZ)
 
-    fig, axes = plt.subplots(3, 1, figsize=(7, 8.4))
-    for axk, (ff, FF, w_here, etiqueta) in zip(
-            axes[:2],
-            [(f_lo_grid, F_lo, w_start, "inicio de banda"),
-             (f_hi_grid, F_hi, w_isco, "cerca del merger")]):
-        axk.plot(ff, np.abs(FF), lw=1.0, color="#2b6cb0")
-        axk.axhline(sqrt_mu_plus + sqrt_mu_minus, color="#c05621", lw=0.9, ls="--")
-        axk.axhline(sqrt_mu_plus - sqrt_mu_minus, color="#c05621", lw=0.9, ls="--")
-        axk.set_ylabel(r"$|F(f)|$")
-        axk.set_xlabel("$f$ [Hz]")
-        axk.set_title(f"{etiqueta}: {ff[0]:.0f}–{ff[-1]:.0f} Hz, $w={w_here:.0f}$",
-                      fontsize=9.5)
-    # The overall title goes on the first panel rather than in a suptitle.
-    # A suptitle has to be positioned by hand relative to a layout that
-    # tight_layout computes afterwards, and every value either leaves a band
-    # of white or overlaps the first panel's own title; folding it in removes
-    # the guess entirely.
-    axes[0].set_title(
-        f"Caso A: franjas de interferencia en $F(f)$ (lente estático, "
-        f"$y={y_A:.3f}$)\n"
-        f"inicio de banda: {f_lo_grid[0]:.0f}–{f_lo_grid[-1]:.0f} Hz, "
-        f"$w={w_start:.0f}$", fontsize=10)
-    axes[1].set_title(
-        f"cerca del merger: {f_hi_grid[0]:.0f}–{f_hi_grid[-1]:.0f} Hz, "
-        f"$w={w_isco:.0f}$", fontsize=9.5)
-    axes[0].text(0.985, 0.90, r"$\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$",
-                 transform=axes[0].transAxes, ha="right", va="top",
-                 fontsize=8, color="#c05621")
-    axes[2].plot(f_lo_grid, np.angle(F_lo), lw=1.0, color="#c05621")
-    axes[2].set_ylabel(r"$\arg F(f)$ [rad]")
-    axes[2].set_xlabel("$f$ [Hz]")
-    # F traces a circle of radius sqrt(mu_-) centered on sqrt(mu_+) in the
-    # complex plane as w*DeltaT sweeps 2*pi per fringe (the strong image is
-    # the fixed reference, weak image the rotating arm) -- since mu_- < mu_+
-    # here, that circle does not enclose the origin, so arg F oscillates
-    # (bounded, not a full 2*pi wrap) once per fringe, in phase with |F|
-    # above.
-    axes[2].set_title("la fase, sobre la misma ventana: oscilación acotada, "
-                      "una vuelta por franja", fontsize=9.5)
+    # Dos paneles, no tres. La version anterior eran tres ventanas de |F(f)|
+    # y arg F(f) que, medidas, son la MISMA curva: el periodo de franja vale
+    # 0.29120 Hz a 10 Hz, a 60 y a 123, y las cotas de |F| y de arg F
+    # coinciden en las tres a cuatro decimales. Repetir una curva tres veces
+    # para demostrar que es la misma es un mal uso de tres paneles.
+    #
+    # Lo que si hay que mostrar es de donde salen esas cotas. En optica
+    # geometrica F = sqrt(mu_+) - i sqrt(|mu_-|) exp(i w Delta_T), asi que al
+    # barrer f el punto recorre una CIRCUNFERENCIA de radio sqrt(|mu_-|)
+    # centrada en sqrt(mu_+), una vuelta por franja. De ahi se leen las tres
+    # cosas a la vez: |F| esta entre los puntos mas cercano y mas lejano de
+    # esa circunferencia al origen; arg F no da nunca la vuelta porque la
+    # circunferencia no encierra al origen, y las tangentes desde el origen
+    # dan la cota arcsin(sqrt(|mu_-|)/sqrt(mu_+)); y el periodo es 1/Delta_T
+    # porque w Delta_T es lineal en f.
+    un_giro = 1.0 / NUMBERS["image_time_delay_seconds"]        # una franja, en Hz
+    f_giro, F_giro = _F_dense(f_zoom_lo, f_zoom_lo + un_giro, n=800)
+    arg_max = float(np.arcsin(sqrt_mu_minus / sqrt_mu_plus))
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.4, 4.3),
+                             gridspec_kw={"width_ratios": [1, 1.25]})
+
+    ax = axes[0]
+    ax.axhline(0, color="0.6", lw=0.8)
+    ax.axvline(0, color="0.6", lw=0.8)
+    for signo in (+1, -1):
+        ax.plot([0, 1.45 * np.cos(signo * arg_max)],
+                [0, 1.45 * np.sin(signo * arg_max)],
+                color="#c05621", lw=0.9, ls="--")
+    ax.plot(F_giro.real, F_giro.imag, color="#2b6cb0", lw=2.0)
+    ax.plot([sqrt_mu_plus - sqrt_mu_minus, sqrt_mu_plus + sqrt_mu_minus], [0, 0],
+            "o", color="#c05621", ms=5)
+    ax.set_aspect("equal")
+    ax.set_xlim(-0.12, 1.45)
+    ax.set_ylim(-0.62, 0.62)
+    ax.set_xlabel(r"$\mathrm{Re}\,F$")
+    ax.set_ylabel(r"$\mathrm{Im}\,F$")
+    ax.set_title("$F$ en el plano complejo: una vuelta por franja", fontsize=9.5)
+
+    axes[1].plot(f_lo_grid, np.angle(F_lo), lw=1.1, color="#c05621")
+    for signo in (+1, -1):
+        axes[1].axhline(signo * arg_max, color="#c05621", lw=0.9, ls="--")
+    axes[1].set_ylabel(r"$\arg F(f)$ [rad]")
+    axes[1].set_xlabel("$f$ [Hz]")
+    axes[1].set_title("la fase, acotada: nunca da la vuelta", fontsize=9.5)
+    # La cota va dentro de los ejes, pero el hueco hay que FABRICARLO: con
+    # los límites automáticos la curva llena toda la banda entre las dos
+    # punteadas, y el rótulo quedaba escrito encima de los mínimos de la
+    # fase (y con su extremo izquierdo fuera del eje, alineado a la derecha).
+    # Se baja el límite inferior hasta abrir una franja vacía, el rótulo va
+    # centrado en ella, y encima lleva recuadro opaco: eso es lo que lo
+    # mantiene legible aunque la geometría de la figura vuelva a cambiar.
+    axes[1].set_ylim(-2.10 * arg_max, 1.22 * arg_max)
+    axes[1].text(0.5, 0.045,
+                 r"$|\arg F|\leq\arcsin(\sqrt{|\mu_-|}/\sqrt{\mu_+})="
+                 + f"{arg_max:.4f}$",
+                 transform=axes[1].transAxes, ha="center", va="bottom",
+                 fontsize=8.5, color="#c05621",
+                 bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                           edgecolor="#c05621", linewidth=0.7, alpha=0.95))
+    fig.tight_layout()
+    fig.suptitle(
+        f"Caso A: dos imágenes interfieren (lente estático, $y={y_A:.3f}$)\n"
+        f"radio $\\sqrt{{|\\mu_-|}}={sqrt_mu_minus:.4f}$, centro "
+        f"$\\sqrt{{\\mu_+}}={sqrt_mu_plus:.4f}$, "
+        f"período de franja $1/\\Delta T={un_giro:.4f}$ Hz",
+        fontsize=10.5, y=1.02)
     # tight_layout FIRST, suptitle after: tight_layout reserves vertical space
     # for a suptitle even when that suptitle is placed outside the canvas, so
     # calling it second leaves a band of white between the title and the top
@@ -671,7 +699,7 @@ def main():
             axes, espectros, ("sin lente", "con lente")):
         band = (f_sp >= 8.0) & (f_sp <= 400.0)
         im = axk.pcolormesh(t_sp + t[tf_view][0] - t_peak, f_sp[band],
-                            S[band], shading="auto", cmap="magma",
+                            S[band], shading="auto", cmap="viridis",
                             norm=LogNorm(vmin=vmax / 2.0e2, vmax=vmax))
         axk.set_yscale("log")
         axk.set_ylabel("$f$ [Hz]")
@@ -715,13 +743,20 @@ def main():
             "env_lensed": env_l[idx].tolist(),
             "f_of_t": f_of_t.tolist(),
         },
+        # Grilla propia, no la de la FFT. La de la FFT tiene 0.031 Hz de
+        # paso contra un periodo de franja de 0.291: nueve puntos por
+        # franja, con los que la fase sale poligonal y el lugar geometrico
+        # en el plano complejo se dibuja a cuerdas que cortan la
+        # circunferencia. F(f) es forma cerrada, asi que la grilla de
+        # dibujo no tiene por que heredar la resolucion de la onda.
         "fringes": {
-            "freqs": freqs[zmask_idx].tolist(),
-            "F_abs": np.abs(F[zmask_idx]).tolist(),
-            # La fase, para que report.html dibuje el lugar geometrico de
-            # F en el plano complejo a partir de los datos y no de una
-            # formula reescrita ahi.
-            "F_arg": np.angle(F[zmask_idx]).tolist(),
+            "freqs": f_lo_grid.tolist(),
+            "F_abs": np.abs(F_lo).tolist(),
+            "F_arg": np.angle(F_lo).tolist(),
+            # una sola vuelta, para dibujar la circunferencia sin repetirla
+            "giro_re": F_giro.real.tolist(),
+            "giro_im": F_giro.imag.tolist(),
+            "arg_max": arg_max,
         },
         # Parameters only, no grid: across this whole band w > 30, so the
         # pattern is the two-image geometric-optics form and report.html

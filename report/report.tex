@@ -83,19 +83,22 @@ v\'ease \code{README.md}).
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{../cases/case_A_chirp/caseA_F_of_f.png}
-\caption{El factor de amplificaci\'on $F(f)$ en dos ventanas de 3~Hz en
-extremos opuestos de la banda del chirp: al inicio ($w=62$, arriba) y cerca
-del merger ($w=778$, medio), con l\'ineas punteadas marcando la envolvente
-exacta $\sqrt{\mu_+}\pm\sqrt{|\mu_-|}$ en las dos. Son dos ventanas y no
-una porque lo que hay que ver es que el ancho de la envolvente y el
-per\'iodo de las franjas son los mismos en los dos extremos: $F$ ac\'a es la
-f\'ormula de \'optica geom\'etrica de dos im\'agenes en toda la banda
-(\code{theory/theory.pdf} Cap.~3), as\'i que $\Delta T$ es fijo, la fase
-$2\pi f\Delta T$ es lineal en $f$ y el per\'iodo de franja vale
-$1/\Delta T=0.29$~Hz en cualquier punto. Confirmado adem\'as reconstruyendo
+\caption{De d\'onde salen las franjas. En \'optica geom\'etrica, que rige
+toda la banda del Caso~A (\code{theory/theory.pdf} Cap.~3),
+$F=\sqrt{\mu_+}-i\sqrt{|\mu_-|}\,e^{iw\Delta T}$: al barrer $f$ el punto
+recorre una \textbf{circunferencia} de radio $\sqrt{|\mu_-|}=0.2396$
+centrada en $\sqrt{\mu_+}=1.0283$, una vuelta por franja (izquierda). De ah\'i
+se leen las tres cosas a la vez. $|F|$ queda entre el punto m\'as cercano y
+el m\'as lejano de esa circunferencia al origen, $0.789$ y $1.268$. La fase
+nunca da la vuelta, porque la circunferencia no encierra al origen: las dos
+tangentes desde el origen (punteadas) la acotan por
+$\arcsin(\sqrt{|\mu_-|}/\sqrt{\mu_+})=0.2352$~rad, que es exactamente lo que
+alcanza (derecha). Y el per\'iodo de franja vale $1/\Delta T=0.2912$~Hz en
+cualquier punto de la banda, porque $w\Delta T$ es lineal en $f$ y $\Delta T$
+es fijo --- los mismos $3.434$~s del eco. Confirmado adem\'as reconstruyendo
 \code{h\_lensado} a partir de nada m\'as que dos copias retrasadas y
 reescaladas de la forma de onda no lensada, con acuerdo a
-$1.1\times10^{-13}$. Abajo: la fase sobre la primera ventana.}
+$1.1\times10^{-13}$.}
 \end{figure}
 
 \begin{figure}[H]
