@@ -817,25 +817,23 @@ window.__CASE_B__ = {"y_max": 25.0, "P_days": 4.0, "w_B": 0.30947772357063164, "
     // el período de anillo en y alrededor de la fuente, como lectura
     const yA = P.y_A, sA = Math.sqrt(yA * yA + 4);
     const ddT = sA;   // d(Delta_T)/dy = sqrt(y^2+4), exacto
-    // Barrido uniforme en log f, no en tiempo. Un barrido en tiempo es lo que
-    // el chirp hace de verdad, pero el chirp pasa casi toda su vida abajo en
-    // la banda: cruza 20 Hz en el último tercio y 100 Hz en el último 2%, así
-    // que el 95% de la animación se queda quieta y los anillos sólo se
-    // aprietan en el último instante. En log f el apretamiento es parejo y se
-    // ve; el instante correspondiente va en la lectura, que es donde el
-    // tiempo importa.
+    // Barrido lineal en TIEMPO: es la evolución del chirp, y el eje es el
+    // tiempo físico. Eso significa que casi toda la animación transcurre abajo
+    // en la banda -- el chirp cruza 20 Hz en su último tercio y 100 Hz en el
+    // último 2% -- y que los anillos se aprietan de golpe sobre el final. Así
+    // es como ocurre.
     vivo(document.getElementById("vizPat"), 14000, frac => {
-      const f = P.f_start * Math.pow(P.f_isco / P.f_start, frac);
-      const w = P.w_start * f / P.f_start;
+      const tCur = tIni + frac * (tFin - tIni);
       let i = 0;
-      while (i < fA.length - 1 && fA[i] < f) i++;
-      const tCur = tA[i] - CASE_A.t_peak;
+      while (i < tA.length - 1 && tA[i] < tCur) i++;
+      const f = Math.min(fA[i], P.f_isco);
+      const w = P.w_start * f / P.f_start;
       pintarZoom(w);
       pintarFull(w);
       readout.textContent =
-        "f = " + f.toFixed(1) + " Hz     w = " + w.toFixed(0) +
-        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y" +
-        "     (t − t_merger = " + tCur.toFixed(2) + " s)";
+        "t − t_merger = " + (tCur - CASE_A.t_peak).toFixed(2) + " s" +
+        "     f = " + f.toFixed(1) + " Hz     w = " + w.toFixed(0) +
+        "     período de anillo ≈ " + (2 * Math.PI / (w * ddT)).toFixed(4) + " en y";
     });
   }
 
