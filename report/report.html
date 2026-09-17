@@ -749,8 +749,9 @@
 
   // ============== El sistema: el triple jerárquico, de costado ==========
   // La vista del observador no sirve para un esquema: de frente la órbita
-  // externa es una raya (i_out = 87°) y no se distingue nada. Acá está
-  // inclinada a propósito, con la dirección al observador dibujada aparte.
+  // externa es una raya (i_out = 87°) y no se distingue nada. Acá el eje que
+  // manda es la línea de visión, horizontal, y la órbita se apoya torcida
+  // sobre ella los 3° que le corresponden.
   (() => {
     const cv = document.getElementById("canvasSis");
     if (!cv) return;
@@ -763,13 +764,23 @@
     const readout = document.getElementById("readoutSis");
     const P_DIAS = 4.0;
 
+    // La inclinación es la de verdad: i_out = 87° deja la órbita 3° fuera de
+    // la línea de visión, y el esquema la inclina esos 3°. Sobre un semieje
+    // de 190 px el extremo de la órbita queda 10 px por encima de la línea,
+    // que es poco y es justamente lo que se quiere mostrar.
+    const INCL = 3 * Math.PI / 180;
+    const CI = Math.cos(INCL), SI = Math.sin(INCL);
+    function pto(t) {
+      const lx = A * Math.cos(t), ly = -B * Math.sin(t);
+      return [cx + lx * CI - ly * SI, cy + lx * SI + ly * CI];
+    }
+
     function arco(desde, hasta, color, lw) {
       ctx.strokeStyle = color; ctx.lineWidth = lw;
       ctx.beginPath();
       for (let i = 0; i <= 90; i++) {
-        const th = desde + (hasta - desde) * i / 90;
-        const px = cx + A * Math.cos(th), py = cy - B * Math.sin(th);
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        const q = pto(desde + (hasta - desde) * i / 90);
+        i === 0 ? ctx.moveTo(q[0], q[1]) : ctx.lineTo(q[0], q[1]);
       }
       ctx.stroke();
     }
@@ -787,7 +798,7 @@
 
     function marco(frac) {
       const th = frac * TAU;                  // arranca por delante del lente
-      const px = cx + A * Math.cos(th), py = cy - B * Math.sin(th);
+      const pf = pto(th), px = pf[0], py = pf[1];
       // Dos profundidades distintas, y conviene no confundirlas. `arriba` es
       // respecto de QUIEN MIRA EL DIBUJO y sólo decide qué tapa a qué. Estar
       // detrás del LENTE es otra cosa: el observador está a la derecha, así
@@ -797,6 +808,13 @@
       const alineado = Math.abs(th - Math.PI) < dth;
 
       ctx.clearRect(0, 0, W, H);
+
+      // La línea de visión, que acá es el eje: sale del lente hacia el
+      // observador y sigue punteada del otro lado. Por ese tramo punteado es
+      // por donde la fuente tiene que pasar para que veamos dos imágenes.
+      ctx.strokeStyle = REJILLA; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+      ctx.beginPath(); ctx.moveTo(14, cy); ctx.lineTo(cx - 18, cy); ctx.stroke();
+      ctx.setLineDash([]);
 
       arco(0, Math.PI, REJILLA, 1.4);                 // la mitad de atrás
       if (arriba) fuente(px, py, frac * TAU * 37, alineado);
@@ -815,34 +833,28 @@
       arco(Math.PI - dth, Math.PI + dth, CYAN, 2.6);
       if (!arriba) fuente(px, py, frac * TAU * 37, false);
 
-      // Hacia dónde está el observador: a la derecha, y CASI en el plano de la
-      // órbita. Ese "casi" es i_out = 87°, y es lo que hace que la fuente pase
-      // cerca del lente sin taparlo del todo; acá va exagerado a 11° porque a
-      // 3° la inclinación no se distingue de cero.
-      const INCL = 0.20;
-      const xo = cx + A + 8, largo = W - 18 - xo;
-      const ax = xo + largo * Math.cos(INCL), ay = cy - largo * Math.sin(INCL);
-      ctx.strokeStyle = REJILLA; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
-      ctx.beginPath(); ctx.moveTo(xo, cy); ctx.lineTo(xo + largo, cy); ctx.stroke();
-      ctx.setLineDash([]);
+      // hacia el observador: horizontal, trazada desde el lente
+      const xo = cx + 20, ax = W - 18;
       ctx.strokeStyle = alineado ? CYAN : SUAVE; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(xo, cy); ctx.lineTo(ax, ay); ctx.stroke();
-      ctx.save();
-      ctx.translate(ax, ay); ctx.rotate(-INCL);
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-11, -4.5); ctx.lineTo(-11, 4.5);
+      ctx.beginPath(); ctx.moveTo(xo, cy); ctx.lineTo(ax, cy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ax, cy); ctx.lineTo(ax - 11, cy - 4.5); ctx.lineTo(ax - 11, cy + 4.5);
       ctx.closePath(); ctx.fillStyle = alineado ? CYAN : SUAVE; ctx.fill();
-      ctx.restore();
 
       ctx.font = "11px -apple-system,sans-serif";
       ctx.fillStyle = SUAVE;
-      ctx.fillText("al observador", ax - 78, ay - 8);
-      ctx.fillText("i = 87°: casi de canto", xo + 6, cy + 16);
-      ctx.fillText("lente  5×10⁴ M☉", cx - RING - 80, cy + 4);
+      ctx.fillText("al observador", ax - 80, cy - 10);
+      ctx.fillText("i = 87°", cx - A + 26, cy + 21);
+      ctx.fillText("lente  5×10⁴ M☉", cx - RING - 78, cy + 34);
       ctx.fillStyle = CYAN;
       // a la derecha la fuente comparte espacio con la flecha: el cartel se
       // pasa al otro lado en vez de encimarse
+      // El cartel se pone del lado de afuera de la órbita, y eso lo decide la
+      // posición DIBUJADA, no el ángulo: en la conjunción la inclinación deja
+      // a la fuente arriba de la línea aunque sin(th) ya haya cambiado de
+      // signo, y con el criterio del ángulo el cartel saltaba de lado.
       ctx.fillText("binaria interna", px + (Math.cos(th) > 0 ? -84 : 12),
-                   py + (arriba ? -10 : 16));
+                   py + (py < cy ? -16 : 22));
       ctx.fillStyle = SUAVE;
       ctx.fillText("órbita externa  a = 1.82 UA", 10, H - 10);
 
