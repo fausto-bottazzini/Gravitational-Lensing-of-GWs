@@ -34,7 +34,7 @@ of it, and explains why there is deliberately no Markdown copy.
 | `cases/case_A_chirp/` | the static-lens case: `run.py`, its figures, `RESULTS.md` (what they show), and `provenance/` — `numbers.json`, every number the case reports, written by the run rather than typed, and `claims.yaml`, which ties each claim to the code and the check behind it |
 | `cases/case_B_monochromatic/` | the moving-lens case, same structure |
 | `tests/` | every correctness check the case `RESULTS.md` files and `provenance/claims.yaml` point at; each file runs on its own and prints one PASS/FAIL line per check |
-| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md` |
+| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md`. Also `final-project.html`, a verbatim copy of the course assignment this project is answering, kept here so the repository carries its own brief |
 | `bibliography/` | the DOI of every work cited and an arXiv link where there is a free preprint. The PDFs are deliberately not committed — they are copyrighted by their journals |
 | `checks/independent_review/` | gitignored working space for fresh-agent reviews; kept empty between them |
 | `reproduce.sh` | the entry point for rebuilding any of it (below) |
@@ -160,7 +160,7 @@ do it last, right before comparing against what is committed.
 
 ## Reproducibility test this repo was held to
 
-Per the assignment (`GW-AI-course/final-project.html`): *hand it to a fresh
+Per the assignment ([`wiki/final-project.html`](wiki/final-project.html), copied verbatim from the course repository): *hand it to a fresh
 agent that knows nothing, ask it to reproduce a result, and see how far it
 gets.* This repo was checked that way three times over (independent
 fresh-agent passes with no prior context, each fixing what the last one
