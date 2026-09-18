@@ -15,7 +15,8 @@ hilo teórico.
 
 ## Estructura
 
-Siete capítulos, un apéndice de deducciones y un prefacio. 41 páginas.
+Siete capítulos, un apéndice de deducciones y un prefacio. 41 páginas, con
+una única figura (4.1, el tren de pulsos, en §4.3).
 
 | | Capítulo | Contenido |
 |---|---|---|
@@ -64,6 +65,8 @@ Dermott; Chandrasekhar) se citan por capítulo y sección.
 | `theory.tex` | fuente del documento, **y la manera de leerlo si sos un agente** (ver abajo) |
 | `theory.pdf` | documento compilado, que es lo que se entrega |
 | `refs.bib` | bibliografía, compartida con `report/` |
+| `pulsos_esquema.py` | genera la figura 4.1 (el tren de pulsos, §4.3), esquemática y sin números: `theory.pdf` enuncia el fenómeno, no la instancia — los números de este proyecto están en `cases/case_B_monochromatic/caseB_repeated_pulses.png` |
+| `pulsos_esquema.pdf` | salida del script anterior, incluida por `theory.tex` |
 | `paraxial_validity.py` | genera los números del Cuadro 4.1 (validez paraxial) a partir de `src/gwlens/system.py`; lo corre `reproduce.sh` |
 | `paraxial_validity_numbers.json` | salida del script anterior, que es lo que el Cuadro 4.1 transcribe |
 | `OUTLINE.md` | este archivo |
