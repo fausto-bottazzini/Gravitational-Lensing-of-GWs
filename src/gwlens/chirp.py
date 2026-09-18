@@ -42,7 +42,7 @@ def time_to_merger(f_hz, mchirp_msun):
 
 
 def freq_of_time(t, t_c, mchirp_msun):
-    """f(t) = (1/pi) * [(5/256) * (Mc_sec)^{-5/3} * (t_c-t)]^{-3/8} for t<t_c,
+    """f(t) = (1/pi) * (5/256)^{3/8} * (t_c-t)^{-3/8} * Mc_sec^{-5/8} for t<t_c,
     the closed-form solution of (*) -- algebraically re-derived from
     `time_to_merger` by inverting tau(f) for f (see module docstring); cross
     -checked against direct numerical ODE integration in tests/test_chirp.py.

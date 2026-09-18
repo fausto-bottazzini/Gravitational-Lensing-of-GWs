@@ -10,5 +10,13 @@
   "pn_terms_are_small_corrections": {
     "passed": true,
     "message": "v=0.2213; PN correction terms at f=20Hz: [0.3138327864378355, -0.544461647978746, 0.1099153005504013] (all should be < 1 in magnitude)"
+  },
+  "spa_phase_series_matches_literature": {
+    "passed": true,
+    "message": "PN series recovered from spa_phase vs Buonanno et al. (2009) Eq. 3.18 over f=12..160 Hz: max relative error 6.88e-13 (tol 1e-12)"
+  },
+  "spa_amplitude_scaling": {
+    "passed": true,
+    "message": "spa_amplitude doubling ratio A(2f)/A(f) = 0.445449359 vs 2^(-7/6) = 0.445449359 (max relative error 2.49e-16, tol 1e-12)"
   }
 }

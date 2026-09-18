@@ -242,7 +242,10 @@ def check_causality_of_lensed_pulse():
     strong_at_t_ref = abs(t_strong - t_ref) < 2.0 / 4096.0  # within a couple of samples
     strong_amp_ok = abs(amp_strong - expected_strong) < 0.05 * expected_strong
     # the weak image must show up clearly AFTER, not before
-    weak_after_ok = (amp_after > 0.2 * expected_weak) and (amp_before < 0.05 * expected_weak)
+    # two-sided, and tight: a one-sided `> 0.2 * expected_weak` passed with
+    # the sqrt(mu_-/mu_+) normalization this check exists to rule out.
+    weak_after_ok = (abs(amp_after - expected_weak) < 0.05 * expected_weak
+                     and amp_before < 0.05 * expected_weak)
     ok = strong_at_t_ref and strong_amp_ok and weak_after_ok
     return ok, (f"strong image at t_ref+{t_strong - t_ref:.4f}s, amplitude {amp_strong:.4f} "
                 f"(expect sqrt(mu_+)={expected_strong:.4f}); weak image AFTER = {amp_after:.4f} "

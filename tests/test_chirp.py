@@ -76,9 +76,27 @@ def check_td_amplitude_increases_with_frequency():
     return ok, f"amplitude_td at f=10,50,125 Hz -> {a} (must be increasing)"
 
 
+def check_td_amplitude_scaling():
+    """The envelope must go as f^(2/3), not merely increase. The existing
+    monotonicity check holds for ANY positive power: breaking both exponents
+    in restricted_pn_amplitude_td at once (f^(2/3) -> f^(1/3) and
+    (GMc/c^2)^(5/3) -> ^(4/3)) passed every check in this file, in
+    test_doppler.py and in test_system.py. This envelope is what Case B's
+    amplitude figures rest on."""
+    f = np.array([10.0, 40.0, 160.0])
+    a = chirp.restricted_pn_amplitude_td(f, 15.0, 5.0e-3)
+    ratios = a[1:] / a[:-1]
+    expected = 4.0 ** (2.0 / 3.0)
+    relerr = float(np.max(np.abs(ratios - expected) / expected))
+    ok = relerr < 1e-12
+    return ok, (f"quadrupling ratio A(4f)/A(f) = {ratios[0]:.9f} vs 4^(2/3) = "
+                f"{expected:.9f} (max relative error {relerr:.2e}, tol 1e-12)")
+
+
 CHECKS = [
     ("freq_of_time_matches_f0", check_freq_of_time_matches_f0),
     ("td_amplitude_increases_with_frequency", check_td_amplitude_increases_with_frequency),
+    ("td_amplitude_scaling", check_td_amplitude_scaling),
     ("closed_form_matches_numeric_ode", check_closed_form_matches_numeric_ode),
     ("isco_frequency_reasonable", check_isco_frequency_reasonable),
     ("chirp_mass_symmetry", check_chirp_mass_symmetry),

@@ -285,12 +285,15 @@ def F_hybrid(w, y, w_geo_threshold=30.0):
     hypergeometric series for `F_point_lens` converges slowly once its
     argument `i*w*y^2/2` gets large (many terms before the series settles),
     which happens exactly in the regime -- large w -- where
-    `F_geometric_optics` is independently validated to agree with it to
-    <0.1% (`tests/test_waveoptics.py::check_geometric_optics_limit`, errors
-    3e-4 at w=10 falling to 3e-5 at w=1000). `w_geo_threshold=30` sits
-    comfortably inside that validated agreement (3.1% at w=30 itself, per
-    `check_hybrid_matches_at_threshold`, well under its 4% tolerance and
-    shrinking fast on either side of that point). The cost is not marginal:
+    `F_geometric_optics` is independently validated against it
+    (`tests/test_waveoptics.py::check_geometric_optics_limit`: 3.3e-4 at
+    w=10, 1.4e-3 at w=50, 2.7e-5 at w=200, 2.6e-5 at w=1000 -- a few parts
+    in 1e3, not monotonic in w across those samples, and the check asserts
+    only <5e-3). The agreement at the threshold is strongly y-DEPENDENT,
+    which `check_hybrid_matches_at_threshold` shows at w=30: 3.1e-4 at
+    Case A's y=1.589 and 5.6e-4 at y=2.5, but 2.6e-3 at y=1 and 3.1e-2 at
+    y=0.3. `w_geo_threshold=30` is therefore validated for the y this
+    project actually visits (y>=1.589 throughout), not universally. The cost is not marginal:
     one Case A frequency sweep through `F_point_lens` takes ~150 s, and
     through `F_hybrid` no mpmath call is needed at all.
     """

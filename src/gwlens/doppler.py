@@ -23,7 +23,8 @@ in completely different ways:
                          strain ENVELOPE is untouched, because the envelope
                          evolves on the inspiral timescale (240 d here) and
                          the delay only reshuffles it by ~900 s (relative
-                         change ~6e-5, checked in tests/test_doppler.py).
+                         change 1.1e-5 = (1/4)*900/2.08e7, checked in
+                         tests/test_doppler.py).
                          That is why adding it changes none of this repo's
                          amplitude results.
   2. `classical_doppler_factor`

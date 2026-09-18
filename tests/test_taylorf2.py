@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import numpy as np
-from gwlens import taylorf2, chirp
+from gwlens import taylorf2, chirp, units
 
 
 def check_leading_order_group_delay():
@@ -14,10 +14,11 @@ def check_leading_order_group_delay():
     (see spa_phase docstring), gives group delay (1/2pi)dPsi/df =
     -(t_c - tau(f)) for the LEADING (v^0) term alone, tau from chirp.py's
     independently-derived (and separately checked, tests/test_chirp.py)
-    time_to_merger. Validates the prefactor and v-definition of spa_phase
-    against a completely different implementation, without relying on the
-    (unverified-by-us) higher PN coefficients at all -- those enter at v^2
-    and above, zero here. This checks the ALGEBRA is self-consistent; it
+    time_to_merger. NOTE what this does and does not touch: `psi_leading`
+    below is a local hand-written copy of the leading term, so what is
+    validated here is that ALGEBRA against chirp.py, plus `_v_of_f`, which
+    is the only thing it imports from the module. It does NOT exercise
+    `spa_phase` -- check_spa_phase_series_matches_literature does that. It
     does NOT by itself catch an overall sign flip relative to numpy's
     ifft (a constant-derivative-sign error), which is what
     check_ifft_reconstructs_chirp_at_tc below catches instead."""
@@ -99,10 +100,69 @@ def check_pn_terms_are_small_corrections():
     return ok, f"v={v:.4f}; PN correction terms at f=20Hz: {terms} (all should be < 1 in magnitude)"
 
 
+def check_spa_phase_series_matches_literature():
+    """Exercises `spa_phase` itself, which the check above does not.
+
+    Inverting the definition in its docstring,
+
+        -Psi = 2*pi*f*t_c - phi_c - pi/4 + (3/(128*eta*v^5)) * P(v),
+
+    recovers the PN polynomial P(v) FROM the function's own output; it is then
+    compared against Buonanno et al. (2009), Eq. 3.18, written out here from
+    the paper. One comparison therefore pins the overall sign, the
+    3/(128*eta*v^5) prefactor, the v = (pi*M*f)^(1/3) definition and all three
+    PN coefficients at once -- none of which any check reached before: with the
+    leading-order check comparing a local copy against chirp.py, mutating
+    phi2, phi3, the v^5 exponent or the amplitude exponent all passed, and so
+    did doubling the entire leading-order phase.
+
+    v is rebuilt here from units rather than taken from `_v_of_f`, so the two
+    checks do not share a way to be wrong."""
+    m1, m2 = 20.0, 15.0
+    mtot = m1 + m2
+    eta = m1 * m2 / mtot ** 2
+    t_c = 15.0
+    f = np.array([12.0, 20.0, 35.0, 60.0, 100.0, 160.0])
+    v = (np.pi * units.msun_to_seconds(mtot) * f) ** (1.0 / 3.0)
+
+    psi = taylorf2.spa_phase(f, m1, m2, t_c)
+    recovered = (-psi - 2.0 * np.pi * f * t_c + np.pi / 4.0) * (128.0 * eta * v ** 5 / 3.0)
+
+    phi2 = 3715.0 / 756.0 + 55.0 * eta / 9.0
+    phi3 = -16.0 * np.pi
+    phi4 = 15293365.0 / 508032.0 + 27145.0 * eta / 504.0 + 3085.0 * eta ** 2 / 72.0
+    literature = 1.0 + phi2 * v ** 2 + phi3 * v ** 3 + phi4 * v ** 4
+
+    relerr = float(np.max(np.abs(recovered - literature) / np.abs(literature)))
+    ok = relerr < 1e-12
+    return ok, (f"PN series recovered from spa_phase vs Buonanno et al. (2009) "
+                f"Eq. 3.18 over f=12..160 Hz: max relative error {relerr:.2e} "
+                f"(tol 1e-12)")
+
+
+def check_spa_amplitude_scaling():
+    """|h(f)| ~ f^(-7/6), the exponent spa_amplitude's own docstring states
+    and that nothing checked: mutating it to f^(-1/6) passed every check in
+    this file. A ratio needs no absolute normalization, so this tests the
+    exponent alone."""
+    m1, m2 = 20.0, 15.0
+    f = np.array([10.0, 20.0, 40.0, 80.0])
+    a = taylorf2.spa_amplitude(f, m1, m2, 100.0)
+    ratios = a[1:] / a[:-1]
+    expected = 2.0 ** (-7.0 / 6.0)
+    relerr = float(np.max(np.abs(ratios - expected) / expected))
+    ok = relerr < 1e-12
+    return ok, (f"spa_amplitude doubling ratio A(2f)/A(f) = {ratios[0]:.9f} vs "
+                f"2^(-7/6) = {expected:.9f} (max relative error {relerr:.2e}, "
+                f"tol 1e-12)")
+
+
 CHECKS = [
     ("leading_order_group_delay", check_leading_order_group_delay),
     ("ifft_reconstructs_chirp_at_tc", check_ifft_reconstructs_chirp_at_tc),
     ("pn_terms_are_small_corrections", check_pn_terms_are_small_corrections),
+    ("spa_phase_series_matches_literature", check_spa_phase_series_matches_literature),
+    ("spa_amplitude_scaling", check_spa_amplitude_scaling),
 ]
 
 
