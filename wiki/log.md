@@ -8,6 +8,15 @@ traceable to a `numbers.json` or a test.
 
 ## Decisions
 
+**The assignment is in the repo.** `wiki/final-project.html` is a byte-identical
+copy of the course brief (`matiaszaldarriaga/GW-AI-course`), verbatim, because
+it is the specification this work is measured against and a paraphrase of a
+specification is not one. It used to be reachable only as
+`../GW-AI-course/final-project.html`, a sibling checkout outside this
+repository — so the one document stating the test the repo is held to, *hand it
+to a fresh agent that knows nothing*, was the one document that agent could not
+read.
+
 **One system, two epochs.** Case A (chirp, static lens) and Case B
 (quasi-monochromatic, moving lens) are the *same* hierarchical triple at two
 points of one inspiral, not two unrelated examples. Pinned in
@@ -515,6 +524,11 @@ were not, and its own fix was to add citations satisfying itself.
 The pattern from every earlier round held again, harder: everything found was
 in prose, equations, docstrings, provenance and preambles. Nothing was in the
 physics the tests cover — except where the tests turned out not to cover it.
+
+What the round found and this pass did not act on is in `todo.md` rather than
+here: four presentation defects in the deck, two in the one-turn page, and
+four in `src/`/`cases/`. They are listed there with what was measured, so the
+round's output survives having been filtered.
 
 ## Stated limits
 
