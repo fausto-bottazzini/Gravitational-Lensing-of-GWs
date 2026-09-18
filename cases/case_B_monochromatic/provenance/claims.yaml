@@ -203,6 +203,39 @@ figures:
     from_scratch: The F(t) evaluation via F_hybrid at each sampled y(t).
     from_library: matplotlib.
     supports: [repeated_lensing_pulses]
+  - file: caseB_pattern.png
+    produced_by: run.py::main
+    shows: >
+      The fixed |F(w_B,y)|^2 amplification pattern on the source plane out to
+      |y|<25: concentric rings with the Einstein-ring peak at the centre,
+      with axes, a logarithmic colour bar, and a single white marker at the
+      closest approach the source reaches, y_min=1.59. This is the pattern the
+      source sweeps through once per outer period; WHERE on it the source sits
+      over time is said in caseB_repeated_pulses.png instead, in time.
+    from_scratch: >
+      A radial F_hybrid(w_B,r) evaluation on 2000 points out to y_max=25,
+      interpolated onto a 361x361 square grid by radius. Only the radial
+      profile is ever computed: the pattern is axisymmetric, so the 2D map
+      costs one interpolation instead of 130 thousand evaluations of F.
+    from_library: scipy.interpolate.interp1d, matplotlib (LogNorm colour scale).
+    choices:
+      - "y_max=25, set from min_y and NOT from max(y_t). max(y_t) is dominated by the near-divergent samples at each D_LS=0 crossing and would shrink the whole pattern to an invisible dot (caught by eye on the first version). 8*min_y (~12.7) was too tight the other way: the median y among lensed samples is ~25.5, so report.html's marker built on that y_max sat clamped at the frame edge for 78% of the orbit (caught by an independent review). y is genuinely unbounded toward each crossing, so no finite window keeps the marker on frame the whole orbit -- this one holds it for roughly the lensed half's median rather than only its sharpest dip."
+      - "The source's orbit track is NOT drawn over the pattern. It is a near-straight line crossing rings whose spacing is the entire content of the figure, and it hid exactly what it was meant to locate. The marker at y_min is the one thing the track carried that the pattern does not say by itself."
+      - "The y_min label sits beside the marker with no leader line. Anchored up in a corner it needed an arrow, and that arrow was a white diagonal drawn straight across the rings -- doing to the figure exactly what the removed track did."
+      - "Explicit plain-decimal colour-bar ticks. The range is 1.0 to 1.55, inside a single decade, where matplotlib's log formatter renders every tick as '1.1 x 10^0' -- scientific notation whose exponent is always zero -- and its log locator places exactly one major tick."
+    supports: [repeated_lensing_pulses, y_min_crosscheck]
+  - file: caseB_pattern_only.png
+    produced_by: run.py::main
+    shows: >
+      The same |F(w_B,y)|^2 pattern, with no axes, labels or colour bar, on a
+      square canvas. Not a figure for the report: it is the background that
+      report/report.html animates a moving marker over.
+    from_scratch: The same radial evaluation and interpolation as caseB_pattern.png.
+    from_library: matplotlib (LogNorm colour scale).
+    choices:
+      - "Saved WITHOUT bbox_inches='tight', unlike every other figure in this repo, and with subplots_adjust to zero margin. report.html positions its marker by percentage of the image, so this PNG has to stay an exact square with no margin or the marker silently drifts off the pattern it is supposed to be tracking."
+      - "No overlaid track: for the same reason as caseB_pattern.png, and so the animation's own marker is not drawn on top of a static duplicate."
+    supports: [repeated_lensing_pulses]
   - file: caseB_detector_view.png
     produced_by: run.py::main
     shows: >
