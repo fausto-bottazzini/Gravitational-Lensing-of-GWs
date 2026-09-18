@@ -97,11 +97,14 @@ waveform. Set against that:
 | ratio | **5206×** (`roemer_over_lens_phase_ratio`) |
 | Roemer delay vs. image delay `ΔT` at the pulse | 1810 s vs **3.43 s** → **527×** (`roemer_over_image_delay_ratio`) |
 
-`caseB_doppler_vs_lensing.png` is that comparison as one figure: the
-Roemer sinusoid at full scale, the lensing phase correctly flat on zero
-beside it, and an inset at 3392× so the lensing phase is still shown
-resolved (its diffraction ringing around each pulse) rather than only shown
-to be invisible. This is not a defect of the lensing calculation — it is
+`caseB_doppler_vs_lensing.png` is that comparison as one figure, one
+mechanism per panel and each at its own scale, since a ratio of 5206 cannot
+be drawn on a common axis. The top panel carries the Roemer **delay** in GW
+cycles *and* the Doppler **shift** on a twin axis, because they are not the
+same thing and sit a quarter period apart — see below. The bottom panel is
+the lensing phase on its own dense grid, with the fixed-`w` systematic drawn
+as a band so that what can be read off it is separated from what cannot.
+This is not a defect of the lensing calculation — it is
 what a hierarchical triple actually looks like, and it is why
 [D'Orazio & Loeb (2020)](https://arxiv.org/abs/1910.02966), the paper
 this case follows for repeated lensing, models the Doppler boost alongside
@@ -110,6 +113,31 @@ it (their Appendix A) rather than either one alone.
 The Doppler swing in observed frequency, `doppler_freq_swing_Hz` =
 **0.0025 Hz**, is itself larger than the entire intrinsic chirp drift across
 the 12-day observation (`intrinsic_freq_drift_Hz` = **0.00097 Hz**).
+
+**Delay and shift are not the same thing, and they are a quarter period
+apart.** They are the same quantity separated by a derivative — the delay
+goes as the separation along the line of sight, the shift as its velocity —
+so where one is extremal the other vanishes. Measured, at conjunction: the
+Roemer delay is at its extremum, **+905 s of ±905**, while `|v_los|/c` is
+**1.3e-6** against an orbital maximum of **1.6e-2**. A quarter period away it
+is exactly the other way round, and that is where `D_LS = 0` and there is no
+lensing at all. So the lensing pulse coincides with the *delay*, not with the
+shift. Calling the pair "the Roemer-Doppler effect", as though it were one
+thing with one maximum, puts it at the wrong orbital phase; an earlier version
+of the figure's y-label did exactly that.
+
+That quadrature is also why evaluating `F` at the fixed nominal `w_B` is
+legitimate: the frequency shift is smallest precisely where `F` matters most.
+That is an argument, so here are the numbers, and there are four —
+`abs_F_relerr_from_fixed_w_at_pulse` = **1.1e-4** and
+`abs_F_relerr_from_fixed_w_max` = **3.5e-3** for the modulus,
+`arg_F_cycles_err_from_fixed_w_at_pulse` = **2.5e-5** cycles and
+`arg_F_cycles_err_from_fixed_w_max` = **5.6e-4** cycles for the phase. Both
+worst cases fall far from the pulse, on the steep flank of a fringe where
+`|F|` is near 1 and nothing quoted here is read off. The phase bound is new:
+`|F|` had one, `arg F` did not, and it is what decides how much of the lensing
+panel's ringing is a result — the two large excursions are 21 times it, the
+far ringing sits inside it.
 
 **How it is applied, and what it does not change.** The waveform is
 evaluated at the retarded emission time solved from
@@ -157,17 +185,63 @@ moving marker over this same background.
 
 `caseB_detector_view.png` is the idealized-detector view asked for: top
 panel, the strain envelope over the full 12-day observation, showing three
-clean amplification pulses riding on the slowly-drifting quasi-monochromatic
-carrier; bottom panel, a dedicated fine time grid (dt=0.1 s, since the
-1800-point grid used for the envelope — 576 s spacing — wildly undersamples
-the 20 s carrier period and plotting a raw waveform from it aliases)
-zoomed on one pulse peak.
+clean amplification pulses; bottom panel, **five** cycles of the 20 s carrier
+at one pulse's peak, on its own fine grid (the 1800-point envelope grid, 576 s
+spacing, undersamples a 20 s carrier by a factor of 30).
 
-What that bottom panel shows is the **amplitude** difference: crests 17.7%
-taller with the lens than without. It does *not* show a dephasing, and an
-earlier version of this file claimed it did. Both curves are evaluated at
-the same retarded time, so the 90-cycle Roemer delay is common to them and
-cancels; all that is left between them is F, whose phase at the pulse peak
-is `arg F` = 0.0176 rad = **1.01°**, a shift of 0.056 s on a 20 s carrier —
-under a tenth of a pixel at this figure's resolution, and below the
-leading-order waveform's own truncation error besides.
+The baseline in the top panel **drifts upward by 1.29%** across the
+observation, and that is the source rather than the lens: quasi-monochromatic
+is not monochromatic. The binary is still inspiralling, `f_start_Hz`=0.05000 to
+`f_end_Hz`=0.05097 (`fractional_freq_drift` = 1.9%), and the amplitude goes as
+`f^(2/3)`, which predicts `(t_c/(t_c-T))^(1/4)` = 1.0129 — matching the drift
+to five digits. It is the only place in this case where the "quasi" is visible.
+
+What the bottom panel shows is the **amplitude** difference: crests 17.7%
+taller with the lens than without (`max_abs_F` = 1.1766). The window was 30
+cycles until it was noticed that the figure looked like it was *understating*
+the amplification — at that density the two curves cross sixty times and read
+as one sinusoid drawn twice. Nothing was given up by narrowing, because `|F|`
+was flat either way: it moves 0.064% of its peak across ±300 s and 0.002%
+across ±50 s.
+
+It does *not* show a dephasing — and, to be exact about it, it **could not**,
+even if the effect were larger. Both curves are evaluated at the same retarded
+time, so the 90-cycle Roemer delay is common to them and cancels; what is left
+is `F`, whose phase runs over `lens_phase_ptp_cycles` = 0.0174 cycles across
+the *whole* observation, sub-pixel at any window that resolves cycles. Crests
+that line up here are therefore not evidence of anything. The evidence that
+the lens writes amplitude and not phase is that number against Roemer's 90.5.
+Two earlier versions of this file claimed the panel demonstrated it.
+
+## One outer turn, at any magnification (`caseB_one_period.html`)
+
+The only figure in this case that is not an image, and for an arithmetic
+reason: one outer turn holds **17280 carrier cycles**
+(`one_period_carrier_cycles`), so no fixed picture shows the turn and the wave
+at once. It is a page — wheel to zoom, drag to pan, a button per stage — and it
+makes the quadrature above something to click rather than read:
+
+| stage | `|F|` | Roemer delay | `f_obs/f_em − 1` | drag vs a fixed-period comb |
+|---|---|---|---|---|
+| at the pulse (conjunction) | **1.1762** | **+905 s** | −0.02 % | −0.001 cycles |
+| at quadrature | 1.0000 | 4 s | **−1.62 %** | **−0.089 cycles** |
+| half a turn on (source in front) | 1.0000 | **−905 s** | −0.03 % | +0.015 cycles |
+
+The last column answers the question the page otherwise invites. A comb of
+fixed period, anchored to the window centre, measures `dτ/dt` and not `τ`: a
+constant delay shifts the wave rigidly and a rigid shift is invisible against
+a comb that re-anchors with it, so at conjunction — where the delay is at its
+*largest* — the wave stays locked, and at quadrature, where the delay passes
+through zero but is changing fastest, it walks off. Comparing a crest's
+position *between* stages reads nothing at all: two windows a quarter turn
+apart are separated by thousands of accumulated cycles, of which Roemer
+contributes about 45.
+
+The signal is generated in the page rather than sampled into it — sampling
+`h(t)` at 11 points per cycle would be 200000 numbers per turn — so `F(t)` and
+the observed-to-emission time map are tabulated every 69 s and the carrier
+comes from closed forms. That those agree with the phase this repository
+computes is measured:
+`one_period_closed_form_phase_err_cycles` = **5.8e-10** cycles over the whole
+turn. The first version had the prefactor wrong by a factor of two and that
+number is what caught it, reading 4407.

@@ -104,7 +104,42 @@ claims:
     evidence:
       - run.py::main
       - D'Orazio & Loeb (2020), main text (the argument this quantifies)
-    numbers: [abs_F_relerr_from_fixed_w_at_pulse, abs_F_relerr_from_fixed_w_max]
+    numbers: [abs_F_relerr_from_fixed_w_at_pulse, abs_F_relerr_from_fixed_w_max,
+      arg_F_cycles_err_from_fixed_w_at_pulse, arg_F_cycles_err_from_fixed_w_max]
+  - id: delay_and_shift_are_a_quarter_period_apart
+    statement: >
+      The Roemer delay and the Doppler shift are the same quantity separated by
+      a derivative -- the delay goes as the line-of-sight separation, the shift
+      as its velocity -- so where one is extremal the other vanishes. At
+      conjunction, which is where the lensing pulse peaks, the delay is at its
+      +904.9 s extremum (of +-904.9) and |v_los|/c is 1.3e-6 against an orbital
+      maximum of 1.645e-2; a quarter period away it is the other way round, and
+      that is where D_LS = 0 and there is no lensing at all. What coincides
+      with the pulse is therefore the DELAY, not the shift. Treating the pair
+      as one effect with one maximum places it at the wrong orbital phase; the
+      figure's y-label did exactly that until it was corrected.
+    evidence:
+      - run.py::main
+      - caseB_doppler_vs_lensing.png (top panel, twin axes)
+      - caseB_one_period.html (stage buttons)
+      - theory.pdf, ch. "Los dos regimenes"
+    numbers: [roemer_delay_ptp_s, beta_los_max]
+  - id: the_comb_measures_the_derivative
+    statement: >
+      A fixed-period comb anchored to a window centre measures d(tau)/dt, not
+      tau. A constant delay shifts the wave rigidly and a rigid shift is
+      invisible against a comb that re-anchors with it, so at conjunction --
+      where the delay is at its LARGEST -- the wave stays locked to the comb
+      (-0.001 cycles of drag across a 100 s window), while at quadrature, where
+      the delay passes through zero but changes fastest, it walks off by -0.089
+      cycles. That -0.089 over five cycles is -1.78% per cycle: the -1.62%
+      Doppler shift plus the 0.16% of intrinsic chirp drift accumulated over
+      the quarter turn. Comparing a crest's position BETWEEN stages reads
+      nothing: two windows a quarter turn apart are separated by thousands of
+      accumulated cycles, of which Roemer contributes about 45.
+    evidence:
+      - caseB_one_period.html (comb and drag readout)
+    numbers: [beta_los_max, one_period_carrier_cycles]
 figures:
   - file: caseB_doppler_vs_lensing.png
     produced_by: run.py::main

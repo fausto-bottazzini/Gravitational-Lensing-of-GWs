@@ -5,23 +5,13 @@ What is still open. Everything that is done and why it was done that way is in
 
 ## Pending
 
-- [ ] **The validity numbers belong in `report/`, not in `theory/`.**
-  `theory.pdf` states each condition and says the expansion parameter is
-  small, which is what a textbook should do; whether it is small for THIS
-  system is a statement about the repo's numbers. Three such numbers are
-  currently asserted only inside `tests/test_system.py` and need to reach
-  the report: the wave-optics point-source ratio `a_in/eta_0` = 6.4e-3
-  (30x tighter than the geometric `a_in/a_out` it used to stand in for),
-  the adiabatic margin of 5844x where `|F|>1.01`, and the weak-deflection
-  bound -- no ray comes closer than the Einstein ring at 121 r_g, where the
-  second-order Schwarzschild deflection is 2.4% (1.2% at the y actually
-  used).
-- [ ] Cross-references to `theory.tex` that moved with the rewrite:
-  `report/report.tex:251` cites "§4.2--4.3" for the paraxial numbers, now
-  §4.5, and `:305` cites a section by a name that changed;
-  `theory/paraxial_validity.py`'s docstring says Sec. 4.3, now 4.5;
-  `README.md` describes `tests/` as "every correctness check referenced from
-  `theory.tex`", and the text no longer references any test.
+- [ ] `README.md` describes `tests/` as "every correctness check referenced
+  from `theory.tex` and the case `RESULTS.md` files", and the theory text no
+  longer references any test. To be fixed when `README.md` gets its own pass,
+  which is the last stage of the tidy-up. That same pass should say that the
+  cheap way to read the theory is `theory/theory.tex` and not `theory.pdf`
+  (`theory/OUTLINE.md` explains why; a `theory.md` was created and deleted on
+  the strength of exactly that reasoning).
 
 ## Deliberately not done
 
@@ -38,7 +28,8 @@ Each of these is a scope decision, not an oversight; the reasoning is in
   at `e=0.4` in `tests/test_doppler.py`; the redshift side is not.
 - [ ] Feeding the observed frequency back into `F` for Case B rather than
   evaluating at the nominal `w_B`. Quantified as 1.0e-4 in `|F|` at the pulse,
-  3.5e-3 at the worst point of the lensed half, where nothing is read off.
+  3.5e-3 at the worst point of the lensed half, and 2.5e-5 / 5.6e-4 cycles
+  for `arg F`, at points where nothing is read off.
 - [ ] A genuinely non-paraxial treatment of the ~60 s window around each
   `D_LS = 0` crossing (`theory.pdf` §4.5). Quantified as not worth the
   complexity, since `F -> 1` there anyway, but an open problem for anyone who

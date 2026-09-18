@@ -101,12 +101,35 @@ lente & $M_L=5\times10^4\,\Msun$, a $D_L=5$ kpc \\
 \end{tabular}
 \end{center}
 
-\noindent
-La jerarqu\'ia $a_\mathrm{in}\ll a_\mathrm{out}$ se cumple por 2--6 \'ordenes
-de magnitud en las dos \'epocas, con el criterio de estabilidad de
-\citet{MardlingAarseth2001} satisfecho holgadamente
-(\teoria{cap.~``Geometr\'ia del triple como sistema de lente''};
-chequeos en \code{tests/test\_system.py}).
+\subsection*{Las condiciones de validez, con los n\'umeros de este sistema}
+
+\href{../theory/theory.pdf}{\emph{Teor\'ia}} enuncia cada condici\'on y dice
+que su par\'ametro de expansi\'on es
+peque\~no, que es lo que corresponde a un texto te\'orico. Si es peque\~no
+\emph{para este sistema} es una afirmaci\'on sobre estos n\'umeros, y va ac\'a
+(todos de \code{tests/test\_system.py}, que los recalcula en cada corrida):
+
+\begin{itemize}
+  \item \textbf{Jerarqu\'ia.} El criterio de estabilidad de
+    \citet{MardlingAarseth2001} exige $a_\mathrm{out}/a_\mathrm{in}>51.2$ en la
+    \'epoca m\'as ajustada; el sistema est\'a $93\times$ por encima. La
+    binaria interna queda $292\times$ dentro de su radio de Hill alrededor del
+    lente.
+  \item \textbf{Fuente puntual.} La condici\'on que gobierna no es la
+    geom\'etrica $a_\mathrm{in}/a_\mathrm{out}=2.1\times10^{-4}$ sino la de
+    \'optica de ondas, el tama\~no de la fuente contra el radio de Einstein
+    proyectado al plano de la fuente: $a_\mathrm{in}/\eta_0=6.4\times10^{-3}$
+    en la conjunci\'on, $30\times$ m\'as exigente que la otra.
+  \item \textbf{Adiabaticidad} (Caso~B, donde el lente se mueve). El tiempo de
+    respuesta del lente es $4GM_L/c^3=0.985$~s. Donde $|F|>1.01$, el tiempo
+    caracter\'istico del movimiento es $5844\times$ mayor --- medido en dos
+    densidades de grilla, para que el n\'umero sea del sistema y no del
+    muestreo.
+  \item \textbf{Deflexi\'on d\'ebil.} Ning\'un rayo pasa m\'as cerca que el
+    anillo de Einstein, $\xi_0=121\,r_g$. La correcci\'on de segundo orden de
+    Schwarzschild vale ah\'i $2.43\%$ (la cota $y\to0$) y $1.17\%$ en el $y$
+    que este trabajo efectivamente usa.
+\end{itemize}
 
 \begin{center}
 \begin{tabular}{lccl}

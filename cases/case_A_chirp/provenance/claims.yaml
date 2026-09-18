@@ -72,9 +72,11 @@ claims:
       geometric-optics regime the interference term averages away over the
       ~400 in-band fringes, leaving mu_+ + |mu_-| -- the Paczynski (1986)
       total magnification A(y_A). So rms_strain_amplification must equal
-      sqrt(A(y_A)) with nothing fitted: 1.0554959 vs 1.0558485, a relative
-      3.3e-4 (9.6e-9 on the TaylorF2 fallback, whose band has no ringdown
-      power above f_isco to unbalance the fringe average). This is the one
+      sqrt(A(y_A)) with nothing fitted: 1.0556844 vs 1.0558485, a relative
+      1.6e-4 (7.8e-8 on the TaylorF2 fallback, whose band has no ringdown
+      power above f_isco to unbalance the fringe average). Both figures moved
+      when the 0.5 Hz band-edge taper was added, from 3.3e-4 and 9.6e-9, and
+      are re-measured rather than carried over. This is the one
       end-to-end validation of the whole pipeline -- waveform generator, F
       evaluator, Fourier convention, reference phase, window -- against an
       independent textbook result; every other check in this repo validates
@@ -114,16 +116,19 @@ claims:
       F(w,y) is referenced to the strong (minimum-time) image's own
       arrival (zero phase there by construction, waveoptics.py
       "REFERENCE-PHASE NORMALIZATION FIX"), so the combined lensed merger
-      peaks at EXACTLY the unlensed merger time
-      (peak_time_lensed_minus_unlensed_s=0.0). Independent confirmation: a
-      second, genuinely separate copy of the whole merger/ringdown, as
-      faint as echo_to_unlensed_peak_ratio=0.242 (matching the weak
-      image's own magnification sqrt_mu_minus_geometric=0.240 to 1.1%),
-      appears at echo_peak_time_s -- exactly image_time_delay_seconds=
-      3.434s after the merger, to within echo_peak_time_minus_prediction_s
-      =-4.0e-5s. The unlensed envelope is at its FFT-array noise floor at
-      that instant (echo_time_env_unlensed) while the lensed envelope is
-      ~60x above it (echo_peak_env_lensed). A prior version of this
+      peaks at the unlensed merger time to within
+      peak_time_lensed_minus_unlensed_s = 1.5e-3 s -- three samples at
+      2048 Hz, against an image delay of 3.434 s -- and not before it.
+      Independent confirmation: a second, genuinely separate copy of the
+      whole merger/ringdown, as faint as
+      echo_to_unlensed_peak_ratio=0.2395 (matching the weak image's own
+      magnification sqrt_mu_minus_geometric=0.2396 to
+      echo_ratio_vs_sqrt_mu_minus_relerr=5.2e-4, i.e. 0.05%), appears at
+      echo_peak_time_s -- exactly image_time_delay_seconds=3.434s after the
+      merger, to within echo_peak_time_minus_prediction_s=9.4e-4s. The
+      unlensed envelope is at its FFT-array noise floor at that instant
+      (echo_time_env_unlensed=2.6e-25) while the lensed envelope is 3.6e4
+      times above it (echo_peak_env_lensed=9.57e-21). A prior version of this
       analysis omitted the reference-phase normalization above, which made
       the merger peak land 0.60s "early" and the echo miss its naive
       prediction by the same 0.60s -- explained at the time as an
@@ -146,7 +151,28 @@ claims:
       echo_peak_time_s, echo_peak_time_minus_prediction_s,
       echo_peak_env_lensed, echo_time_env_unlensed,
       echo_to_unlensed_peak_ratio, sqrt_mu_minus_geometric,
-      echo_ratio_vs_sqrt_mu_minus_relerr]
+      echo_ratio_vs_sqrt_mu_minus_relerr,
+      second_image_enters_before_merger_s]
+  - id: envelope_ratio_depth_is_set_by_q
+    statement: >
+      The ratio of the lensed to the unlensed envelope is not |F| at the ends
+      of the window, and one quantity explains both ends. The lensed signal is
+      two copies and the analytic signal is linear, so the ratio is exactly
+      |sqrt(mu_+) + sqrt(|mu_-|) q(t) exp(i dphi)| with q = A(t-dT)/A(t): the
+      modulation DEPTH is sqrt(|mu_-|) q(t), and the closed form |F(f)| is the
+      q = 1 limit. q -> 0 at both ends -- at the start the delayed copy has not
+      arrived, towards the merger A(t) runs away while A(t-dT) is still
+      inspiral -- so the band closes back onto sqrt(mu_+) = 1.028, which is
+      nearly 1, and both ends read as "the lens does nothing" because at that
+      instant there is effectively one image. An earlier version of this file
+      attributed the closing-up to the Hilbert transform being unable to follow
+      fringes faster than its own carrier; that was wrong, and
+      ratio_depth_model_max_relerr is what showed it.
+    evidence:
+      - run.py::main
+      - caseA_strain_time.png (fourth and fifth panels)
+    numbers: [ratio_depth_model_max_relerr, ratio_q_at_merger,
+      second_image_enters_before_merger_s]
   - id: caseA_is_pure_geometric_optics
     statement: >
       Every in-band F value in Case A comes from F_geometric_optics

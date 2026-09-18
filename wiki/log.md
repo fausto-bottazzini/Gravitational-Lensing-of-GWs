@@ -269,11 +269,116 @@ Colour bars inside a single decade were rendering "1.1 x 10^0", "6 x 10^-1" --
 scientific notation whose exponent is identical on every tick. Both cases now
 choose plain decimals with explicit ticks when the span is narrow.
 
+## The deliverables pass (2026-09-13..17)
+
+The figures, the deck and the report, gone over one at a time with the same
+rule each time: render it, look at it, and check every number against
+`numbers.json` instead of carrying it over.
+
+**Case A's unlensed envelope was ringing**, and it was the band edge, not the
+Hilbert transform and not the padding (both ruled out by measurement). A 0.5 Hz
+half-cosine taper at `f_lower` fixed it. The width was chosen by measuring the
+scatter of the envelope against its PN prediction at six widths: 4.0% with no
+taper, 2.4% at 0.3 Hz, **2.0% at 0.5**, 5.0% at 1, 22% at 2, 34% at 3.5. It
+also moved two end-to-end numbers, which is why they are re-measured and not
+carried: the Paczynski agreement went from 3.3e-4 to **1.6e-4**, and the
+TaylorF2-fallback one from 9.6e-9 to **7.8e-8**.
+
+**`caseA_F_of_f.png` was one curve drawn three times.** Three windows of
+`|F(f)|` and `arg F(f)` at different points of the band, which measurement
+showed to be identical to four decimals -- the fringe period is 0.29120 Hz at
+10 Hz, at 60 and at 123. Replaced by the thing those three windows were
+evidence *for*: the circle `F` traces in the complex plane, one turn per
+fringe, from which the modulus bounds, the phase bound and the period are all
+read at once.
+
+**The ratio panel's shrinking fringes were not a Hilbert artefact.** The panel
+used to be truncated at -3.22 s, where `Delta_T (df/dt)/f` reaches 0.4, on the
+argument that an analytic envelope cannot follow modulation faster than its own
+carrier. That argument is wrong here. The lensed signal is two copies and the
+analytic signal is linear, so the envelope ratio is exactly
+`|sqrt(mu_+) + sqrt(|mu_-|) q(t) exp(i dphi)|` with `q = A(t-dT)/A(t)`: the
+modulation DEPTH is `sqrt(|mu_-|) q(t)`, and `q -> 0` at both ends of the
+window -- at the start the delayed copy has not arrived, towards the merger
+`A(t)` runs away while `A(t-dT)` is still inspiral. Predicted against measured,
+the depth agrees to **1.3%** from -8 s to 60 ms before the merger, which is
+deep inside the region the old text called untrustworthy. The panel now runs to
+the merger with those bounds drawn over it. Caught by a reader asking why a
+ratio tending to 1 should be surprising.
+
+**"Roemer/Doppler" as one label put the effect at the wrong orbital phase.**
+Delay and shift are the same quantity a derivative apart, so where one is
+extremal the other vanishes: at conjunction the delay is at **+904.9 s of
++-904.9** and `|v_los|/c` is **1.3e-6** against an orbital maximum of
+**1.645e-2**. The lensing pulse coincides with the delay. The figure now draws
+both on twin axes and the crossing pattern says it; `theory.tex` gained the
+half of the quadrature argument it was missing (it had "separation goes as
+sin, velocity as cos" but never said that the DELAY is therefore extremal at
+conjunction, which is the half that is easy to lose in front of a plot).
+
+**A phase bound for Case B that did not exist.** `|F|` had one for the
+fixed-`w` approximation; `arg F` did not, and `arg F` is what
+`caseB_doppler_vs_lensing.png`'s lower panel draws.
+`arg_F_cycles_err_from_fixed_w_max` = **5.6e-4 cycles** turns that panel into
+two things: the two large excursions at `y ~ 3` are 21x it and are a result,
+the far ringing sits inside it and is not.
+
+**Case B's detector view was showing 30 carrier cycles**, at which density the
+two curves cross sixty times and read as one sinusoid drawn twice -- the figure
+looked like it was *understating* the 17.7%. Narrowed to five. Nothing was lost:
+`|F|` moves 0.064% of its peak across +-300 s and 0.002% across +-50 s. Also
+recorded there, because nothing explained it: the top panel's baseline drifts up
+**1.29%**, which is the source still inspiralling and matches
+`(t_c/(t_c-T))^(1/4)` to five digits.
+
+**One outer turn needed to be a page, not a picture.** 17280 carrier cycles per
+turn, so no fixed figure shows the turn and the wave together. The first attempt
+was a three-panel PNG that was correct and unusable -- the pulse it exists to
+show occupies 1.9% of the axis. `caseB_one_period.html` generates the signal in
+the browser instead of carrying it: `F(t)` and the retarded-time map tabulated
+every 69 s, the carrier from closed forms. The check that those agree with the
+repository's own phase, `one_period_closed_form_phase_err_cycles`, is what
+caught the first version having the prefactor wrong by a factor of two --
+`8pi/5` instead of `16pi/5`. It read **4407 cycles**; corrected, **5.8e-10**.
+Locally the wrong version looked fine, which is the whole argument for checking
+the generator against the repository rather than against the picture.
+
+A reader then hit two things in that page immediately. Panning off the pulse
+appeared to zoom, because each window was auto-scaled to its own maximum -- the
+axis meant something different at every position, which destroys the one
+comparison the page exists for. Fixed globally. And fixing your eye on a crest
+while switching stages shows it move, which invites reading that as the Roemer
+delay: it is not, since two windows a quarter turn apart are separated by
+thousands of accumulated cycles of which Roemer contributes about 45. The
+underlying intuition -- the wave is stretched, crests drag -- is right but
+happens *within* a window, so the page gained a fixed-period comb and a drag
+readout: **-0.001 cycles at the pulse, -0.089 at quadrature**. A comb measures
+`d(tau)/dt`, not `tau`, which is why the drag vanishes exactly where the delay
+is largest.
+
+**The report was rewritten as a report.** It read as a lab notebook -- its own
+changelog, citations to `wiki/log.md`, assertions that regenerated figures came
+out byte-identical. All of that belongs here, not there. It is now organised
+around the fact that the two epochs sit on opposite sides of the
+diffraction/geometric-optics transition, and the validity numbers that used to
+live only in `tests/test_system.py` are in it.
+
+**Scope, twice.** The report's caption for `caseA_strain_time.png` was edited
+without being asked -- `report/` is its own stage -- and reverted. And a
+`theory.md` that had appeared as "the token-cheap version of the PDF" was
+deleted: measured, it was 126915 characters against the `.tex`'s 133091, a 5%
+saving in exchange for hand-maintained synchronisation that had already failed
+once, leaving a file that said "generated from theory.tex" and was not. A
+line-by-line dump is not a summary. `theory/OUTLINE.md` now says to read the
+`.tex`.
+
 ## Independent reviews
 
-Three fresh-agent reviews were run during the build (working documents, kept
-locally in `checks/independent_review/`, `.gitignore`d — not part of the
-deliverable), plus several more over `theory.tex` during the rewrite.
+Three fresh-agent reviews were run during the build, plus several more over
+`theory.tex` during the rewrite. They were working documents, never part of the
+deliverable: `checks/independent_review/` is `.gitignore`d, and the three
+review files were deleted on 2026-09-17 once everything actionable in them had
+been acted on. The folder is kept for the next one.
 
 What they were good for: the Fourier-convention bug, the `reproduce.sh` venv
 bug, the aliased Case A animation panel, and most of the `theory.tex` errors
@@ -293,8 +398,9 @@ Deliberately not done, and why:
   carries the eccentric branch and is exercised at `e=0.4`), but `z_orb` stops
   being constant and would have to be applied rather than reported.
 - Feeding the observed frequency back into `F` for Case B: quantified as
-  1.0e-4 in `|F|` at the pulse, 6.4e-3 at the worst point of the lensed half,
-  where nothing is read off.
+  1.1e-4 in `|F|` at the pulse and 3.5e-3 at the worst point of the lensed
+  half, and 2.5e-5 / 5.6e-4 cycles for `arg F`, at points where nothing is
+  read off.
 - A non-paraxial treatment of the ~60 s window around each `D_LS = 0`
   crossing, where the approximation is marginal and `F -> 1` anyway.
 - The idealized detector view carries no noise curve, antenna pattern or

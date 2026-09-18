@@ -61,7 +61,7 @@ Dermott; Chandrasekhar) se citan por capítulo y sección.
 
 | Archivo | Para qué |
 |---|---|
-| `theory.tex` | fuente del documento |
+| `theory.tex` | fuente del documento, **y la manera de leerlo si sos un agente** (ver abajo) |
 | `theory.pdf` | documento compilado, que es lo que se entrega |
 | `refs.bib` | bibliografía, compartida con `report/` |
 | `paraxial_validity.py` | genera los números del Cuadro 4.1 (validez paraxial) a partir de `src/gwlens/system.py`; lo corre `reproduce.sh` |
@@ -70,6 +70,26 @@ Dermott; Chandrasekhar) se citan por capítulo y sección.
 
 Los archivos auxiliares de LaTeX (`.aux`, `.log`, `.out`, `.toc`, `.bbl`,
 `.blg`) no forman parte del repositorio y se regeneran al compilar.
+
+## Para leerlo desde un agente: `theory.tex`, no `theory.pdf`
+
+Leer el PDF cuesta caro, porque se lee renderizando cada página como imagen.
+**La fuente es la lectura barata y es la misma información**: 133 091
+caracteres de `.tex` contra un PDF de 521 KB en imágenes. El `.tex` se lee
+corrido sin problema — los acentos van como `\'a`, la matemática entre `$`, y
+la estructura (`\chapter`, `\section`, `\begin{ejemplo}`) es la del índice de
+más arriba.
+
+Tampoco hace falta generar una versión Markdown. Existió una
+(`theory.md`, borrada el 2026-09-17) que se justificaba como "la versión
+económica en tokens": medida, eran 126 915 caracteres contra 133 091 del
+`.tex`, o sea un 5 % menos, a cambio de mantenerla sincronizada a mano — y ya
+se había desincronizado una vez, quedando un archivo que decía "generado desde
+theory.tex" y no lo estaba, que es peor que no tenerlo. Un volcado línea a
+línea no es un resumen: no aporta nada que no aporte la fuente. Si alguna vez
+hace falta algo más barato que la fuente, tiene que ser un resumen de verdad
+—resultados, condiciones de validez, dónde está cada deducción— y no una
+conversión automática.
 
 ## Compilación
 
