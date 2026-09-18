@@ -99,7 +99,11 @@ def apply_lensing(freqs, H_unlensed, y_A):
     positive = freqs > 0
     t0 = time.time()
     F_vals = np.array([wo.F_hybrid(w, y_A) for w in w_arr[positive]])
-    log("F_evaluation_seconds", time.time() - t0)
+    # Wall clock, to stdout and NOT into numbers.json: it is not a result,
+    # it does not reproduce, and as a logged key it was the only thing that
+    # changed between two runs of this case -- which is exactly what stops
+    # numbers.json from being diffable against a fresh run.
+    print(f"  F evaluated over the band in {time.time() - t0:.2f} s")
     F[positive] = F_vals
     H_lensed = H_unlensed * F
     return H_lensed, F

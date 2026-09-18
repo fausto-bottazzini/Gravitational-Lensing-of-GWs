@@ -19,12 +19,6 @@ re-verified here.
 
 ### `report/report.html`
 
-- [ ] Slides 8, 9, 12 and 14 grow past the viewport and the content below the
-  fold is simply not reachable. The CSS comment says the slide scrolls
-  internally; it does not — `.slide` has `min-height:100vh` and no maximum, so
-  the *body* scrolls, and `mostrar()` calls `scrollTo(0, 0)` on every change,
-  so you always land at the top with no sign there is more. [At 1024x768:
-  slide 8 +80 px, 9 +333, 12 +301, 14 +370.]
 - [ ] The ring rendering on slide 9 keeps full per-pixel resolution down to
   `per > 2*pix`, which is exactly Nyquist rather than the comfortable margin
   its comment claims. In the middle of the sweep that draws beat structure
@@ -97,3 +91,9 @@ Each of these is a scope decision, not an oversight; the reasoning is in
   `D_LS = 0` crossing (`theory.pdf` §4.5). Quantified as not worth the
   complexity, since `F -> 1` there anyway, but an open problem for anyone who
   wants to push further.
+- [ ] Making slides 8, 9, 12 and 14 of `report.html` fit a short viewport.
+  They grow past it and the page scrolls rather than the slide, despite the
+  `overflow-y` the CSS sets — `.slide` has `min-height:100vh` and no maximum.
+  [At 1024x768: slide 8 +80 px, 9 +333, 12 +301, 14 +370.] Left as it is on
+  purpose: the deck is not projected, the browser scrolls, and making the
+  four fit would mean cutting content to win back a scrollbar.

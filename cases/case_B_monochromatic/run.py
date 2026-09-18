@@ -85,7 +85,11 @@ def main():
     t0 = time.time()
     F_t = np.array([wo.F_hybrid(w_B, y) if lm else 1.0 + 0.0j
                      for y, lm in zip(y_t, lensed_mask)])
-    log("F_evaluation_seconds", time.time() - t0)
+    # Wall clock, to stdout and NOT into numbers.json: it is not a result,
+    # it does not reproduce, and as a logged key it was the only thing that
+    # changed between two runs of this case -- which is exactly what stops
+    # numbers.json from being diffable against a fresh run.
+    print(f"  F evaluated over the observation in {time.time() - t0:.2f} s")
     log("max_abs_F", float(np.max(np.abs(F_t))))
     log("mean_abs_F2_over_observation", float(np.mean(np.abs(F_t) ** 2)))
 
