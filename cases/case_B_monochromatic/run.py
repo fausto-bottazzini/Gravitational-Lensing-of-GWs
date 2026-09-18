@@ -626,7 +626,8 @@ def main():
     # caja le pasaba por encima al pozo de arg F y a la bajada del Doppler.
     axes[0].legend([h_conj, h_roe, h_dop],
                    [x.get_label() for x in (h_conj, h_roe, h_dop)],
-                   fontsize=8, loc="upper center", framealpha=0.92)
+                   fontsize=8, loc="lower right", facecolor="white",
+                   edgecolor="0.7", framealpha=1.0)
     axes[1].legend(fontsize=8, loc="upper center", framealpha=0.92)
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
