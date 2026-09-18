@@ -5,13 +5,14 @@ What is still open. Everything that is done and why it was done that way is in
 
 ## Pending
 
-- [ ] `README.md` describes `tests/` as "every correctness check referenced
-  from `theory.tex` and the case `RESULTS.md` files", and the theory text no
-  longer references any test. To be fixed when `README.md` gets its own pass,
-  which is the last stage of the tidy-up. That same pass should say that the
-  cheap way to read the theory is `theory/theory.tex` and not `theory.pdf`
-  (`theory/OUTLINE.md` explains why; a `theory.md` was created and deleted on
-  the strength of exactly that reasoning).
+Nothing. The tidy-up pass is finished: `theory/`, `src/`+`tests/`, the case
+figures, `report/` (both the deck and the written report), the provenance and
+`RESULTS.md` files, `wiki/`, `README.md` and `reproduce.sh` have each had a
+pass, and the two items that used to live here — the validity numbers reaching
+the report, and the README's stale description of `tests/` — are done.
+
+What is left is the list below, which is deliberate, plus whatever the next
+fresh-agent pass turns up.
 
 ## Deliberately not done
 
