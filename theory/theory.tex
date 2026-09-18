@@ -308,7 +308,7 @@ lo que sigue.
     $h(f)$ & forma de onda sin lente \\
     $h_L(f)=F(f)h(f)$ & forma de onda a la salida del lente \\
     $F(w,y)$ & factor de amplificaci\'on, Ec.~\eqref{eq:Fdimless} \\
-    $R_E,\;\theta_E$ & radio de Einstein lineal y angular, Ec.~\eqref{eq:thetaE_t} \\
+    $R_E,\;\theta_E$ & radio de Einstein lineal y angular, Ec.~\eqref{eq:scalings} \\
     $y$ & par\'ametro de impacto adimensional, $y=\theta/\theta_E$ \\
     $w$ & frecuencia adimensional del problema de ondas, Ec.~\eqref{eq:wdef} \\
     \bottomrule
@@ -985,8 +985,8 @@ El retardo temporal tiene dos partes,
   t_d(\vb\xi;\vb\eta)\;=\;
   \underbrace{\frac{D_S}{2c\,D_LD_{LS}}
   \left|\vb\xi-\frac{D_L}{D_S}\vb\eta\right|^{2}}_{\text{geom\'etrico}}
-  \;-\;
-  \underbrace{\frac{2}{c^{3}}\int U\,dz}_{\text{Shapiro}} ,
+  \;+\;
+  \underbrace{\left(-\frac{2}{c^{3}}\int U\,dz\right)}_{\text{Shapiro}} ,
   \label{eq:td_split}
 \end{equation}
 donde el primer t\'ermino es el exceso de camino de una trayectoria quebrada
@@ -1244,8 +1244,9 @@ Evaluar la Ec.~\eqref{eq:Fdimless} por el m\'etodo de fase estacionaria suma
 las contribuciones de las dos im\'agenes, cada una con su amplitud
 $\sqrt{|\mu|}$ y con una fase adicional que depende del tipo de punto
 estacionario. Esa fase extra, el \'indice de Morse, vale $0$ para un m\'inimo
-y $\pi/2$ para un punto silla, es decir, un factor $i$
-(\citealp{Takahashi2003}, su Ec.~15). El resultado es
+y $\pi/2$ para un punto silla, es decir, un factor $i$ en la convenci\'on
+fijada ac\'a (\citealp{Takahashi2003}, su Ec.~15, lo escribe conjugado). El
+resultado es
 \begin{equation}
   F_{\rm geo}(w,y)\;=\;\sqrt{\mu_+}\;+\;i\,\sqrt{|\mu_-|}\;
   e^{-i\,w\,\Delta T(y)} ,
@@ -1652,20 +1653,21 @@ onda; se traduce \'unicamente en un sesgo sistem\'atico sobre los par\'ametros
 que se infieran de ella. Para una \'orbita externa exc\'entrica dejar\'ia de
 ser constante, y habr\'ia que tratarlo expl\'icitamente.
 
-El mismo argumento alcanza a la masa del lente. En el
-\S\ref{sec:distancias} se se\~nal\'o que, por tratarse de un lente
-gal\'actico, el factor $(1+z_L)$ de la literatura cosmol\'ogica vale uno. Eso
-es cierto para el corrimiento cosmol\'ogico, pero la cinem\'atica de la
-\'orbita cumple exactamente el mismo papel: como la frecuencia adimensional
-$w$ de la Ec.~\eqref{eq:wdef} se construye con la frecuencia de la onda, y la
-frecuencia observada est\'a corrida seg\'un la Ec.~\eqref{eq:freq_full}, lo
-que el patr\'on de difracci\'on determina no es $M_L$ sino
-$M_L\,(1+\beta_{\rm los}+z_{\rm orb})$. Con los dos valores del recuadro
-siguiente, $\beta_{\rm los}^{\max}=1.65\times10^{-2}$ y
-$z_{\rm orb}=4.08\times10^{-4}$, ese corrimiento alcanza un $1.7\%$ en el peor
-caso, y su parte dominante, $\beta_{\rm los}$, se anula en la conjunci\'on, que
-es justamente la fase orbital en la que el efecto de lente es m\'aximo
-(\S\ref{sec:caseB}).
+Conviene aclarar hasta d\'onde llega ese argumento, porque hay una analog\'ia
+tentadora que no se sostiene. En el \S\ref{sec:distancias} se se\~nal\'o que,
+por tratarse de un lente gal\'actico, el factor $(1+z_L)$ de la literatura
+cosmol\'ogica vale uno, y podr\'ia pensarse que la cinem\'atica de la \'orbita
+viene a ocupar su lugar. No lo ocupa. El $(1+z_L)$ cosmol\'ogico existe porque
+el lente est\'a en otra \'epoca que el observador, de modo que la frecuencia en
+el plano del lente no es la observada. Ac\'a el lente y el observador comparten
+un mismo fondo est\'atico, y la frecuencia se conserva a lo largo del rayo: la
+que llega al lente \emph{es} la que se mide. El corrimiento cinem\'atico ocurre
+en la emisi\'on, aguas arriba del lente, y por lo tanto ya viene contenido en la
+frecuencia observada. Como el $w$ de la Ec.~\eqref{eq:wdef} se construye
+justamente con ella, el patr\'on de difracci\'on determina $M_L$ sin sesgo. Que
+$\beta_{\rm los}$ dependa del tiempo lo confirma por el absurdo: un sesgo sobre
+$M_L$ tendr\'ia que ser una constante, y no una masa de lente que cambia a lo
+largo de la \'orbita.
 
 \begin{ejemplo}[title={Cinem\'atica frente a lente}]
 Para el triple del cap\'itulo~\ref{ch:scope}, la velocidad orbital de la
@@ -2162,8 +2164,8 @@ imprime sobre la se\~nal una modulaci\'on de Roemer y Doppler que es varios
 informaci\'on sobre la masa del lente, pero no son el efecto m\'as grande que
 la \'orbita externa produce sobre la se\~nal.
 
-Los dos efectos, sin embargo, no se estorban, porque no ocurren en la misma
-fase orbital. La posici\'on de la fuente a lo largo de la \'orbita externa
+El pulso de lente y el corrimiento Doppler, en cambio, no se estorban,
+porque no ocurren en la misma fase orbital. La posici\'on de la fuente a lo largo de la \'orbita externa
 queda dada por el \'angulo $\nu+\omega$ introducido en el
 \S\ref{sec:orbita}, donde $\nu$ es la anomal\'ia verdadera, que crece a lo
 largo del per\'iodo, y $\omega$ es el argumento del pericentro, que es
@@ -2186,9 +2188,11 @@ cerca) que llega a lo largo de la l\'inea de visi\'on. De modo que el m\'aximo
 retardo y el m\'aximo corrimiento no ocurren en la misma fase orbital, sino a
 un cuarto de per\'iodo uno del otro, y hablar de ``el efecto Roemer-Doppler''
 como de una sola cosa con un solo m\'aximo lleva a ubicarlo en la fase
-equivocada. Lo que coincide con el pulso de lente es el retardo. Que la cinem\'atica domine en
-amplitud no impide, entonces, separar ambos efectos: se distinguen por la fase
-orbital en que aparecen.
+equivocada. Lo que coincide con el pulso de lente es el retardo. De modo que lo que permite
+separar la cinem\'atica del lente no es, en el fondo, la fase orbital, sino qu\'e
+toca cada una: el efecto cinem\'atico es de puro \emph{timing} y deja intacto el
+patr\'on de difracci\'on (\S\ref{sec:kinematics}), que es donde vive el pulso. La
+fase orbital separa algo m\'as fino, el corrimiento Doppler del pulso de lente.
 
 % ======================================================================
 \appendix
@@ -2381,8 +2385,11 @@ tercero resta el camino recto que la onda seguir\'ia sin lente, que es el que
 fija el origen de los retardos. Completando cuadrados y usando
 $D_S=D_L+D_{LS}$, los tres se combinan exactamente en el t\'ermino
 geom\'etrico de la Ec.~\eqref{eq:td_split}, con el prefactor
-$D_S/(2c\,D_LD_{LS})$; conviene notar que es el t\'ermino de referencia el que
-produce el factor $D_L/D_S$ que acompa\~na a $\vb\eta$ en aquella expresi\'on.
+$D_S/(2c\,D_LD_{LS})$. Conviene notar de d\'onde sale cada cosa: el factor
+$D_L/D_S$ que acompa\~na a $\vb\eta$ es el cociente entre el coeficiente de
+$\vb\xi\cdot\vb\eta$ y el de $|\vb\xi|^{2}$, y ambos vienen de los dos tramos;
+el t\'ermino de referencia no aporta t\'ermino cruzado, y lo que hace es cancelar
+exactamente el $|\vb\eta|^{2}$ sobrante, que es lo que cierra el cuadrado.
 Normalizando por el campo que llegar\'ia sin lente, que es la misma integral
 con $U=0$, los prefactores se cancelan salvo el factor
 $D_Sf/(i\,c\,D_LD_{LS})$, y se obtiene la Ec.~\eqref{eq:Fdim}.

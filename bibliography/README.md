@@ -27,7 +27,7 @@ If you refill the folder, the naming convention already used is
 
 ## Free full text (arXiv)
 
-Eight of the twenty are on arXiv. The preprint is the same physics as the
+Eight of the twenty-six are on arXiv. The preprint is the same physics as the
 published version; equation numbering can differ slightly between the two, and
 `theory/theory.pdf` cites the **published** numbering throughout.
 

@@ -20,8 +20,8 @@ about *reproducing* those two documents, not about the physics itself.
 
 **If you are an agent**: read `theory/theory.tex`, not `theory/theory.pdf`.
 The PDF is read by rendering every page as an image, which is expensive; the
-source is the same content for the same token cost (133 091 characters against
-a 521 KB PDF) and reads perfectly well as text. `theory/OUTLINE.md` is the map
+source is the same content for the same token cost (~135 000 characters against
+a ~540 KB PDF) and reads perfectly well as text. `theory/OUTLINE.md` is the map
 of it, and explains why there is deliberately no Markdown copy.
 
 ## Repository map

@@ -28,7 +28,7 @@ Each of these is a scope decision, not an oversight; the reasoning is in
   `doppler.los_velocity` already carries the eccentric branch and is exercised
   at `e=0.4` in `tests/test_doppler.py`; the redshift side is not.
 - [ ] Feeding the observed frequency back into `F` for Case B rather than
-  evaluating at the nominal `w_B`. Quantified as 1.0e-4 in `|F|` at the pulse,
+  evaluating at the nominal `w_B`. Quantified as 1.1e-4 in `|F|` at the pulse,
   3.5e-3 at the worst point of the lensed half, and 2.5e-5 / 5.6e-4 cycles
   for `arg F`, at points where nothing is read off.
 - [ ] A genuinely non-paraxial treatment of the ~60 s window around each

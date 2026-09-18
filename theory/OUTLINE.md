@@ -37,8 +37,8 @@ se lea corrido sin perder las cuentas.
 ## Convenciones fijadas en el texto
 
 - Signatura $(-,+,+,+)$.
-- $G$ y $c$ explícitas en todas las fórmulas, salvo el capítulo 2 y el
-  apéndice A.1–A.2, donde se usa $c=1$ y se avisa en el lugar.
+- $G$ y $c$ explícitas en todas las fórmulas, sin excepción, para que cada
+  expresión sea evaluable en SI tal como está escrita.
 - $f$ es siempre la frecuencia de la onda gravitacional, el doble de la orbital.
 - Transformada de Fourier con $h(f)=\int h(t)\,e^{-2\pi ift}\,dt$. La literatura
   de lentes suele usar el signo opuesto, y por eso las expresiones de $F$
@@ -77,15 +77,16 @@ Los archivos auxiliares de LaTeX (`.aux`, `.log`, `.out`, `.toc`, `.bbl`,
 ## Para leerlo desde un agente: `theory.tex`, no `theory.pdf`
 
 Leer el PDF cuesta caro, porque se lee renderizando cada página como imagen.
-**La fuente es la lectura barata y es la misma información**: 133 091
-caracteres de `.tex` contra un PDF de 521 KB en imágenes. El `.tex` se lee
+**La fuente es la lectura barata y es la misma información**: unos 135 000
+caracteres de `.tex` contra un PDF de unos 540 KB en imágenes. El `.tex` se lee
 corrido sin problema — los acentos van como `\'a`, la matemática entre `$`, y
 la estructura (`\chapter`, `\section`, `\begin{ejemplo}`) es la del índice de
 más arriba.
 
 Tampoco hace falta generar una versión Markdown. Existió una
 (`theory.md`, borrada el 2026-09-17) que se justificaba como "la versión
-económica en tokens": medida, eran 126 915 caracteres contra 133 091 del
+económica en tokens": medida en su momento, eran 126 915 caracteres
+contra 133 091 del
 `.tex`, o sea un 5 % menos, a cambio de mantenerla sincronizada a mano — y ya
 se había desincronizado una vez, quedando un archivo que decía "generado desde
 theory.tex" y no lo estaba, que es peor que no tenerlo. Un volcado línea a
