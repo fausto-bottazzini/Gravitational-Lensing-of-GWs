@@ -2,6 +2,10 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-nodecimaldot,es-noquoting]{babel}
+% babel-spanish rotula las tablas como "Cuadro"; el texto las llama
+% "Tabla" al referirlas. Via \addto y no \renewcommand a secas, porque
+% babel fija \tablename al abrir el documento y pisaria lo otro.
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
 
 % --- tipografia: cuerpo y matematica en la misma familia (Times/newtx) ---
 \usepackage{amsmath,amsthm}

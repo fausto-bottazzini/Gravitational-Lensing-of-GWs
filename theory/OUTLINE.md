@@ -9,14 +9,18 @@ triple jerárquico.
 
 La dependencia con el resto del proyecto va en un solo sentido: `report/` cita
 a este texto, y este texto se lee sin `report/`. No contiene rutas del
-repositorio, nombres de tests ni narrativa de implementación; los valores
-numéricos concretos aparecen únicamente en recuadros `ejemplo`, separados del
-hilo teórico.
+repositorio, nombres de tests ni narrativa de implementación. Los valores
+numéricos de este sistema están confinados a los cuatro recuadros `ejemplo`
+y a la Tabla 4.1, separados del hilo teórico.
 
 ## Estructura
 
-Siete capítulos, un apéndice de deducciones y un prefacio. 41 páginas, con
-una única figura (4.1, el tren de pulsos, en §4.3).
+Siete capítulos, un apéndice de diez deducciones y un prefacio. 41 páginas,
+con tres figuras y dos tablas. Las figuras son la geometría del triple (1.1)
+y la de lente delgado (2.1), ambas dibujadas en TikZ dentro del propio
+`.tex`, y el tren de pulsos (4.1), la única que se incluye desde un archivo
+(`pulsos_esquema.pdf`). Las tablas son la de notación (1.1) y la de validez
+paraxial (4.1).
 
 | | Capítulo | Contenido |
 |---|---|---|
@@ -51,9 +55,10 @@ se lea corrido sin perder las cuentas.
 
 `refs.bib` es compartido con `report/report.tex` (que lo incluye como
 `../theory/refs`). Los PDF no están versionados, porque son artículos con
-copyright de sus revistas: `bibliography/README.md` lista el DOI de cada uno
-y el enlace a arXiv de los ocho que tienen preprint libre, que es lo que hace
-falta para descargarlos. Las citas indican la ecuación o sección exacta del
+copyright de sus revistas: `bibliography/README.md` lista el DOI de cada
+artículo —los cuatro libros y la entrada de software no tienen— y el enlace
+a arXiv de los ocho que tienen preprint libre, que es lo que hace falta para
+descargarlos. Las citas indican la ecuación o sección exacta del
 trabajo citado cuando se toma de él un resultado concreto; las cuatro
 referencias que son libros (Maggiore; Schneider, Ehlers & Falco; Murray &
 Dermott; Chandrasekhar) se citan por capítulo y sección.
@@ -67,8 +72,8 @@ Dermott; Chandrasekhar) se citan por capítulo y sección.
 | `refs.bib` | bibliografía, compartida con `report/` |
 | `pulsos_esquema.py` | genera la figura 4.1 (el tren de pulsos, §4.3), esquemática y sin números: `theory.pdf` enuncia el fenómeno, no la instancia — los números de este proyecto están en `cases/case_B_monochromatic/caseB_repeated_pulses.png` |
 | `pulsos_esquema.pdf` | salida del script anterior, incluida por `theory.tex` |
-| `paraxial_validity.py` | genera los números del Cuadro 4.1 (validez paraxial) a partir de `src/gwlens/system.py`; lo corre `reproduce.sh` |
-| `paraxial_validity_numbers.json` | salida del script anterior, que es lo que el Cuadro 4.1 transcribe |
+| `paraxial_validity.py` | genera los números de la Tabla 4.1 (validez paraxial) a partir de `src/gwlens/system.py`; lo corre `reproduce.sh` |
+| `paraxial_validity_numbers.json` | salida del script anterior, que es lo que la Tabla 4.1 transcribe |
 | `OUTLINE.md` | este archivo |
 
 Los archivos auxiliares de LaTeX (`.aux`, `.log`, `.out`, `.toc`, `.bbl`,
@@ -85,9 +90,8 @@ más arriba.
 
 Tampoco hace falta generar una versión Markdown. Existió una
 (`theory.md`, borrada el 2026-09-17) que se justificaba como "la versión
-económica en tokens": medida en su momento, eran 126 915 caracteres
-contra 133 091 del
-`.tex`, o sea un 5 % menos, a cambio de mantenerla sincronizada a mano — y ya
+económica en tokens": medida en su momento, eran 126 915 caracteres contra
+133 091 del `.tex`, o sea un 5 % menos, a cambio de mantenerla sincronizada a mano — y ya
 se había desincronizado una vez, quedando un archivo que decía "generado desde
 theory.tex" y no lo estaba, que es peor que no tenerlo. Un volcado línea a
 línea no es un resumen: no aporta nada que no aporte la fuente. Si alguna vez
@@ -109,4 +113,5 @@ pdflatex -interaction=nonstopmode theory.tex
 ```
 
 Requiere `newtx`, `babel-spanish`, `microtype`, `titlesec`, `fancyhdr`,
-`tcolorbox`, `tikz`, `physics`, `siunitx` y `natbib`.
+`tcolorbox`, `tikz`, `physics`, `siunitx`, `natbib`, `booktabs` e
+`hyperref`.
