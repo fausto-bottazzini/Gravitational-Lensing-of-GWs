@@ -103,11 +103,10 @@ never crossed in band anyway.
 This means Case A does **not** show a clean, few-fringe diffraction pattern
 (that is Case B's regime), and -- worth being precise about, since an
 earlier version of this section overclaimed it -- every in-band `F` value
-here comes from `F_geometric_optics` (`F_hybrid` never drops below
-`w_geo_threshold=30`; confirmed independently by reconstructing
-`h_lensed` from nothing but two delayed, rescaled copies of the unlensed
-waveform and finding `max|h_lensed - h_two_image|/max|h_lensed| = 1.1e-13`,
-machine precision). What's shown is the two-image **interference** term
+here comes from `F_geometric_optics`, because `F_hybrid` never drops
+below `w_geo_threshold=30` across the band, and that switch is checked
+against the exact form by `check_hybrid_matches_at_threshold` (3.1e-4 at
+`y_A`) and `check_geometric_optics_limit`. What's shown is the two-image **interference** term
 `exp(i*w*DeltaT)` oscillating very rapidly in frequency, NOT the exact
 diffraction integral contributing anything measurable beyond that limit.
 Because y_A (and so mu_+, mu_-) is fixed for the whole chirp, everything
@@ -253,7 +252,9 @@ where the geometric-optics magnification formally diverges, see
 GW analogue of the Arago/Poisson spot in optical diffraction, Deguchi &
 Watson 1986). Left panel: the full pattern at w=61.9, source marked at y_A.
 Right panel: zoomed to |Δy|<0.02 around the source at w=777.6 — here the
-rings are so closely spaced (radial period ~2π/(w·y) ≈ 0.003 in y) that,
+rings are so closely spaced (radial period ~2π/(w·√(y²+4)) ≈ 0.003 in y,
+the derivative of the image delay — not 2π/(w·y), which is only its
+large-y limit and gives 0.005 here) that,
 locally, they look like near-straight parallel fringes rather than curved
 rings; both are the same physical pattern, just resolved at very different
 scales, which is itself the wave-to-geometric-optics story of this whole

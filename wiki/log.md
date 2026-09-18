@@ -460,6 +460,62 @@ again: everything it caught was in prose, equations and preambles, and nothing
 it caught was in the code. Filtering mattered more than finding, four fixes out
 of seventeen touched files.
 
+### Six passes at once, one per part (2026-09-18)
+
+Six reviewers were run in parallel over the finished repo, one per part
+(theory, src+tests, cases, report.tex, the two HTML pages, and the entry
+points), each told to report rather than edit, to say how it verified every
+finding, and to mark its own confidence. Everything below was re-checked here
+before being acted on; roughly a fifth of what came back was rejected.
+
+The four that mattered:
+
+- **report.tex Eq. (2) was the complex conjugate of what the code computes.**
+  `waveoptics.F_geometric_optics` builds exactly that expression as `F_raw`
+  and returns `np.conjugate(F_raw)`; theory's `eq:Fgeo` has `+i` with
+  `e^{-i w DeltaT}`. `arg F` had the wrong sign at every frequency in the
+  delivered PDF. This is the Fourier-convention bug's family, three years of
+  project-time later and in a place no test looks.
+- **theory 4.4 claimed the source's kinematics bias the lens mass** the way a
+  cosmological `(1+z_L)` would. They do not: lens and observer share one
+  static background, the frequency is conserved along the ray, and the
+  kinematic shift happens upstream at emission, so it is already inside
+  `f_obs` — which is what `w` is built from. A time-dependent `beta_los` could
+  not have been a bias on a constant anyway.
+- **theory 7.2 contradicted itself** about what separates the lens from the
+  kinematics, opening and closing on "orbital phase" with a paragraph in
+  between correctly establishing that the Roemer delay is extremal exactly
+  where the pulse peaks.
+- **Three checks could not fail.** `check_leading_order_group_delay` says it
+  validates `spa_phase` and never calls it, leaving every TaylorF2 phase
+  coefficient untested; the envelope check asserted only monotonicity, which
+  any positive power satisfies; and the causality check's weak-image window
+  was one-sided and 5x wide, so it passed with the exact normalization bug its
+  own docstring says it rules out. Found by mutation, not by reading.
+
+Below those, about twenty stale numbers and pointers, nearly all in the
+provenance layer: a `claims.yaml` entry describing a figure that had been
+replaced, a peak amplification of 1.065 that exists in no file (and whose
+claim, "peak and RMS differ", is false — they agree to 3e-5), an echo bound
+violated by its own number, a ring spacing quoted as `2*pi/(w*y)` when the
+number beside it comes from `2*pi/(w*sqrt(y^2+4))`, and `report.html`'s
+"con lensing" badge keyed to the alignment window, marking 9.5% of the orbit
+where `fraction_of_time_lensed` is 0.4994 and the next slide says half.
+
+**What was rejected, and why it is the interesting part.** Two reviewers
+independently reported a units error on the same pair of numbers, and both
+were wrong: `arg F` at the pulse is 0.0176 rad and the peak-to-peak lens phase
+is 0.0174 cycles. Two different quantities that look alike, and each reviewer
+grabbed the wrong twin. Both texts were already right, and so is the 5206
+ratio, which compares peak-to-peak with peak-to-peak. A third reported three
+orphan `refs.bib` entries; two were cited in `report.tex`, which shares the
+same `.bib` — its check only looked at `theory.tex`, so it found orphans that
+were not, and its own fix was to add citations satisfying itself.
+
+The pattern from every earlier round held again, harder: everything found was
+in prose, equations, docstrings, provenance and preambles. Nothing was in the
+physics the tests cover — except where the tests turned out not to cover it.
+
 ## Stated limits
 
 Deliberately not done, and why:

@@ -350,9 +350,10 @@
 <section class="slide">
   <div class="kicker">Caso A</div>
   <h2>Lo que el lente le hace a la onda</h2>
-  <p>Amplificación de la muestra pico: <b>1.065</b>. Amplificación RMS: <b>1.056</b>. F(f)
-  modula fase además de amplitud a través de la banda, así que la forma de onda lensada es una
-  copia desfasada, no simplemente reescalada, de la no lensada.</p>
+  <p>Amplificación de la muestra pico: <b>1.0557</b>. Amplificación RMS: <b>1.0557</b>, que por
+  Parseval es √A(y<sub>A</sub>). Coinciden: la amplitud sola no delata nada. Lo que hace que la
+  forma de onda lensada sea una copia <i>desfasada</i> y no simplemente reescalada es arg F, que
+  oscila a lo largo de la banda dentro de ±0.235 rad.</p>
   <p>El pico lensado llega exactamente al mismo tiempo que el no lensado (F está referida a la
   llegada de la imagen fuerte, sin desfasaje absoluto arbitrario). Una segunda copia, ~4× más
   débil — la amplitud exacta coincide con la magnificación geométrica de la imagen débil,
@@ -455,7 +456,7 @@
   por eso que D'Orazio &amp; Loeb (2020), el mismo trabajo que este caso sigue para el lensing
   repetido, modelan el Doppler <i>junto</i> con él (su Apéndice A).</p>
   <p>El Doppler se aplica evaluando la forma de onda en el tiempo de emisión retardado, y por ser
-  puro <i>timing</i> deja la envolvente intacta a 1.2×10<sup>−5</sup>: todos los resultados de
+  puro <i>timing</i> deja la envolvente intacta a 1.1×10<sup>−5</sup>: todos los resultados de
   amplitud quedan sin cambio, de manera demostrada.</p>
 </section>
 
@@ -865,7 +866,9 @@
       disco(ctx, cx, cy, 0.023 * W, AGUJERO, TINTA, 1.6);
 
       arco(Math.PI, TAU, SUAVE, 1.6);                 // la mitad de adelante
-      // El tramo de órbita donde hay lensing, marcado sobre la órbita misma:
+      // La ventana de ALINEACION, donde el lensing es fuerte y cae el pulso
+      // --- no es "donde hay lensing", que es toda la mitad de atras
+      // (fraction_of_time_lensed = 0.4994). Marcada sobre la orbita misma:
       // una versión anterior pintaba un "corredor" detrás del lente y se leía
       // como un rectángulo dibujado encima del esquema, no como una región.
       arco(Math.PI - dth, Math.PI + dth, CYAN, 2.6);
@@ -909,9 +912,11 @@
       const est = pintar(frac, frac * TAU * 37);
       readout.innerHTML = "día " + (frac * P_DIAS).toFixed(2) + " de " + P_DIAS.toFixed(0) +
         "   una vuelta cada 4 días   " +
-        (est.alineado
-          ? '<span class="badge on">detrás del lente — con lensing</span>'
-          : '<span class="badge off">fuera de alineación — sin lensing</span>');
+        (!est.detras
+          ? '<span class="badge off">delante del lente — sin lensing</span>'
+          : est.alineado
+            ? '<span class="badge on">detrás del lente — pulso de lente</span>'
+            : '<span class="badge on">detrás del lente — con lensing</span>');
     });
   })();
 

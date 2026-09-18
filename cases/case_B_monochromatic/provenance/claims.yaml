@@ -16,7 +16,10 @@ claims:
       crossing.
     evidence:
       - src/gwlens/geometry.py::impact_parameter_of_time
-      - caseB_pattern.png
+      - tests/test_geometry.py::check_one_lensing_pulse_per_outer_period
+      - caseB_repeated_pulses.png (the gaps between pulses ARE the
+        unlensed half; caseB_pattern.png no longer carries the orbit
+        track, so it shows nothing about which half is which)
     numbers: [fraction_of_time_lensed]
   - id: y_min_crosscheck
     statement: >
@@ -55,8 +58,12 @@ claims:
       (light-travel-time) modulation of 1810 s peak-to-peak = 90.5 GW cycles
       of phase at f_B. That is 5206x the phase the lens itself writes
       (arg F/2pi, 0.0174 cycles) and 527x the image time delay Delta_T=3.43 s
-      at the pulse. The Doppler frequency swing (0.0025 Hz) also exceeds the
-      whole intrinsic chirp drift across the observation (0.00097 Hz).
+      at the pulse. Over the observation the OBSERVED frequency swings
+      0.0025 Hz peak to peak, of which only 0.00097 Hz is the intrinsic
+      chirp drift: the rest is Doppler, which is therefore the larger
+      contribution to what the frequency does. (doppler_freq_swing_Hz is
+      the peak-to-peak of the observed frequency, drift included, so it
+      must not be set against intrinsic_freq_drift_Hz as if disjoint.)
     evidence:
       - src/gwlens/doppler.py::roemer_delay
       - src/gwlens/doppler.py::emission_time
@@ -96,7 +103,7 @@ claims:
       where the line-of-sight velocity crosses zero, which for this
       near-edge-on circular orbit is exactly the pulse's orbital phase).
       Quantified rather than left as that argument: evaluating F at the true
-      instantaneous observed frequency changes |F| by 1.0e-4 at the pulse,
+      instantaneous observed frequency changes |F| by 1.1e-4 at the pulse,
       but by up to 3.5e-3 at the worst point of the lensed half, far from the
       pulse where |F| sits on a steep fringe flank at a value near 1 that
       carries no weight in any result quoted. Both numbers reported; quoting
@@ -216,6 +223,7 @@ figures:
     choices:
       - "The zoom is five carrier cycles (+-50 s), not thirty (+-300 s). At thirty the two curves cross sixty times across the frame and read as one sinusoid drawn twice, and the figure looked like it was understating the amplification -- which is how the window got revisited. Nothing is lost by narrowing: |F| moves 0.064% of its peak across +-300 s and 0.002% across +-50 s, so it was flat either way. Widening to where |F| really moves (+-2500 s, 4.4%) drops the cycles to 5 px and the carrier fills in as a block."
       - "Zoom panel y-limits symmetric about zero. The curves are a symmetric oscillation, and the asymmetric frame left by the old legend-headroom hack read as an offset that is not there."
-    from_scratch: The dedicated fine time grid (dt=0.1s) for the zoom panel, built separately from the coarse envelope grid after the first version aliased using the coarse grid directly (see wiki/log.md).
+    from_scratch: The dedicated fine time grid (4000 points over +-50 s,
+      dt=0.025 s) for the zoom panel, built separately from the coarse envelope grid after the first version aliased using the coarse grid directly (see wiki/log.md).
     from_library: numpy, matplotlib.
     supports: [repeated_lensing_pulses]

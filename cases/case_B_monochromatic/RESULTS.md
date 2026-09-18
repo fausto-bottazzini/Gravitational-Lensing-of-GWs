@@ -40,7 +40,7 @@ the orbital phase of the lensing pulse, so the Doppler shift is at its
 minimum precisely where F matters most. That is an argument, not a number,
 so here are the numbers, and there are two: evaluating F at the true
 instantaneous *observed* frequency instead of at w_B changes |F| by
-`abs_F_relerr_from_fixed_w_at_pulse` = **1.0e-4** at the pulse (the argument
+`abs_F_relerr_from_fixed_w_at_pulse` = **1.1e-4** at the pulse (the argument
 holds), but by up to `abs_F_relerr_from_fixed_w_max` = **3.5e-3** at the
 worst point of the lensed half — far from the pulse, where |F| sits on the
 steep flank of a diffraction fringe, on a value close to 1 that carries no
@@ -110,9 +110,12 @@ what a hierarchical triple actually looks like, and it is why
 this case follows for repeated lensing, models the Doppler boost alongside
 it (their Appendix A) rather than either one alone.
 
-The Doppler swing in observed frequency, `doppler_freq_swing_Hz` =
-**0.0025 Hz**, is itself larger than the entire intrinsic chirp drift across
-the 12-day observation (`intrinsic_freq_drift_Hz` = **0.00097 Hz**).
+The observed frequency swings `doppler_freq_swing_Hz` = **0.0025 Hz** peak
+to peak over the 12-day observation, of which only
+`intrinsic_freq_drift_Hz` = **0.00097 Hz** is the binary's own chirp: the
+rest is Doppler, which is thus the bigger of the two contributions. (The
+logged swing is of the observed frequency, drift included, so the two are
+nested, not disjoint.)
 
 **Delay and shift are not the same thing, and they are a quarter period
 apart.** They are the same quantity separated by a derivative — the delay

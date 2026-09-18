@@ -70,8 +70,8 @@ signal by the unlensed one leaves `|F|`, and because the chirp sweeps
 frequency monotonically, plotting that against time sweeps out F's
 interference fringes. The curve oscillates between `√μ₊ ∓ √|μ₋|` (drawn as
 dashed lines) from end to end, and the fringes crowd together towards the
-merger because `df/dt` does: **1.0 fringes per second at 10 Hz against 93 per
-second at 36 Hz**. The fringe period is constant in *frequency* (0.29 Hz,
+merger because `df/dt` does: **0.85 fringes per second at 10 Hz against 93
+per second at 36 Hz**. The fringe period is constant in *frequency* (0.29 Hz,
 `caseA_F_of_f.png`); this is the same curve seen through `f(t)`.
 
 A previous version plotted the difference instead. That is a different
@@ -190,7 +190,8 @@ period**, each peaking at 1.384 and flanked by diffraction ringing. The lower
 panel zooms one pulse so the ringing is resolved — that ringing is the
 signature of wave optics, and geometric optics does not produce it.
 
-Each pulse lasts about **1.85 h** (FWHM), which is 1.9% of the period and 333
+Each pulse lasts about **1.85 h** (FWHM of `|F|`; the panel plots `|F|²`,
+whose FWHM is a little narrower at 1.81 h), which is 1.9% of the period and 333
 carrier cycles. This is the "lensing time": long compared to the lens response
 time (0.985 s) by a factor of ~6700, which is why the quasi-static treatment
 of a moving lens is legitimate.
@@ -280,8 +281,8 @@ shows a single upward peak at conjunction; this panel shows two deep troughs
 *flanking* conjunction with a local maximum between them. They are the same
 diffraction ringing seen in the two components of one complex `F` — over
 `y ∈ [1.55, 30]` both cross their asymptote **45 times** — but in quadrature
-with each other. At closest approach `|F|² = 1.383`, its maximum, while
-`arg F/2π = +0.0026`, essentially zero; `arg F`'s extremum (−0.0121) falls at
+with each other. At closest approach `|F|² = 1.384`, its maximum, while
+`arg F/2π = +0.0028`, essentially zero; `arg F`'s extremum (−0.0121) falls at
 `y ≈ 3`, which the source crosses twice, once on each side. That is the general
 rule: where `|F|` is stationary, `F` is nearly real, so its phase passes through
 zero there.

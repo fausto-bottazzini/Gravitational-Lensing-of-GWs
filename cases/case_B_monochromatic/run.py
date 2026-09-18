@@ -135,6 +135,10 @@ def main():
     # observed frequency = emitted / (1+beta_los): the Doppler swing is
     # itself larger than the whole intrinsic drift across the observation
     f_obs_t = f_t * dp.classical_doppler_factor(t_em, **orb_novec)
+    # NOTE: f_t already carries the intrinsic chirp drift, so this is the
+    # peak-to-peak of the OBSERVED frequency, Doppler and drift together.
+    # It is not the pure Doppler swing and must not be differenced against
+    # intrinsic_freq_drift_Hz as if the two were disjoint.
     log("doppler_freq_swing_Hz", float(np.ptp(f_obs_t)))
     log("intrinsic_freq_drift_Hz", float(f_t[-1] - f_t[0]))
 
@@ -210,7 +214,7 @@ def main():
 
     # --- one approximation this case makes, quantified rather than assumed --
     # F is evaluated at the fixed w_B = w(F_B_HZ), i.e. at the nominal
-    # emitted frequency: neither the 4% intrinsic drift nor the Doppler shift
+    # emitted frequency: neither the 1.9% intrinsic drift nor the Doppler
     # is fed back into the amplification factor. D'Orazio & Loeb (2020) make
     # the same omission and give the reason -- lensing only happens where the
     # line-of-sight velocity crosses zero, which for this near-edge-on
@@ -430,7 +434,8 @@ def main():
     # Build a dedicated fine grid around the first pulse instead.
     i_pulse = int(np.argmax(np.abs(F_t)))
     t_pulse = t[i_pulse]
-    # +-2500 s, not +-200 s. The pulse is 6653 s wide (FWHM), so over 200 s
+    # +-50 s, five carrier cycles. The pulse is 6653 s wide (FWHM of |F|),
+    # so over 200 s
     # |F| changes by 0.2% of its peak height: the panel resolved carrier
     # cycles beautifully and showed an amplification that was, correctly but
     # uselessly, constant across the frame. At 2500 s the envelope moves
@@ -646,7 +651,8 @@ def main():
     #
     # No se exporta h(t): a 11 muestras por ciclo serian 200 mil numeros por
     # vuelta. Se exporta lo que varia despacio --- F(t) sobre una grilla de 86
-    # s --- y lo que varia rapido se reconstruye en forma cerrada, porque la
+    # s (345600/5000 = 69 s) --- y lo que varia rapido se reconstruye en
+    # forma cerrada, porque la
     # tiene:
     #
     #   f(t)   = f_c (1 - t/tau_c)^(-3/8)
