@@ -59,7 +59,18 @@
 
   <p><b>Rueda</b> para acercar sobre el puntero, <b>arrastre</b> para desplazar,
   <b>click</b> en la vista general para saltar — o los botones, que llevan directo a cada etapa.
-  La línea punteada gris es la envolvente <i>sin</i> lente.</p>
+  La línea punteada horizontal es la envolvente <i>sin</i> lente; la escala vertical es la misma
+  siempre, así que las amplitudes se pueden comparar entre etapas.</p>
+
+  <p>Con pocos ciclos a la vista aparecen además unas <b>verticales punteadas</b>: un peine de
+  período fijo, anclado al centro de la ventana. Es el reloj contra el cual se ve el
+  <b>arrastre</b> que produce el Doppler. En la conjunción y media vuelta después el corrimiento
+  se anula y la onda queda clavada al peine; en cuadratura se le escapa, unas <b>0.09 de ciclo</b>
+  a lo largo de la ventana. Ojo con la tentación de comparar la posición de una cresta
+  <i>entre</i> etapas: entre dos ventanas separadas un cuarto de vuelta la fase acumuló miles de
+  ciclos, de los cuales Roemer aporta unos 45, así que lo que se ve módulo 2π está dominado por la
+  portadora y no dice nada. El arrastre sólo es legible <i>dentro</i> de una ventana, contra el
+  peine.</p>
 
   <div class="panel">
     <h2>La vuelta entera (4 días), centrada en la conjunción</h2>
@@ -144,17 +155,24 @@
   // una columna de pixel. Si entra mas de uno, la curva llenaria la columna
   // entera y lo unico dibujable es la banda -- que se dibuja EXACTA, como
   // +-|F|A, sin muestrear nada. Si entra menos, se dibuja la onda.
+  // El maximo sobre la vuelta ENTERA, una sola vez. Antes cada panel se
+  // autoescalaba a su ventana, y entonces salirse del pulso agrandaba la
+  // onda: el eje significaba una cosa distinta en cada posicion, que es
+  // exactamente lo que impide comparar amplitudes entre etapas, para lo cual
+  // existe la pagina.
+  let PICO = 0;
+  for (let k = 0; k <= 4000; k++) {
+    const e = envolventes(TA + (TB - TA) * k / 4000);
+    if (e[0] > PICO) PICO = e[0];
+    if (e[1] > PICO) PICO = e[1];
+  }
+  const LIM = 1.12 * PICO / ESC;
+
   function tramo(ctx, W, H, M, ta, tb, conSinLente) {
     ctx.clearRect(0, 0, W, H);
     const x0 = M.l, x1 = W - M.r, y0 = M.t, y1 = H - M.b;
     const X = t => x0 + (t - ta) / (tb - ta) * (x1 - x0);
-    let pico = 0;
-    for (let k = 0; k <= 200; k++) {
-      const e = envolventes(ta + (tb - ta) * k / 200);
-      if (e[0] > pico) pico = e[0];
-      if (e[1] > pico) pico = e[1];
-    }
-    const lim = 1.12 * pico / ESC;
+    const lim = LIM;
     const Y = v => (y0 + y1) / 2 - v / ESC / lim * (y1 - y0) / 2;
 
     ctx.strokeStyle = REJILLA; ctx.lineWidth = 1;
@@ -177,6 +195,20 @@
       }
       ctx.closePath(); ctx.fill();
     } else {
+      // Peine de periodo fijo 1/f_c, anclado al centro de la ventana: es el
+      // reloj contra el cual se ve el "arrastre". Donde el corrimiento
+      // Doppler se anula la onda queda clavada al peine; en cuadratura se le
+      // escapa. Sin una referencia asi el estiramiento es invisible, porque
+      // mirar la misma cresta en dos ventanas distintas no sirve: entre ellas
+      // la fase acumulo miles de ciclos y lo que se ve modulo 2 pi no
+      // significa nada.
+      const Tc = 1 / FC, tc = 0.5 * (ta + tb);
+      ctx.strokeStyle = SUAVE; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+      for (let k = Math.ceil((ta - tc) / Tc); k <= Math.floor((tb - tc) / Tc); k++) {
+        const p = X(tc + k * Tc);
+        ctx.beginPath(); ctx.moveTo(p, y0); ctx.lineTo(p, y1); ctx.stroke();
+      }
+      ctx.setLineDash([]);
       const n = Math.min(40000, ncol * 10);
       ctx.strokeStyle = CYAN; ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -208,7 +240,8 @@
     ctx.fillStyle = SUAVE;
     const ancho = tb - ta;
     const [div, uni] = ancho > 40000 ? [86400, "d"] : (ancho > 600 ? [3600, "h"] : [1, "s"]);
-    for (let k = 0; k <= 4; k++) {
+    // hasta la cuarta: la quinta cae en el borde y le pisa el rotulo
+    for (let k = 0; k <= 3; k++) {
       const t = ta + ancho * k / 4;
       ctx.fillText((t / div).toFixed(ancho / div > 4 ? 1 : 2), g.X(t) - 12, g.y1 + 16);
     }
@@ -249,6 +282,9 @@
     const tem = interp(temF, centro);
     const absF = Math.hypot(interp(Fre, centro), interp(Fim, centro));
     const ciclos = ancho * FC;
+    // cuanto se corre la onda respecto del peine a lo largo de la ventana
+    const dCiclos = (fase(interp(temF, tb)) - fase(interp(temF, ta))) / (2 * Math.PI)
+                    - ciclos;
     readout.innerHTML =
       "ventana " + (ancho >= 86400 ? (ancho / 86400).toFixed(2) + " d"
                     : ancho >= 600 ? (ancho / 3600).toFixed(2) + " h"
@@ -256,7 +292,9 @@
       " = " + (ciclos >= 100 ? ciclos.toFixed(0) : ciclos.toFixed(1)) + " ciclos" +
       "&nbsp;&nbsp;|F| = " + absF.toFixed(4) +
       "&nbsp;&nbsp;retardo de Roemer " + (RR + (centro - tem)).toFixed(0) + " s" +
-      "&nbsp;&nbsp;f_obs/f_em − 1 = " + (100 * (pendiente(centro) - 1)).toFixed(2) + " %";
+      "&nbsp;&nbsp;f_obs/f_em − 1 = " + (100 * (pendiente(centro) - 1)).toFixed(2) + " %" +
+      (ciclos < 60 ? "&nbsp;&nbsp;arrastre contra el peine " +
+                     (dCiclos >= 0 ? "+" : "") + dCiclos.toFixed(3) + " ciclos" : "");
   }
 
   detCv.addEventListener("wheel", ev => {

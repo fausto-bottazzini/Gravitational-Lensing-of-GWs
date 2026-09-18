@@ -317,6 +317,25 @@ not assumed: `one_period_closed_form_phase_err_cycles` = **5.8×10⁻¹⁰ cycle
 over the whole turn. The first version of it was wrong by a factor of two in the
 prefactor and that check is what caught it — it read 4407 cycles.
 
+**The vertical scale is fixed for the whole turn, not per window.** An earlier
+version auto-scaled each window to its own maximum, so panning off the pulse
+made the wave grow — the axis meant something different at every position,
+which destroys the one comparison the page exists to allow.
+
+**A fixed-period comb appears when few cycles are in view**, anchored to the
+window centre. It is the clock against which the Doppler *drag* is visible: at
+conjunction and half a turn on the shift vanishes and the wave stays locked to
+the comb (−0.001 and +0.015 cycles across the window); at quadrature it walks
+off it by **−0.089 cycles**, which is the −1.62 % shift plus the 0.16 % of
+intrinsic drift accumulated over the quarter turn. Without a reference the
+stretching is invisible.
+
+It is worth saying what the comb is *not* for. Comparing the position of a
+crest *between* stages reads nothing: two windows a quarter turn apart are
+separated by thousands of accumulated cycles, of which Roemer contributes about
+45, so what is left mod 2π is dominated by the carrier. The drag is legible only
+*within* a window, against the comb.
+
 Drawing follows one rule: whether more than one carrier cycle falls in a pixel
 column. If it does, the curve would fill the column and the only honest thing is
 the band, which is then drawn **exactly** as ±|F|·A rather than sampled; if it
