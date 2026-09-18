@@ -34,6 +34,7 @@ Sec. 7 derives the timescale hierarchy that justifies this).
 Run: `python3 cases/case_B_monochromatic/run.py`
 """
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -636,6 +637,79 @@ def main():
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
+    # --- Una vuelta completa, para el explorador de report.html ------------
+    # Esto era una figura fija de tres paneles. No alcanzaba: en una vuelta
+    # entran 17280 ciclos de portadora, asi que para mirar "todas las etapas
+    # de la senal" hay que poder acercarse cuatro ordenes de magnitud, y eso
+    # una imagen no lo hace. Lo que se exporta acá es lo necesario para que el
+    # navegador GENERE la senal a cualquier zoom.
+    #
+    # No se exporta h(t): a 11 muestras por ciclo serian 200 mil numeros por
+    # vuelta. Se exporta lo que varia despacio --- F(t) sobre una grilla de 86
+    # s --- y lo que varia rapido se reconstruye en forma cerrada, porque la
+    # tiene:
+    #
+    #   f(t)   = f_c (1 - t/tau_c)^(-3/8)
+    #   phi(t) = (8/5) 2 pi f_c tau_c [1 - (1 - t/tau_c)^(5/8)]
+    #   A(t)   = A_c (f/f_c)^(2/3)
+    #   roemer(t) = R cos(2 pi t / P)        (exacto para e = 0)
+    #
+    # con t medido desde la conjuncion. Que la forma cerrada coincida con la
+    # fase que calcula el repositorio no se supone: se mide, abajo.
+    _mitad_obs = 0.5 * system.T_OBS_B_S
+    _cerca = np.abs(t - _mitad_obs) < 0.5 * system.P_OUT_S
+    t_conj_s = float(t[_cerca][int(np.argmax(np.abs(F_t[_cerca])))])
+    med_P = 0.5 * system.P_OUT_S
+
+    # F sobre su propia grilla, que es lo unico que necesita una. 5000 puntos
+    # dan 69 s de paso contra un anillado cuyo rasgo mas fino mide ~1900 s.
+    t_F = np.linspace(t_conj_s - med_P, t_conj_s + med_P, 5000)
+    y_F, lensed_F, _ = geo.impact_parameter_of_time(
+        t_F, system.A_OUT_M / units.PC_SI, system.E_OUT, system.P_OUT_S,
+        np.deg2rad(system.I_OUT_DEG), system.OMEGA_OUT, system.LITTLE_OMEGA_OUT,
+        system.T_PERI_OUT, system.M_LENS_MSUN, system.D_L_PC)
+    F_F = np.array([wo.F_hybrid(w_B, yy) if lm else 1.0 + 0.0j
+                    for yy, lm in zip(y_F, lensed_F)])
+    _tem_F, _ = dp.emission_time(t_F, **orb)
+
+    # los escalares de la forma cerrada, referidos a la conjuncion
+    t_em_conj, _ = dp.emission_time(np.array([t_conj_s]), **orb)
+    tau_c = float(t_c - t_em_conj[0])          # tiempo al merger desde ahi
+    f_c = float(chirp.freq_of_time(t_em_conj[0], t_c, system.MCHIRP_MSUN))
+    A_c = float(chirp.restricted_pn_amplitude_td(
+        np.array([f_c]), system.MCHIRP_MSUN, D_eff_mpc)[0])
+    roemer_R = float(np.max(np.abs(dp.roemer_delay(
+        np.linspace(t_conj_s - med_P, t_conj_s + med_P, 4001), **orb))))
+
+    # Verificacion: la fase en forma cerrada contra phase_interp, que es la
+    # que usa todo lo demas. Se compara la DIFERENCIA respecto de la
+    # conjuncion, porque una constante global de fase no significa nada.
+    _tv = np.linspace(t_conj_s - med_P, t_conj_s + med_P, 20001)
+    _tem, _ = dp.emission_time(_tv, **orb)
+    _rel = _tem - t_em_conj[0]
+    _phi_cerrada = (3.2 * np.pi * f_c * tau_c   # 2*pi*(8/5), no pi*(8/5)
+                    * (1.0 - np.power(1.0 - _rel / tau_c, 0.625)))
+    _phi_repo = phase_interp(_tem) - phase_interp(t_em_conj)[0]
+    log("one_period_closed_form_phase_err_cycles",
+        float(np.max(np.abs(_phi_cerrada - _phi_repo)) / (2.0 * np.pi)))
+    log("one_period_carrier_cycles", float(system.P_OUT_S * system.F_B_HZ))
+
+    vuelta_datos = {
+        "P_s": float(system.P_OUT_S),
+        "f_c_hz": f_c,
+        "tau_c_s": tau_c,
+        "A_c": A_c,
+        "roemer_R_s": roemer_R,
+        "t_F_s": np.round(t_F - t_conj_s, 3).tolist(),
+        # el mapa tiempo observado -> tiempo de emision, tabulado en vez de
+        # resuelto en el navegador: la ecuacion retardada es implicita, y su
+        # pendiente 1/(1+beta) no se aparta de 1 mas de 1.6%, asi que sobre
+        # esta grilla interpola a ~2e-4 s (6e-5 rad de fase a f_B)
+        "tem_rel_s": np.round(_tem_F - t_em_conj[0], 4).tolist(),
+        "F_re": np.round(F_F.real, 6).tolist(),
+        "F_im": np.round(F_F.imag, 6).tolist(),
+    }
+
     # Fig 6: pattern only (no track), fixed square canvas -- background for
     # the animated visualization in report/report.html. A clean render (no
     # overlaid line) so the JS animation draws its own marker on top without
@@ -710,12 +784,35 @@ def main():
     with open(OUT / "caseB_animation_data.json", "w") as fh:
         json.dump(anim, fh)
 
+    # La vuelta completa no va al JSON de la presentacion: la presentacion no
+    # la usa, y son 170 KB. Va embebida en su propia pagina, que vive con las
+    # figuras porque es una de ellas -- sólo que interactiva. El mecanismo es
+    # el mismo que report/update_report_data.py: la pagina es el fuente Y el
+    # resultado, y esto reemplaza en el lugar el contenido de su bloque de
+    # datos. Embebido y no cargado con fetch(), porque la pagina esta pensada
+    # para abrirse como file:// y ahi CORS bloquea leer un JSON local.
+    pagina = OUT / "caseB_one_period.html"
+    if pagina.exists():
+        crudo = json.dumps(vuelta_datos, separators=(",", ":"))
+        assert "</script" not in crudo
+        html = pagina.read_text(encoding="utf-8")
+        nuevo, k = re.subn(r'(<script id="datos">).*?(</script>)',
+                           lambda m: "%swindow.__VUELTA__ = %s;%s"
+                                     % (m.group(1), crudo, m.group(2)),
+                           html, count=1, flags=re.S)
+        if k != 1:
+            sys.exit("ERROR: caseB_one_period.html no tiene su bloque "
+                     '<script id="datos">.')
+        pagina.write_text(nuevo, encoding="utf-8")
+        print("caseB_one_period.html <- %d KB de datos" % (len(crudo) // 1024))
+
     with open(OUT / "provenance" / "numbers.json", "w") as fh:
         json.dump(NUMBERS, fh, indent=2)
     print(json.dumps(NUMBERS, indent=2))
     print("\nFigures written: caseB_repeated_pulses.png, "
           "caseB_pattern.png, caseB_pattern_only.png, "
           "caseB_detector_view.png, caseB_doppler_vs_lensing.png, "
+          "caseB_one_period.html, "
           "caseB_animation_data.json")
 
 

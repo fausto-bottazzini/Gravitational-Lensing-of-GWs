@@ -132,6 +132,29 @@ figures:
       - "The lensing panel has its own drawing grid (8000 points over 1.5 outer periods). F(w,y) is a closed form, so the drawing grid need not inherit the waveform sampling; the shared 576 s grid resolved the ringing but swallowed one oscillation, counting 30 zero crossings against 32 on a grid 38x finer."
       - "The fixed-w systematic on the PHASE is drawn as a band rather than left to a number, because it is what decides how much of the ringing can be read: the two large excursions (0.0121 cycles at y ~ 3) are 21x it, the far ringing is inside it. Out there the lensing has gone to zero while the error has not, which is why it never mattered that the approximations loosen away from alignment."
     supports: [doppler_dominates_the_lensing]
+  - file: caseB_one_period.html
+    produced_by: run.py::main (data block substituted in place)
+    shows: >
+      One full outer turn, centred on conjunction, at any magnification the
+      reader chooses: overview, wheel zoom, drag pan, and buttons for each
+      stage. It is a page rather than an image because one turn holds more
+      than 17000 carrier cycles, so no fixed figure shows the turn and the
+      wave at once. The stage buttons make the quadrature relation
+      clickable: at the pulse |F| = 1.1762 with the Roemer delay at its
+      +905 s extremum and the Doppler shift through zero; a quarter period
+      away |F| = 1 with the delay through zero and the shift at its -1.62%
+      extremum.
+    from_scratch: >
+      The closed forms for f(t), phi(t) and A(t) that the page evaluates,
+      and the tabulated F(t) and observed-to-emission time map it
+      interpolates.
+    from_library: none in the page; numpy/scipy upstream of the export.
+    choices:
+      - "A page, not a PNG. One turn is 17280 carrier cycles at f_B, so showing the turn and the wave together needs four orders of magnitude of zoom. It replaces a three-panel PNG of the same turn, which was correct and unusable: the pulse it exists to show occupies 1.9% of the axis."
+      - "The signal is generated in the browser, not sampled into the page. Sampling h(t) at 11 points per cycle would be 200000 numbers per turn; instead F(t) and the retarded-time map are tabulated every 69 s and the carrier comes from a closed form. one_period_closed_form_phase_err_cycles = 5.8e-10 over the whole turn measures the agreement with the phase the repository computes -- the first version had the prefactor wrong by a factor of two and that number is what caught it, reading 4407 cycles."
+      - "Where more than one carrier cycle falls in a pixel column the band is drawn EXACTLY as +-|F|A rather than sampled, since a sampled curve there is pure alias; where less than one falls, the wave itself is drawn. One criterion, both regimes."
+      - "Data embedded rather than fetched, and the page is its own source and output -- the same arrangement as report/report.html, because the page is meant to open as file:// where fetch() of a local JSON is blocked by CORS."
+    supports: [repeated_lensing_pulses, doppler_dominates_the_lensing]
   - file: caseB_repeated_pulses.png
     produced_by: run.py::main
     shows: "|F(w_B,y(t))|^2 over the full 3-period observation."

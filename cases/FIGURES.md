@@ -286,6 +286,49 @@ with each other. At closest approach `|F|² = 1.383`, its maximum, while
 rule: where `|F|` is stationary, `F` is nearly real, so its phase passes through
 zero there.
 
+### `caseB_one_period.html` — one outer turn, at any magnification
+
+The only figure here that is not an image, and for a reason that is arithmetic
+rather than taste: **one outer turn holds more than 17 000 carrier cycles**. No
+fixed picture shows the turn and the wave at once — seeing both means being able
+to zoom four orders of magnitude — so this one is a page. Wheel to zoom on the
+pointer, drag to pan, click the overview to jump, or use the buttons, which go
+straight to each stage:
+
+| stage | `|F|` | Roemer delay | `f_obs/f_em − 1` |
+|---|---|---|---|
+| carrier at the pulse (conjunction) | **1.1762** (max) | **+905 s** (max) | −0.02 % (≈0) |
+| carrier at quadrature | 1.0000 | 4 s (≈0) | **−1.62 %** (max) |
+| carrier half a turn on (source in front) | 1.0000 | **−905 s** (min) | −0.03 % (≈0) |
+
+That table is the whole of §"the orbit does two things" made clickable: lensing
+and Doppler peak a quarter period apart, and what coincides with the pulse is
+the *delay*, not the shift.
+
+**The signal is not sampled into the page, it is generated in it.** What varies
+slowly — `F(t)` and the observed-to-emission time map — is tabulated every 69 s;
+what varies fast has a closed form,
+
+    f(t) = f_c (1 − t/τ_c)^(−3/8),   φ(t) = (16π/5) f_c τ_c [1 − (1 − t/τ_c)^(5/8)]
+
+with `A ∝ f^(2/3)`. Sampling `h(t)` instead would be 200 000 numbers per turn.
+That the closed form agrees with the phase the repository computes is measured,
+not assumed: `one_period_closed_form_phase_err_cycles` = **5.8×10⁻¹⁰ cycles**
+over the whole turn. The first version of it was wrong by a factor of two in the
+prefactor and that check is what caught it — it read 4407 cycles.
+
+Drawing follows one rule: whether more than one carrier cycle falls in a pixel
+column. If it does, the curve would fill the column and the only honest thing is
+the band, which is then drawn **exactly** as ±|F|·A rather than sampled; if it
+does not, the wave itself is drawn. The page is its own source and its own
+output — `run.py` replaces the contents of its `<script id="datos">` block in
+place, the same arrangement as `report/report.html`, and for the same reason:
+the page is meant to open as a `file://` URL, where `fetch()` of a local JSON is
+blocked by CORS.
+
+It replaces a three-panel PNG of the same turn. That figure was correct and
+unusable: the pulse it exists to show occupies 1.9 % of the axis.
+
 ### `caseB_pattern.png` — the diffraction pattern
 
 The fixed `|F(w_B,y)|²` pattern: concentric rings with the Einstein-ring peak
