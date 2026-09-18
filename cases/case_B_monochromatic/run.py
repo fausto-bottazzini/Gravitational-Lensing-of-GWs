@@ -624,10 +624,13 @@ def main():
     # entraba a la leyenda como "_child1". Y arriba al centro en los dos
     # paneles, que es donde los dos estan vacios -- abajo a la izquierda la
     # caja le pasaba por encima al pozo de arg F y a la bajada del Doppler.
-    axes[0].legend([h_conj, h_roe, h_dop],
-                   [x.get_label() for x in (h_conj, h_roe, h_dop)],
-                   fontsize=8, loc="lower right", facecolor="white",
-                   edgecolor="0.7", framealpha=1.0)
+    # Colgada de ax_d y no de axes[0]: el eje gemelo se dibuja DESPUES, asi
+    # que una leyenda puesta en axes[0] queda debajo de la curva verde por
+    # mucho que se le suba el alpha.
+    ax_d.legend([h_conj, h_roe, h_dop],
+                [x.get_label() for x in (h_conj, h_roe, h_dop)],
+                fontsize=8, loc="lower right", facecolor="white",
+                edgecolor="0.7", framealpha=1.0).set_zorder(10)
     axes[1].legend(fontsize=8, loc="upper center", framealpha=0.92)
     fig.tight_layout()
     fig.savefig(OUT / "caseB_doppler_vs_lensing.png", dpi=170, bbox_inches="tight")
