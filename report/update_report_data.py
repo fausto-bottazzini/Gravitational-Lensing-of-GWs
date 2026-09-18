@@ -45,10 +45,11 @@ def main():
         raw = path.read_text(encoding="utf-8")
         # Parsed before it is embedded, not after. Inside a <script> block this
         # text is read as JAVASCRIPT, where NaN and Infinity are ordinary
-        # identifiers and would slip through silently; json.loads rejects them.
+        # identifiers and would slip through silently. Python's decoder accepts
+        # them, so the rejection has to happen on the way OUT, hence allow_nan.
         data = json.loads(raw)
-        payload = json.dumps(data, separators=(",", ":"))
-        if "</script" in payload:
+        payload = json.dumps(data, separators=(",", ":"), allow_nan=False)
+        if "</script" in payload.lower():
             sys.exit("ERROR: %s contains '</script', which would close the "
                      "block early." % path)
 

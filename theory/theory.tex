@@ -106,7 +106,8 @@ completa, paso por paso, porque el objetivo es \emph{entender} las cuentas y no 
 poder ejecutarlas. El texto est\'a organizado, entonces, como un libro de
 texto breve y no como un reporte: cada cap\'itulo introduce las magnitudes
 que usa, las deduce a partir de las anteriores, y remite a fuentes reales
-para los resultados que no se demuestran en \'el.
+para los resultados que no se demuestran en \'el. La referencia general
+para la teor\'ia de ondas gravitacionales es \citet{Maggiore2008}.
 
 \paragraph{Qu\'e se supone conocido.} Relatividad general a nivel de
 perturbaciones sobre un fondo (la descomposici\'on
@@ -1471,7 +1472,7 @@ componente paralela a la l\'inea de visi\'on, y es la que determina cu\'al de
 los dos cuerpos est\'a m\'as lejos del observador.
 
 % ----------------------------------------------------------------------
-\section{$D_{LS}$ en un sistema ligado}
+\section{\texorpdfstring{$D_{LS}$}{D\_LS} en un sistema ligado}
 \label{sec:dls}
 
 Aqu\'i aparece la diferencia esencial con el lente de libro de texto. En el
@@ -2139,12 +2140,20 @@ est\'atica en el $y$ de ese instante,
 \begin{equation}
   z_L(t)=F\big(w_B,\,y(t)\big)\;z(t),
   \qquad
-  z(t)\equiv h(t)\,e^{i\phi(t)} ,
+  z(t)\equiv A(t)\,e^{i\phi(t)} ,
   \label{eq:adiabatic}
 \end{equation}
-donde $z$ es la se\~nal anal\'itica asociada a $h$. El resultado es una
+donde $z$ es la se\~nal anal\'itica asociada a $h$, con $A$ su envolvente
+y $h(t)=\mathrm{Re}\,z(t)$. El resultado es una
 modulaci\'on de amplitud con el per\'iodo de la \'orbita externa, es decir, los
 pulsos de lente repetidos del \S\ref{sec:repetido}.
+
+Conviene volver ac\'a sobre la fase de referencia del \S\ref{sec:adimensional}.
+Evaluar $F$ en el $y$ de cada instante hace que la sustracci\'on que fija el
+retardo m\'inimo en cero cambie tambi\'en con el tiempo: la fase que queda es
+\emph{residual} respecto de la primera imagen instant\'anea, y el retardo
+com\'un $t_{\min}(t)$ que se resta --- junto con el corrimiento de frecuencia
+que su derivada producir\'ia --- queda fuera de este tratamiento.
 
 Conviene cerrar con la advertencia del \S\ref{sec:kinematics}. Todo lo
 anterior describe lo que el lente le hace a la onda, pero la misma \'orbita
@@ -2671,7 +2680,7 @@ $df/dt=-\tfrac32(f/a)\,da/dt$. Sustituyendo,
 \begin{equation}
   \dv{f}{t}=\frac{96}{5}\,\pi^{8/3}
   \left(\frac{G}{c^{3}}\right)^{5/3}
-  \left(m_1m_2M_b^{-1/3}\right)^{5/3}\!\!\cdot f^{11/3} ,
+  \left(m_1m_2M_b^{-1/3}\right) f^{11/3} ,
   \label{eq:chirprate_raw}
 \end{equation}
 y basta observar que
@@ -2710,7 +2719,13 @@ artificial, Claude Opus 5 de Anthropic, a lo largo de sucesivas iteraciones de
 revisi\'on humana: cada cap\'itulo se escribi\'o, se anot\'o a mano sobre el
 PDF y se reescribi\'o tantas veces como hizo falta. Las deducciones se
 verificaron num\'ericamente y las citas se cotejaron contra los trabajos
-originales. Los errores que hayan sobrevivido a ese ida y vuelta son, como
-corresponde, responsabilidad compartida.\par}
+originales.
+
+Sobre a qui\'en le caben los errores que hayan sobrevivido, los dos agentes
+que pasaron por este texto no coincidieron: el que lo escribi\'o propuso
+\guillemotleft responsabilidad compartida\guillemotright, y el que lo
+revis\'o, que \guillemotleft la responsabilidad por la versi\'on presentada
+corresponde a su autor\guillemotright. Se deja la discrepancia a la vista,
+que dice m\'as que cualquiera de las dos frases por separado.\par}
 
 \end{document}

@@ -71,7 +71,7 @@ constant delay is reabsorbed into t_c, a constant slope into the observed
 chirp mass. The only non-degenerate, genuinely observable part there is the
 CURVATURE, i.e. the line-of-sight acceleration; `roemer_residual` returns
 exactly that (the delay with its best-fit constant + linear part removed
-over the observation window). Over Case B's 6 full outer periods, by
+over the observation window). Over Case B's 3 full outer periods, by
 contrast, the delay is periodic with zero mean and zero trend, nothing is
 degenerate, and the full `roemer_delay` applies.
 """

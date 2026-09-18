@@ -418,6 +418,48 @@ that were matters of taste, or were reported against a stale copy of the file.
 A review returns a list whether or not there is anything left to fix, so the
 list needs to be filtered before it is acted on.
 
+### A fourth pass, after the fact (2026-09-18)
+
+One more review was run on the finished repository rather than during the
+build. It arrived as a working tree of uncommitted edits, so it was triaged
+against `origin/master` instead of accepted. It found four real errors, every
+one of them in text that nothing executes:
+
+- `theory.tex` Eq. (A.36) carried the `5/3` exponent twice. The line
+  immediately below it already reads `m1 m2 Mb^(-1/3) = Mchirp^(5/3)`, so the
+  equation contradicted its own next sentence. `chirp.py` was always right and
+  no number moved.
+- `report.tex` loaded neither `babel` nor `fontenc`. The Spanish report said
+  "Figure 1..8" and hyphenated accented words as if they were English: eight
+  captions wrong on a delivered PDF, for the sake of two preamble lines.
+- Eq. (7.5) wrote the analytic signal as `h(t) e^(i phi)` rather than
+  `A(t) e^(i phi)`.
+- `update_report_data.py` carried a comment asserting that `json.loads`
+  rejects `NaN` and `Infinity`. It does not; Python accepts both. The guard
+  that comment described did not exist. Rejection now happens on the way out,
+  with `allow_nan=False`, and `</script` is matched case-insensitively.
+
+Plus four smaller ones: a stale "6 full outer periods" in `doppler.py` (it is
+3), a `\section` title whose bare math broke its PDF bookmark, a citation
+sending the paraxial-validity claim to chapter 5 when it is in chapter 4, and
+`Maggiore2008` sitting in `refs.bib` uncited by anything.
+
+The rest was rejected. A rewrite of `theory/OUTLINE.md` cut it in half and
+dropped the measured argument for reading the `.tex` over the PDF; the same
+paragraph was deleted from `README.md`; a scope caveat was inserted in eight
+places at once; and a pass of hedging over `report.tex` and `report.html`
+replaced physical statements with a reviewer's register. That caveat was
+itself real and was kept, once in `theory.tex` 7.2 where `y(t)` is introduced,
+and once in the report's limitations list.
+
+Two things are worth remembering from it. Its own delivery check asserted that
+every `refs.bib` entry is cited in `theory.tex`, ignoring `report.tex`, which
+shares the same `.bib`; it then "found" two orphans that were not orphans and
+added citations to satisfy itself. And the pattern from the earlier rounds held
+again: everything it caught was in prose, equations and preambles, and nothing
+it caught was in the code. Filtering mattered more than finding, four fixes out
+of seventeen touched files.
+
 ## Stated limits
 
 Deliberately not done, and why:
