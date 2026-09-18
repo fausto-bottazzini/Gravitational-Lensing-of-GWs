@@ -1444,11 +1444,16 @@
     const pCtx = pCv.getContext("2d");
     const PW = pCv.width, PH = pCv.height;
     const T_CAR = NUM.carrier_period_s, F_MAX = NUM.max_abs_F;
+    // Dos ciclos y no cinco: el panel es angosto, y con cinco las dos curvas
+    // se cruzan veinte veces en un cuarto del ancho de la figura estatica.
+    // Lo unico que este panel tiene que dejar juzgar es la altura relativa de
+    // las crestas, y para eso cuantas menos haya, mejor.
+    const N_CIC = 2;
 
     function portadora(absF) {
       pCtx.clearRect(0, 0, PW, PH);
       const x0 = 34, x1 = PW - 14, y0 = 26, y1 = PH - 28;
-      const X = s => x0 + (s + 2.5 * T_CAR) / (5 * T_CAR) * (x1 - x0);
+      const X = s => x0 + (s + N_CIC * T_CAR / 2) / (N_CIC * T_CAR) * (x1 - x0);
       const Y = v => (y0 + y1) / 2 - v / (1.12 * F_MAX) * (y1 - y0) / 2;
       pCtx.strokeStyle = REJILLA; pCtx.lineWidth = 1;
       pCtx.beginPath(); pCtx.moveTo(x0, Y(0)); pCtx.lineTo(x1, Y(0)); pCtx.stroke();
@@ -1456,7 +1461,7 @@
         pCtx.strokeStyle = col; pCtx.lineWidth = lw;
         pCtx.beginPath();
         for (let k = 0; k <= 240; k++) {
-          const s = -2.5 * T_CAR + 5 * T_CAR * k / 240;
+          const s = (k / 240 - 0.5) * N_CIC * T_CAR;
           const px = X(s), py = Y(amp * Math.cos(TAU * s / T_CAR));
           k === 0 ? pCtx.moveTo(px, py) : pCtx.lineTo(px, py);
         }
@@ -1464,7 +1469,7 @@
       }
       pCtx.font = "11px -apple-system,sans-serif";
       pCtx.fillStyle = SUAVE;
-      pCtx.fillText("5 ciclos de 20 s", x0, y0 - 8);
+      pCtx.fillText(N_CIC + " ciclos de 20 s", x0, y0 - 8);
       // Con |F| = 1 las dos curvas coinciden exactamente, que es medio giro
       // de cada vuelta: sin leyenda eso se lee como que hay una sola curva.
       // Abajo y no arriba a la derecha: la sinusoide llena el panel entero y
