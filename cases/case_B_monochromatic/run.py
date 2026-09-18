@@ -669,8 +669,12 @@ def main():
             "lensed": lensed_traj.tolist(),
         },
     }
-    # envelope + pulses: subsample the full 3-period arrays to ~900 points
-    stride = max(1, n_samples // 900)
+    # envelope + pulses: subsample the full 3-period arrays. 2200 points and
+    # not the 900 de antes: report.html dibuja el ringing de |F| alrededor de
+    # cada pulso, y a 900 puntos el paso (1152 s) se come una oscilacion --
+    # el mismo problema que tenia el panel de fase de
+    # caseB_doppler_vs_lensing antes de darle grilla propia.
+    stride = max(1, n_samples // 2200)
     anim["envelope"] = {
         "t_days": (t[::stride] / 86400.0).tolist(),
         "unlensed": np.abs(z_unlensed[::stride]).tolist(),
@@ -686,6 +690,22 @@ def main():
         "roemer_cycles": (system.F_B_HZ * roemer_t[::stride]).tolist(),
         "lens_phase_cycles": lens_phase_cycles[::stride].tolist(),
         "beta_los": beta_los_t[::stride].tolist(),
+    }
+    # Lo que la diapositiva necesita para dibujar la SEÑAL y no solo |F|^2.
+    # La portadora no se exporta: son 51840 ciclos en la observacion, y a la
+    # velocidad a la que la animacion barre los 12 dias no se podria dibujar
+    # de todos modos. Se genera en el navegador a partir de f_B, con la
+    # amplificacion del instante -- que es lo unico que cambia despacio.
+    anim["f_B_hz"] = float(system.F_B_HZ)
+    anim["t_conj_days"] = float(t[int(np.argmax(np.abs(F_t)))] / 86400.0)
+    anim["numeros"] = {
+        "max_abs_F": float(NUMBERS["max_abs_F"]),
+        "roemer_s_ptp": float(NUMBERS["roemer_delay_ptp_s"]),
+        "roemer_cycles_ptp": float(NUMBERS["roemer_phase_ptp_cycles"]),
+        "lens_cycles_ptp": float(NUMBERS["lens_phase_ptp_cycles"]),
+        "roemer_over_lens": float(NUMBERS["roemer_over_lens_phase_ratio"]),
+        "beta_los_max": float(NUMBERS["beta_los_max"]),
+        "carrier_period_s": float(1.0 / system.F_B_HZ),
     }
     with open(OUT / "caseB_animation_data.json", "w") as fh:
         json.dump(anim, fh)
