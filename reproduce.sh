@@ -48,6 +48,31 @@ echo "== using venv interpreter: $PY =="
 echo "== installing pinned dependencies =="
 "$PY" -m pip install --quiet -r requirements.txt
 
+# Case A's committed numbers and figures come from pycbc's IMRPhenomD, which
+# does not install on native Windows (README.md, "One waveform, two possible
+# sources"). Without it the fallback runs, silently, and overwrites what the
+# repository ships with an inspiral-only result: no merger, no ringdown, and
+# no second-image echo. The fallback is legitimate and the script should not
+# refuse to run -- but it should not be quiet about it either, and it should
+# say how to undo it.
+warn_if_no_pycbc() {
+  if ! "$PY" -c "import pycbc" >/dev/null 2>&1; then
+    echo
+    echo "!! ---------------------------------------------------------------"
+    echo "!! pycbc is NOT importable in this venv, so Case A used the"
+    echo "!! TaylorF2 fallback: inspiral only, no merger, no ringdown, and"
+    echo "!! no second-image echo. Anything just written under"
+    echo "!! cases/case_A_chirp/ or tests/CHECKS_imr_waveform.json is a"
+    echo "!! fallback result and is NOT what this repository ships."
+    echo "!!"
+    echo "!!   to undo:        git checkout tests/ cases/case_A_chirp/"
+    echo "!!   to reproduce:   see README.md, 'One waveform, two possible"
+    echo "!!                   sources' -- run from a Linux/WSL2 venv."
+    echo "!! ---------------------------------------------------------------"
+    echo
+  fi
+}
+
 run_checks() {
   echo "== running correctness checks (tests/) =="
   for f in tests/test_*.py; do
@@ -64,6 +89,7 @@ run_checks() {
   # install should still be regenerating it.
   echo "--- theory/paraxial_validity.py ---"
   "$PY" theory/paraxial_validity.py
+  warn_if_no_pycbc
 }
 
 run_cases() {
@@ -72,6 +98,7 @@ run_cases() {
   echo "== Case B: quasi-monochromatic, moving lens =="
   "$PY" cases/case_B_monochromatic/run.py
   run_html
+  warn_if_no_pycbc
 }
 
 run_html() {
@@ -87,6 +114,13 @@ run_html() {
 }
 
 run_theory() {
+  # theory.tex includes theory/pulsos_esquema.pdf, which this script generates
+  # -- a build input, so it is regenerated here rather than trusted to be on
+  # disk. Same failure mode paraxial_validity.py had until 2026-09-07: a file
+  # theory.tex depends on, with no reproduce path that rebuilds it. It needs
+  # no LaTeX, only the venv.
+  echo "== regenerating theory/pulsos_esquema.pdf (figure 4.1) =="
+  "$PY" theory/pulsos_esquema.py
   echo "== rebuilding theory/theory.pdf (requires pdflatex + bibtex) =="
   ( cd theory && \
     pdflatex -interaction=nonstopmode -halt-on-error theory.tex && \
