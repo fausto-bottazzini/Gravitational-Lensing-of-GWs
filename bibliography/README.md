@@ -7,9 +7,10 @@ Reviews), not to this project. Redistributing them here would be republishing
 someone else's copyrighted work, so `bibliography/*.pdf` is in `.gitignore`
 and the folder arrives empty.
 
-Download them yourself from the links below. Every entry has a DOI; where a
-free preprint exists, the arXiv link is given and is the one to use, since it
-needs no subscription. Authoritative bibliographic data — the same DOIs, in
+Download them yourself from the links below. Every journal article has a DOI;
+the four books and the PyCBC software entry do not, which is why the Books and
+Software tables further down have no DOI column. Where a free preprint exists,
+the arXiv link is given and is the one to use, since it needs no subscription. Authoritative bibliographic data — the same DOIs, in
 BibTeX — is in `theory/refs.bib`, which is what `theory/theory.tex` actually
 compiles against; this file is the human-readable version of it plus the
 download links.

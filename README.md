@@ -83,6 +83,12 @@ pans, and has a button per stage of the orbit. Open it directly; like
 
 ## Reproduce everything
 
+`reproduce.sh` is a Bash script, so on Windows run it from **Git Bash or
+WSL** — it does not run from PowerShell or `cmd`. Nothing else here needs a
+POSIX shell: every `cases/*/run.py` and every `tests/test_*.py` is runnable
+on its own with plain `python`, from any shell, and together they cover
+everything except building the two PDFs.
+
 ```
 git clone https://github.com/fausto-bottazzini/Gravitational-Lensing-of-GWs.git
 cd Gravitational-Lensing-of-GWs
@@ -157,6 +163,13 @@ naming the files it just overwrote and the `git checkout` that undoes it. If
 you want to reproduce the exact committed Case A numbers and figures
 (including the ~3.4 s second-image echo), do it from the WSL venv above, and
 do it last, right before comparing against what is committed.
+
+A smaller one, so it does not look like a symptom of that: running the checks
+also rewrites `tests/CHECKS_doppler.json`, changing one reported figure from
+`2.35e-10` to `2.36e-10`. That is last-bit variation between platforms in a
+finite-difference check whose tolerance is `1e-6`, it means nothing, and
+`git checkout tests/CHECKS_doppler.json` undoes it. Two dirty files after a
+check run are expected; only one of them is the pycbc clobber.
 
 ## Reproducibility test this repo was held to
 

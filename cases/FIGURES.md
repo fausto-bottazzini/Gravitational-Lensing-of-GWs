@@ -1,7 +1,8 @@
 # The figures, one by one
 
 What each figure is for, what it shows, and what it deliberately does not.
-Nine figures: four per case, plus one schematic in `theory/`. The figures
+Eleven artefacts: four figures in Case A, six in Case B (five figures
+and one interactive page), plus one schematic in `theory/`. The figures
 themselves are in Spanish, because they go into `report.pdf`; this page is in
 English like the rest of the repo's own documentation.
 
