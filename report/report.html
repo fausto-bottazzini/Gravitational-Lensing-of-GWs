@@ -376,7 +376,9 @@
   <h2>La órbita recorriendo el patrón</h2>
   <p>El mismo reloj para todo: dónde está la fuente, dónde cae eso en el patrón, qué mide el
   detector, y el <b>retardo de Roemer</b> que la misma órbita escribe encima — la fuente se aleja
-  y se acerca, y su luz tarda hasta 905 s más o menos en llegar.</p>
+  y se acerca, y su luz tarda hasta 905 s más o menos en llegar. Acá se ven <b>dos</b> de las
+  tres vueltas de la observación, para poder mirarlas con detalle; las figuras estáticas muestran
+  los 12 días enteros.</p>
   <div class="viz" id="vizB">
     <div class="viz-grid">
       <div class="viz-panel">
@@ -1345,8 +1347,15 @@
     const NUM = CASE_B.numeros, yMax = CASE_B.y_max;
     const marker = document.getElementById("markerB");
     const readout = document.getElementById("readoutB");
-    const T_FIN = env.t_days[env.t_days.length - 1];
     const P_DIAS = CASE_B.P_days, T_CONJ = CASE_B.t_conj_days;
+    // Dos vueltas de las tres que dura la observacion. Con las tres, cada
+    // pulso ocupa un tercio menos de eje y la animacion las cruza un 50% mas
+    // rapido, y lo que hay para mirar acá es un pulso, no la repetición --
+    // que ya esta contada en caseB_repeated_pulses.png y en el numero. Las
+    // figuras estaticas siguen mostrando la observacion entera.
+    const N_VUELTAS = 2;
+    const T_FIN = N_VUELTAS * P_DIAS;
+    const T_TOTAL = env.t_days[env.t_days.length - 1];
 
     function cerca(arr, v) {
       let lo = 0, hi = arr.length - 1;
@@ -1370,6 +1379,11 @@
     for (const v of env.unlensed) if (v > picoU) picoU = v;
     const envU = env.unlensed.map(v => v / picoU);
     const envL = env.lensed.map(v => v / picoU);
+    const iFin = (() => {
+      let k = 0;
+      while (k < env.t_days.length - 1 && env.t_days[k] < T_FIN) k++;
+      return k;
+    })();
     let roeMax = 0;
     for (const v of kin.roemer_s) if (Math.abs(v) > roeMax) roeMax = Math.abs(v);
 
@@ -1387,7 +1401,7 @@
       for (const [arr, col, lw] of [[envL, CYAN, 1.3], [envU, GRIS, 1.3]]) {
         sCtx.strokeStyle = col; sCtx.lineWidth = lw;
         sCtx.beginPath();
-        for (let i = 0; i < arr.length; i++) {
+        for (let i = 0; i <= iFin; i++) {
           const px = X(env.t_days[i]), py = Y(arr[i]);
           i === 0 ? sCtx.moveTo(px, py) : sCtx.lineTo(px, py);
         }
@@ -1412,7 +1426,7 @@
       sCtx.beginPath(); sCtx.moveTo(x0, YR(0)); sCtx.lineTo(x1, YR(0)); sCtx.stroke();
       sCtx.strokeStyle = "#6b46c1"; sCtx.lineWidth = 1.4;
       sCtx.beginPath();
-      for (let i = 0; i < kin.roemer_s.length; i++) {
+      for (let i = 0; i <= iFin; i++) {
         const px = X(env.t_days[i]), py = YR(kin.roemer_s[i]);
         i === 0 ? sCtx.moveTo(px, py) : sCtx.lineTo(px, py);
       }
@@ -1423,7 +1437,9 @@
         if (d > T_FIN) continue;
         sCtx.fillText(String(d), X(d) - 4, b1 + 16);
       }
-      sCtx.fillText("t [días]", x1 - 44, b1 + 16);
+      // corrido a la izquierda: la última marca cae justo en x1 y el rótulo
+      // se le pegaba, leyéndose "t [días] 8"
+      sCtx.fillText("t [días]", x1 - 100, b1 + 16);
 
       // el cursor, en los dos
       sCtx.strokeStyle = ROJO; sCtx.lineWidth = 1.2;
@@ -1444,11 +1460,7 @@
     const pCtx = pCv.getContext("2d");
     const PW = pCv.width, PH = pCv.height;
     const T_CAR = NUM.carrier_period_s, F_MAX = NUM.max_abs_F;
-    // Dos ciclos y no cinco: el panel es angosto, y con cinco las dos curvas
-    // se cruzan veinte veces en un cuarto del ancho de la figura estatica.
-    // Lo unico que este panel tiene que dejar juzgar es la altura relativa de
-    // las crestas, y para eso cuantas menos haya, mejor.
-    const N_CIC = 2;
+    const N_CIC = 5;
 
     function portadora(absF) {
       pCtx.clearRect(0, 0, PW, PH);
@@ -1488,7 +1500,9 @@
     }
 
     // ---------------------------------------------------------- el cuadro --
-    vivo(document.getElementById("vizB"), 20000, frac => {
+    // 26 s para dos vueltas, contra los 20 que duraban tres: el pulso dura
+    // 1.9% del periodo, asi que a la velocidad anterior pasaba en 0.13 s.
+    vivo(document.getElementById("vizB"), 26000, frac => {
       const tCur = frac * T_FIN;
       const tMod = tCur % P_DIAS;
 
@@ -1516,8 +1530,9 @@
 
       const periodo = Math.floor(tCur / P_DIAS) + 1;
       readout.innerHTML =
-        "día " + tCur.toFixed(2) + " de " + T_FIN.toFixed(0) +
-        "  (vuelta " + periodo + "/3)&nbsp;&nbsp; |F|² = " + env.F2[ei].toFixed(3) +
+        "día " + tCur.toFixed(2) + "&nbsp;&nbsp; vuelta " + periodo + " de " +
+        (T_TOTAL / P_DIAS).toFixed(0) +
+        "&nbsp;&nbsp; |F|² = " + env.F2[ei].toFixed(3) +
         "&nbsp;&nbsp; la señal llega " + Math.abs(kin.roemer_s[ei]).toFixed(0) +
         " s " + (kin.roemer_s[ei] >= 0 ? "tarde" : "temprano") + " (" +
         Math.abs(kin.roemer_cycles[ei]).toFixed(1) + " ciclos)&nbsp;&nbsp;" +
