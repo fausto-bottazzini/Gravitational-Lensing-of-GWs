@@ -22,7 +22,7 @@ thing to read before editing anything in this repository.
 | `theory/` | **CLOSED** | 2026-09-18 | `theory.tex`/`.pdf`, `OUTLINE.md`, `refs.bib`, `paraxial_validity.py` + its JSON, `pulsos_esquema.py` + its PDF |
 | `src/gwlens/` | **CLOSED** | 2026-09-19 | the physics library and the pinned system |
 | `tests/` | **CLOSED** | 2026-09-19 | the checks and their `CHECKS*.json` records |
-| `cases/` | open | — | both `run.py`, the figures, `RESULTS.md`, `provenance/`, `FIGURES.md` |
+| `cases/` | **CLOSED** | 2026-09-19 | both `run.py`, the figures, `RESULTS.md`, `provenance/`, `FIGURES.md` |
 | `report/` | open | — | `report.tex`/`.pdf`, `report.html`, `update_report_data.py` |
 | `wiki/` | open | — | these notes, plus the course brief |
 | `bibliography/` | **CLOSED** | 2026-09-18 | `README.md` (mirrors `refs.bib`) |
@@ -42,7 +42,7 @@ flowchart LR
     CHK["CHECKS*.json"]
   end
 
-  subgraph CAS["cases/ · open"]
+  subgraph CAS["cases/ · CLOSED"]
     RUNA["case_A_chirp/run.py"]
     RUNB["case_B_monochromatic/run.py"]
     NUM["provenance/numbers.json"]
@@ -92,7 +92,8 @@ flowchart LR
   FIGS --> RHTML
 
   classDef closed fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  class PVPY,PVJS,PUPY,PUPDF,BIB,TEX,TPDF,OUT,SYS,LIB,TESTS,CHK closed;
+  class PVPY,PVJS,PUPY,PUPDF,BIB,TEX,TPDF,OUT,SYS,LIB,TESTS,CHK,
+        RUNA,RUNB,NUM,FIGS,ANIM,PROV closed;
 ```
 
 ## Edges that have actually caused damage

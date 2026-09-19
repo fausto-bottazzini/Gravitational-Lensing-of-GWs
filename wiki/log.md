@@ -577,6 +577,34 @@ copy of the tree, never in place.
 44 checks, none skipped, run from the WSL venv so the IMR one executes rather
 than being skipped for want of pycbc.
 
+### cases/ closed (2026-09-19)
+
+Reviewed without running anything: no run.py, no reproduce.sh, since on this
+machine either would overwrite Case A's pycbc results with the TaylorF2
+fallback.
+
+Every `key = value` citation in FIGURES.md and both RESULTS.md was swept
+against both numbers.json -- 31 of them, none wrong. The first sweep flagged
+eleven, and all eleven were the comparator's fault rather than the files': it
+was matching on relative tolerance where the text is written to a given number
+of significant figures, and it was reading "1.3" out of "1.3%" and "5.8" out
+of "5.8x10^-10". Rewritten to round the logged value to the precision actually
+written, the count went to zero.
+
+Pointers too: every relative link resolves, every check_* named exists in
+tests/, every backticked filename is tracked, and nothing still refers to
+F_evaluation_seconds, the key that came out of provenance earlier today.
+
+Downstream was the part that mattered for closing, because report/ is still
+open and hangs off this folder. Both cases were re-run today, so: the two Case
+B values that moved did so in their last bits and round to the same 3.5e-3 and
+5.6e-4 the documents quote, and report.html's two embedded data blocks parse
+equal to the case exports.
+
+Not acted on, and the author's call: FIGURES.md documents caseB_pattern.png
+last, after the interactive page that uses it, and the stated run time for
+Case B is ~10 s in FIGURES.md against ~7 s in its own RESULTS.md.
+
 ## Stated limits
 
 Deliberately not done, and why:
