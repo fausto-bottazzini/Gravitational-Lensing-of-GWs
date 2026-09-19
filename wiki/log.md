@@ -583,9 +583,12 @@ author's.
 read as including `theory.tex`, and a closed file was edited. It was caught
 within the minute and reverted whole with `git checkout -- theory/`, so nothing
 was lost. But nothing in the repository had ever stated that a closed folder is
-closed, so nothing could have stopped it either. `wiki/dependencies.md` was
-written that evening: the rule, a status table, and a Mermaid graph of what is
-built from what.
+closed, so nothing could have stopped it either. A dependency map was written
+that evening and used for the rest of the work: the rule, a status table with a
+date per folder, and a Mermaid graph of what is built from what. Like the
+review write-ups it was a working document rather than part of the deliverable,
+and it is untracked now that every folder is closed. What it knew and nothing
+else did is below.
 
 The rule is short. A folder marked closed is not edited again, not tidied, not
 improved, not "while I am here"; only the author reopens it, and says so.

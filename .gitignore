@@ -14,3 +14,6 @@ checks/independent_review/
 
 # Bibliography PDFs: copyrighted, kept locally only -- see bibliography/README.md
 bibliography/*.pdf
+
+# The dependency map: a working document, like the review write-ups
+wiki/dependencies.md
