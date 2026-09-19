@@ -57,23 +57,13 @@
      de renglon y con cifras de ancho fijo. */
   .metric { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-  /* Matematica. El glifo U+221A no trae vinculum, asi que el radicando queda
-     suelto y no se ve hasta donde llega la raiz: la barra la pone el
-     border-top del <span> interno. Las variables, en italica. */
+  /* Matematica: MathML, que el navegador compone solo. Nada que cargar, sin
+     librerias ni fuentes extra, y el radical crece con el radicando en vez
+     de ser el glifo U+221A con una barra dibujada al lado. Las variables
+     sueltas dentro de la prosa siguen yendo con .m, que no amerita MathML. */
   .m { font-style: italic; }
-  .rad { white-space: nowrap; }
-  .rad > span {
-    border-top: 1px solid currentColor;
-    padding: .12em .18em 0 .1em;
-    margin-left: -.06em;
-  }
-  /* Ecuacion desplegada: fuera del renglon, centrada y con aire. Inline, una
-     expresion con dos niveles de parentesis y una raiz se lee como una
-     tirada de caracteres. */
-  .eq {
-    display: block; text-align: center;
-    margin: 1rem 0; font-size: 1.15rem; line-height: 2.1;
-  }
+  math { font-size: 1.06em; }
+  math[display="block"] { font-size: 1.28em; margin: 1.1rem 0; }
   a { color: #2b6cb0; }
   .refs { font-size: 0.92rem; }
   footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
@@ -409,14 +399,22 @@
   <h2>La segunda imagen llega tarde y débil</h2>
   <p>En óptica geométrica un lente puntual da <b>dos</b> imágenes, y sus posiciones salen
   de resolver la ecuación de lente:</p>
-  <span class="eq"><span class="m">x</span><sub>±</sub> = ½ <big>(</big> <span class="m">y</span> ±
-  <span class="rad">√<span><span class="m">y</span>² + 4</span></span> <big>)</big></span>
+  <math display="block">
+    <msub><mi>x</mi><mo>&#177;</mo></msub>
+    <mo>=</mo>
+    <mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac>
+    <mo stretchy="true">(</mo>
+    <mi>y</mi>
+    <mo>&#177;</mo>
+    <msqrt><mrow><msup><mi>y</mi><mn>2</mn></msup><mo>+</mo><mn>4</mn></mrow></msqrt>
+    <mo stretchy="true">)</mo>
+  </math>
   <p>Una es un mínimo del tiempo de llegada y la otra un punto de silla. La del silla recorre
   más camino, así que llega <span class="metric">ΔT = 3.434 s</span> más tarde, y está menos
   magnificada.</p>
   <p>Eso es el eco: la misma forma de onda otra vez, con una amplitud de <span class="metric">0.2395</span> del pico
   sin lente — que es exactamente la magnificación
-  <span class="rad">√<span>|μ₋|</span></span> = 0.2396 de esa imagen, al
+  <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math> = 0.2396 de esa imagen, al
   0.05%. Un número que sale del cálculo en el dominio del tiempo y coincide con otro que sale
   de la óptica geométrica, sin nada ajustado en el medio. La segunda imagen entra en banda
   11.7 s antes del merger, así que durante casi toda la señal las dos están presentes y se
@@ -443,14 +441,13 @@
   <p>El lente está quieto, pero <i>f</i> no, y F depende de <i>f</i>. Al barrer la banda, F da
   una vuelta completa por cada franja — 397 vueltas entre 10 Hz y el merger.</p>
   <p>Que el recorrido sea una <b>circunferencia</b> es la suma de las dos imágenes: un vector
-  fijo de largo <span class="rad">√<span>μ₊</span></span> = 1.0283, la imagen
-  fuerte, más otro de largo <span class="rad">√<span>|μ₋|</span></span> = 0.2396
+  fijo de largo <math><msqrt><msub><mi>&#956;</mi><mo>+</mo></msub></msqrt></math> = 1.0283, la imagen
+  fuerte, más otro de largo <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math> = 0.2396
   que gira con la fase <span class="m">w</span>·ΔT. Como <span class="m">w</span>·ΔT es lineal
   en <span class="m">f</span>, el
   período de franja es 1/ΔT = 0.2912 Hz, el mismo en toda la banda.</p>
   <p>Y como el círculo <b>no encierra al origen</b>, arg F nunca completa una vuelta: queda
-  acotado por arcsen(<span class="rad">√<span>|μ₋|</span></span> /
-  <span class="rad">√<span>μ₊</span></span>) = ±0.235 rad. Ahí está la asimetría del
+  acotado por <math><mi>arcsen</mi><mo>(</mo><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt><mo>/</mo><msqrt><msub><mi>&#956;</mi><mo>+</mo></msub></msqrt><mo>)</mo></math> = ±0.235 rad. Ahí está la asimetría del
   efecto. El lente mueve la amplitud entre 0.789 y 1.268 —&nbsp;±0.24 alrededor de 1.028&nbsp;—
   y la fase, apenas un cuarto de radián.</p>
   <div class="viz" id="vizFr">
@@ -499,13 +496,13 @@
   <div class="kicker">Caso A</div>
   <h2>Lo que el lente le hace a la onda</h2>
   <p>Amplificación de la muestra pico: <span class="metric">1.0557</span>. Amplificación RMS: <span class="metric">1.0557</span>, que por
-  Parseval es <span class="rad">√<span><span class="m">A</span>(<span class="m">y</span><sub>A</sub>)</span></span>. Coinciden: la amplitud sola no delata nada. Lo que hace que la
+  Parseval es <math><msqrt><mrow><mi>A</mi><mo>(</mo><msub><mi>y</mi><mi>A</mi></msub><mo>)</mo></mrow></msqrt></math>. Coinciden: la amplitud sola no delata nada. Lo que hace que la
   forma de onda con lente sea una copia <i>desfasada</i> y no simplemente reescalada es arg F, que
   oscila a lo largo de la banda dentro de ±0.235 rad.</p>
   <p>El pico con lente llega exactamente al mismo tiempo que el pico sin lente (F está referida a la
   llegada de la imagen fuerte, sin desfasaje absoluto arbitrario). Una segunda copia, ~4× más
   débil — la amplitud exacta coincide con la magnificación geométrica de la imagen débil,
-  <span class="rad">√<span>|μ₋|</span></span>, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
+  <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math>, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
   que predice la óptica geométrica entre las dos imágenes. Ambas construidas sólo del pasado de
   la fuente: la causalidad nunca estuvo en duda. Un <b>eco genuino</b>, visible en
   <code>caseA_spectrogram.png</code> como una segunda traza en el plano tiempo-frecuencia.</p>
