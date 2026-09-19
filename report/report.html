@@ -348,11 +348,26 @@
   muchísimo más rápido que la órbita externa (4 días), así que el lente queda congelado en un
   único parámetro de impacto (y<sub>A</sub>=1.589) durante toda la señal. La forma de onda es
   <b>IMRPhenomD</b> real (inspiral+merger+ringdown), no una aproximación truncada.</p>
+  <p>Ese chirp no cae en cualquier punto de la órbita externa: lo ubicamos en la
+  <b>conjunción</b> — la fase 0.25 del período, cuando la fuente pasa exactamente por detrás
+  del lente. De ahí sale y<sub>A</sub>=1.589, que es el <i>mínimo</i> de toda la órbita, el
+  mismo valor al que llega el Caso B en el pico de cada pulso. La elección importa y es
+  sostenible: los 15 s del chirp son <span class="metric">4×10<sup>−5</sup></span> del período
+  externo, así que la binaria coalesce entera sin salir de esa fase. En cualquier otra, el
+  lente quedaría más lejos de la línea de visión y el efecto sería menor.</p>
 </section>
 
 <section class="slide">
   <div class="kicker">Caso A</div>
   <h2>La señal, con lente y sin lente</h2>
+  <p>En frecuencia, lo que el lente hace es una multiplicación: h<sub>L</sub>(f)=F(f)·h(f). En
+  el tiempo eso <i>no</i> es un reescaleo — es la señal original más una copia suya, retrasada
+  y más débil. Acá están las dos curvas sobre el mismo reloj que el esquema de la coalescencia,
+  y la diferencia entre ellas es del orden del 5%: chica, pero no constante, porque F oscila
+  con <i>f</i> mientras el chirp barre la banda.</p>
+  <p>Los dos picos llegan en el <b>mismo instante</b>. No es casualidad: F está referida a la
+  llegada de la imagen fuerte, así que no queda ningún corrimiento global arbitrario y
+  cualquier desfasaje que se vea entre las curvas es físico.</p>
   <div class="viz" id="vizA">
     <div class="viz-grid der-ancha">
       <div class="viz-panel">
@@ -371,6 +386,17 @@
 <section class="slide">
   <div class="kicker">Caso A</div>
   <h2>La segunda imagen llega tarde y débil</h2>
+  <p>En óptica geométrica un lente puntual da <b>dos</b> imágenes, en
+  x<sub>±</sub>=½(y±√(y²+4)): una es un mínimo del tiempo de llegada y la otra un punto de
+  silla. La del silla recorre más camino, así que llega
+  <span class="metric">ΔT = 3.434 s</span> más tarde, y está menos magnificada.</p>
+  <p>Eso es el eco: la misma forma de onda otra vez, con una amplitud de <b>0.2395</b> del pico
+  sin lente — que es exactamente la magnificación √|μ<sub>−</sub>| = 0.2396 de esa imagen, al
+  0.05%. Un número que sale del cálculo en el dominio del tiempo y coincide con otro que sale
+  de la óptica geométrica, sin nada ajustado en el medio. La segunda imagen entra en banda
+  11.7 s antes del merger, así que durante casi toda la señal las dos están presentes y se
+  interfieren; el eco se ve <i>separado</i> recién después del merger, cuando la primera ya se
+  apagó.</p>
   <div class="viz" id="vizIm">
     <div class="viz-grid">
       <div class="viz-panel">
@@ -391,6 +417,14 @@
   <h2>Dos imágenes interfieren: F recorre una circunferencia</h2>
   <p>El lente está quieto, pero <i>f</i> no, y F depende de <i>f</i>. Al barrer la banda, F da
   una vuelta completa por cada franja — 397 vueltas entre 10 Hz y el merger.</p>
+  <p>Que el recorrido sea una <b>circunferencia</b> es la suma de las dos imágenes: un vector
+  fijo de largo √μ<sub>+</sub> = 1.0283, la imagen fuerte, más otro de largo
+  √|μ<sub>−</sub>| = 0.2396 que gira con la fase w·ΔT. Como w·ΔT es lineal en <i>f</i>, el
+  período de franja es 1/ΔT = 0.2912 Hz, el mismo en toda la banda.</p>
+  <p>Y como el círculo <b>no encierra al origen</b>, arg F nunca completa una vuelta: queda
+  acotado por arcsen(√|μ<sub>−</sub>|/√μ<sub>+</sub>) = ±0.235 rad. Ahí está la asimetría del
+  efecto. El lente mueve la amplitud entre 0.789 y 1.268 —&nbsp;±0.24 alrededor de 1.028&nbsp;—
+  y la fase, apenas un cuarto de radián.</p>
   <div class="viz" id="vizFr">
     <div class="fr-grid">
       <div class="viz-panel">
@@ -960,6 +994,20 @@
       // una versión anterior pintaba un "corredor" detrás del lente y se leía
       // como un rectángulo dibujado encima del esquema, no como una región.
       arco(Math.PI - dth, Math.PI + dth, CYAN, 2.6);
+
+      // Donde cae el Caso A. El chirp entero dura 15 s, 4e-5 del periodo
+      // externo, y esta ubicado en la conjuncion: y_A_outer_orbit_phase_
+      // fraction = 0.25. Marca FIJA, no animada --- dice en que fase de esta
+      // orbita ocurre el otro caso, que es lo unico que el esquema no decia.
+      const pA = pto(Math.PI);
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(pA[0], pA[1] - 10); ctx.lineTo(pA[0], pA[1] - 26); ctx.stroke();
+      ctx.font = "10px -apple-system,sans-serif";
+      ctx.fillStyle = CYAN; ctx.textAlign = "center";
+      ctx.fillText("acá ocurre el Caso A", pA[0], pA[1] - 31);
+      ctx.textAlign = "left";
+
       if (!arriba) fuente(px, py, giro, false);
 
       // hacia el observador: horizontal, trazada desde el lente
