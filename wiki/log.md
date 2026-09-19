@@ -530,6 +530,28 @@ here: four presentation defects in the deck, two in the one-turn page, and
 four in `src/`/`cases/`. They are listed there with what was measured, so the
 round's output survives having been filtered.
 
+### src/gwlens closed (2026-09-19)
+
+Verified rather than assumed. All 44 checks run from the WSL venv with pycbc,
+so the IMR one actually runs instead of skipping, and every CHECKS*.json came
+back byte-identical to what is committed. No TODOs, no unused imports, and the
+three docstrings that asserted false things are still corrected. Every number
+quoted in a comment or docstring across the nine files was swept mechanically
+against both cases' numbers.json: none is off by more than 5% from what the
+run logged. That sweep matters because stale docstring numbers had already
+come back twice.
+
+What closes with it is also what hangs off it: the arrows leaving src go to
+tests/, to both run.py, and to theory/paraxial_validity.py. All three
+reproduced after the last change to src, and paraxial_validity_numbers.json
+came out identical -- which is the one that feeds Table 4.1 inside a folder
+that is already closed.
+
+Left open on purpose, recorded in todo.md: F_hybrid(w, np.inf) returns NaN
+with only a numpy warning. geometry.impact_parameter_of_time returns inf on
+the unlensed half by design and the F = 1 substitution is the caller's job; no
+caller forgets it today.
+
 ## Stated limits
 
 Deliberately not done, and why:
