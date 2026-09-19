@@ -63,11 +63,14 @@
      sueltas dentro de la prosa siguen yendo con .m, que no amerita MathML. */
   .m { font-style: italic; }
   math { font-size: 1.06em; }
-  /* Los nombres de funcion van en REDONDA, que es lo que los separa de una
-     variable; para que ademas no se confundan con una palabra de la prosa,
-     en versalita y con un poco de tracking. */
-  math .fn { font-style: normal; font-variant: small-caps; letter-spacing: .04em; }
-  math[display="block"] { font-size: 1.28em; margin: 1.1rem 0; }
+  /* Un radicando con descendente y subindice (y_A) obliga al msqrt a
+     cubrir mucha profundidad, y la cola del radical se mete en el
+     renglon de abajo. Esta se compone algo mas chica. */
+  math.apretada { font-size: .9em; }
+  /* Los nombres de funcion van en redonda, que es lo que los separa de una
+     variable. */
+  math .fn { font-style: normal; }
+  math[display="block"] { font-size: 1.05em; margin: 1rem 0; }
   a { color: #2b6cb0; }
   .refs { font-size: 0.92rem; }
   footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
@@ -407,11 +410,13 @@
     <msub><mi>x</mi><mo>&#177;</mo></msub>
     <mo>=</mo>
     <mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac>
-    <mo stretchy="true">(</mo>
-    <mi>y</mi>
-    <mo>&#177;</mo>
-    <msqrt><mrow><msup><mi>y</mi><mn>2</mn></msup><mo>+</mo><mn>4</mn></mrow></msqrt>
-    <mo stretchy="true">)</mo>
+    <mrow>
+      <mo stretchy="true">(</mo>
+      <mi>y</mi>
+      <mo>&#177;</mo>
+      <msqrt><mrow><msup><mi>y</mi><mn>2</mn></msup><mo>+</mo><mn>4</mn></mrow></msqrt>
+      <mo stretchy="true">)</mo>
+    </mrow>
   </math>
   <p>Una es un mínimo del tiempo de llegada y la otra un punto de silla. La del silla recorre
   más camino, así que llega <span class="metric">ΔT = 3.434 s</span> más tarde, y está menos
@@ -457,12 +462,14 @@
       <mrow><mo stretchy="false">|</mo><mi>arg</mi><mo>&#8289;</mo><mspace width="0.12em"/><mi>F</mi><mo stretchy="false">|</mo></mrow>
       <mo>&#8804;</mo>
       <mi class="fn">arcsen</mi><mo>&#8289;</mo>
-      <mo stretchy="true">(</mo>
-      <mfrac>
-        <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt>
-        <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8330;</mi><mo stretchy="false">|</mo></mrow></msqrt>
-      </mfrac>
-      <mo stretchy="true">)</mo>
+      <mrow>
+        <mo stretchy="true">(</mo>
+        <mfrac displaystyle="false">
+          <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt>
+          <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8330;</mi><mo stretchy="false">|</mo></mrow></msqrt>
+        </mfrac>
+        <mo stretchy="true">)</mo>
+      </mrow>
       <mo>=</mo><mn>0.235</mn><mtext>&#160;rad</mtext>
     </mrow>
   </math>
@@ -514,7 +521,7 @@
   <div class="kicker">Caso A</div>
   <h2>Lo que el lente le hace a la onda</h2>
   <p>Amplificación de la muestra pico: <span class="metric">1.0557</span>. Amplificación RMS: <span class="metric">1.0557</span>, que por
-  Parseval es <math><msqrt><mrow><mi>A</mi><mo>(</mo><msub><mi>y</mi><mi>A</mi></msub><mo>)</mo></mrow></msqrt></math>. Coinciden: la amplitud sola no delata nada. Lo que hace que la
+  Parseval es <math class="apretada"><msqrt><mrow><mi>A</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>A</mi></msub><mo stretchy="false">)</mo></mrow></msqrt></math>. Coinciden: la amplitud sola no delata nada. Lo que hace que la
   forma de onda con lente sea una copia <i>desfasada</i> y no simplemente reescalada es arg F, que
   oscila a lo largo de la banda dentro de ±0.235 rad.</p>
   <p>El pico con lente llega exactamente al mismo tiempo que el pico sin lente (F está referida a la
