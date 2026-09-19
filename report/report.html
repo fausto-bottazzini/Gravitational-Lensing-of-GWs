@@ -63,6 +63,10 @@
      sueltas dentro de la prosa siguen yendo con .m, que no amerita MathML. */
   .m { font-style: italic; }
   math { font-size: 1.06em; }
+  /* Los nombres de funcion van en REDONDA, que es lo que los separa de una
+     variable; para que ademas no se confundan con una palabra de la prosa,
+     en versalita y con un poco de tracking. */
+  math .fn { font-style: normal; font-variant: small-caps; letter-spacing: .04em; }
   math[display="block"] { font-size: 1.28em; margin: 1.1rem 0; }
   a { color: #2b6cb0; }
   .refs { font-size: 0.92rem; }
@@ -414,7 +418,7 @@
   magnificada.</p>
   <p>Eso es el eco: la misma forma de onda otra vez, con una amplitud de <span class="metric">0.2395</span> del pico
   sin lente — que es exactamente la magnificación
-  <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math> = 0.2396 de esa imagen, al
+  <math><msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt></math> = 0.2396 de esa imagen, al
   0.05%. Un número que sale del cálculo en el dominio del tiempo y coincide con otro que sale
   de la óptica geométrica, sin nada ajustado en el medio. La segunda imagen entra en banda
   11.7 s antes del merger, así que durante casi toda la señal las dos están presentes y se
@@ -441,15 +445,29 @@
   <p>El lente está quieto, pero <i>f</i> no, y F depende de <i>f</i>. Al barrer la banda, F da
   una vuelta completa por cada franja — 397 vueltas entre 10 Hz y el merger.</p>
   <p>Que el recorrido sea una <b>circunferencia</b> es la suma de las dos imágenes: un vector
-  fijo de largo <math><msqrt><msub><mi>&#956;</mi><mo>+</mo></msub></msqrt></math> = 1.0283, la imagen
-  fuerte, más otro de largo <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math> = 0.2396
+  fijo de largo <math><msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8330;</mi><mo stretchy="false">|</mo></mrow></msqrt></math> = 1.0283, la imagen
+  fuerte, más otro de largo <math><msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt></math> = 0.2396
   que gira con la fase <span class="m">w</span>·ΔT. Como <span class="m">w</span>·ΔT es lineal
   en <span class="m">f</span>, el
   período de franja es 1/ΔT = 0.2912 Hz, el mismo en toda la banda.</p>
-  <p>Y como el círculo <b>no encierra al origen</b>, arg F nunca completa una vuelta: queda
-  acotado por <math><mi>arcsen</mi><mo>(</mo><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt><mo>/</mo><msqrt><msub><mi>&#956;</mi><mo>+</mo></msub></msqrt><mo>)</mo></math> = ±0.235 rad. Ahí está la asimetría del
-  efecto. El lente mueve la amplitud entre 0.789 y 1.268 —&nbsp;±0.24 alrededor de 1.028&nbsp;—
-  y la fase, apenas un cuarto de radián.</p>
+  <p>Y como el círculo <b>no encierra al origen</b>, arg F nunca completa una vuelta: las dos
+  tangentes desde el origen la dejan acotada en</p>
+  <math display="block">
+    <mrow>
+      <mrow><mo stretchy="false">|</mo><mi>arg</mi><mo>&#8289;</mo><mspace width="0.12em"/><mi>F</mi><mo stretchy="false">|</mo></mrow>
+      <mo>&#8804;</mo>
+      <mi class="fn">arcsen</mi><mo>&#8289;</mo>
+      <mo stretchy="true">(</mo>
+      <mfrac>
+        <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt>
+        <msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8330;</mi><mo stretchy="false">|</mo></mrow></msqrt>
+      </mfrac>
+      <mo stretchy="true">)</mo>
+      <mo>=</mo><mn>0.235</mn><mtext>&#160;rad</mtext>
+    </mrow>
+  </math>
+  <p>Ahí está la asimetría del efecto. El lente mueve la amplitud entre 0.789 y 1.268
+  —&nbsp;±0.24 alrededor de 1.028&nbsp;— y la fase, apenas un cuarto de radián.</p>
   <div class="viz" id="vizFr">
     <div class="fr-grid">
       <div class="viz-panel">
@@ -502,7 +520,7 @@
   <p>El pico con lente llega exactamente al mismo tiempo que el pico sin lente (F está referida a la
   llegada de la imagen fuerte, sin desfasaje absoluto arbitrario). Una segunda copia, ~4× más
   débil — la amplitud exacta coincide con la magnificación geométrica de la imagen débil,
-  <math><msqrt><mrow><mo>|</mo><msub><mi>&#956;</mi><mo>&#8722;</mo></msub><mo>|</mo></mrow></msqrt></math>, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
+  <math><msqrt><mrow><mo stretchy="false">|</mo><mi mathvariant="italic">&#956;&#8331;</mi><mo stretchy="false">|</mo></mrow></msqrt></math>, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
   que predice la óptica geométrica entre las dos imágenes. Ambas construidas sólo del pasado de
   la fuente: la causalidad nunca estuvo en duda. Un <b>eco genuino</b>, visible en
   <code>caseA_spectrogram.png</code> como una segunda traza en el plano tiempo-frecuencia.</p>
@@ -1413,7 +1431,7 @@
       gCtx.fillStyle = OCRE;
       gCtx.fillText("θ_E", xe + 7, EJE - TE / 2 + 4);
       gCtx.fillStyle = CYAN;
-      gCtx.fillText("imagen +   √μ₊ = " + sMp.toFixed(3), XPL + 10, YP - 8);
+      gCtx.fillText("imagen +   √|μ₊| = " + sMp.toFixed(3), XPL + 10, YP - 8);
       gCtx.fillStyle = SUAVE;
       gCtx.fillText("imagen −   √|μ₋| = " + sMm.toFixed(3), XPL + 10, YM + 16);
     }
@@ -1932,9 +1950,9 @@
     const dT = CASE_A.image_time_delay_s;
     document.getElementById("readoutFr").textContent =
       "circunferencia de radio √|μ₋| = " + rad.toFixed(4) +
-      " centrada en √μ₊ = " + cx.toFixed(4) +
+      " centrada en √|μ₊| = " + cx.toFixed(4) +
       "     |F| entre " + (cx - rad).toFixed(4) + " y " + (cx + rad).toFixed(4) +
-      "\n|arg F| ≤ arcsen(√|μ₋|/√μ₊) = " + Math.asin(rad / cx).toFixed(4) +
+      "\n|arg F| ≤ arcsen(√|μ₋| / √|μ₊|) = " + Math.asin(rad / cx).toFixed(4) +
       " rad — la circunferencia no encierra al origen, así que la fase nunca da la vuelta" +
       (dT ? "\nuna vuelta por franja: " + (1 / dT).toFixed(4) + " Hz = 1/ΔT, con ΔT = " +
             dT.toFixed(3) + " s — el mismo retraso del eco" : "");
