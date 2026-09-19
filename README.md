@@ -28,13 +28,14 @@ of it, and explains why there is deliberately no Markdown copy.
 
 | | |
 |---|---|
-| `report/` | the results: `report.html` (a slide deck with live figures) and `report.pdf` (the written report), the two documents this project is presented from. `report.html` is the file itself, not a build artefact; `update_report_data.py` refreshes the animation data embedded in it from `cases/*/caseX_animation_data.json` |
+| `report/` | the results: `report.html` (a slide deck with live figures) and `report.pdf` (the written report), the two documents this project is presented from. The PDF is built from `report.tex` with `report.bib` (which cites `theory/refs.bib` as well). `report.html` is the file itself, not a build artefact; `update_report_data.py` refreshes the animation data embedded in it from `cases/*/caseX_animation_data.json` |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
-| `src/gwlens/` | the physics library: wave optics (`waveoptics.py`), orbits (`geometry.py`), the source's line-of-sight kinematics (`doppler.py`), the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system |
+| `src/gwlens/` | the physics library: wave optics (`waveoptics.py`), orbits (`geometry.py`), the source's line-of-sight kinematics (`doppler.py`), the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system (`system.py`) and the constants everything works in (`units.py`) |
+| `cases/` | `FIGURES.md`, what every figure in both cases shows and which script writes it |
 | `cases/case_A_chirp/` | the static-lens case: `run.py`, its figures, `RESULTS.md` (what they show), and `provenance/` — `numbers.json`, every number the case reports, written by the run rather than typed, and `claims.yaml`, which ties each claim to the code and the check behind it |
 | `cases/case_B_monochromatic/` | the moving-lens case, same structure |
 | `tests/` | every correctness check the case `RESULTS.md` files and `provenance/claims.yaml` point at; each file runs on its own and prints one PASS/FAIL line per check |
-| `wiki/` | this project's own working notes: `dependencies.md` (what depends on what, which folders are closed, and the edges that have actually caused damage &mdash; read it before editing anything), `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md`. Also `final-project.html`, a verbatim copy of the course assignment this project is answering, kept here so the repository carries its own brief |
+| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md`. Also `final-project.html`, a verbatim copy of the course assignment this project is answering, kept here so the repository carries its own brief |
 | `bibliography/` | the DOI of every work cited and an arXiv link where there is a free preprint. The PDFs are deliberately not committed — they are copyrighted by their journals |
 | `checks/independent_review/` | gitignored working space for fresh-agent reviews; kept empty between them |
 | `reproduce.sh` | the entry point for rebuilding any of it (below) |
@@ -66,10 +67,14 @@ lens, a 4-day, near-edge-on outer orbit), at two epochs of its inspiral:
   cycles of phase against the lens's 0.017 — a factor of 5206. The pulses
   are real and correctly computed; they are simply not the largest thing
   the outer orbit does, which is a distinction this project got wrong until
-  late and now states in both directions. The two are still separable,
-  because they happen a quarter period apart: the light-travel *delay* is
-  extremal exactly where the line-of-sight *velocity* vanishes, which is the
-  same instant the source passes behind the lens.
+  late and now states in both directions. The two are still separable, but
+  not by *when* they happen: the Roemer delay is extremal at the very
+  instant the pulse peaks, when the source passes behind the lens. It is the
+  Doppler *shift*, the delay's derivative, that is a quarter period out of
+  phase and vanishes there. What separates them is *what* each one touches
+  &mdash; the kinematics are pure timing and leave the strain envelope
+  intact to about one part in 10<sup>5</sup>, so the lensing pulse lives in
+  |F| and the kinematics move only the phase.
 
 Each `RESULTS.md` states every number with a pointer to the function that
 produced it and the check behind it; nothing there is asserted without both.
@@ -94,9 +99,18 @@ git clone https://github.com/fausto-bottazzini/Gravitational-Lensing-of-GWs.git
 cd Gravitational-Lensing-of-GWs
 ./reproduce.sh          # checks + both cases (~1-2 min, creates .venv)
 ./reproduce.sh checks   # just the correctness checks (fast, no figures written)
+./reproduce.sh cases    # just the two cases: figures, numbers, report.html
+./reproduce.sh html     # just report.html, from the case data already on disk
 ./reproduce.sh theory   # rebuilds theory/theory.pdf (needs a LaTeX install)
 ./reproduce.sh report   # rebuilds report/report.pdf and report.html (LaTeX)
 ```
+
+Note that `cases` and the default run both end by regenerating
+`report/report.html`, which inlines `cases/*/caseX_animation_data.json`: that
+keeps the deck from going stale against freshly-written case data, but it does
+mean the default run leaves `report/report.html` modified even when the data
+comes out identical. `git status` after a run, and `git checkout
+report/report.html` if you did not mean to touch it.
 
 No step needs anything pre-installed beyond Python 3.11+ and (for the
 `theory`/`report` steps only) a working LaTeX distribution (MiKTeX/TeX Live,
@@ -175,15 +189,18 @@ check run are expected; only one of them is the pycbc clobber.
 
 Per the assignment ([`wiki/final-project.html`](wiki/final-project.html), copied verbatim from the course repository): *hand it to a fresh
 agent that knows nothing, ask it to reproduce a result, and see how far it
-gets.* This repo was checked that way three times over (independent
-fresh-agent passes with no prior context, each fixing what the last one
-found); the same test can be repeated by anyone with a copy of this repo and
-an agent. `checks/independent_review/` is where those passes were written up;
-it is gitignored and is left empty once a round has been acted on.
+gets.* This repo was checked that way repeatedly, always by agents with no
+prior context: three passes during the build, each fixing what the last one
+found, a fourth over the finished repository, and a final round of six at
+once, one per part of it. The same test can be repeated by anyone with a
+copy of this repo and an agent. `checks/independent_review/` is where those
+passes were written up; it is gitignored and is left empty once a round has
+been acted on.
 
 What those passes were good for and what they were not is recorded in
-`wiki/log.md`. Briefly: they found the Fourier-sign bug, a `reproduce.sh`
-isolation bug, and an aliased animation panel; all three missed that the
+`wiki/log.md`. Briefly: the three build passes found the Fourier-sign bug, a
+`reproduce.sh` isolation bug, and an aliased animation panel; all three missed
+that the
 source's own kinematics were not modelled at all, which turned out to be the
 largest effect in Case B. A review returns a list whether or not anything is
 left to fix, so the list has to be filtered before it is acted on.

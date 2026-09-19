@@ -26,7 +26,7 @@ thing to read before editing anything in this repository.
 | `report/` | **CLOSED** | 2026-09-19 | `report.tex`/`.pdf`/`.bib`, `report.html`, `update_report_data.py` |
 | `wiki/` | open | — | these notes, plus the course brief |
 | `bibliography/` | **CLOSED** | 2026-09-18 | `README.md` (mirrors `refs.bib`) |
-| root | open | — | `README.md`, `reproduce.sh`, `requirements.txt` |
+| root | **CLOSED** | 2026-09-19 | `README.md`, `reproduce.sh`, `requirements.txt` |
 
 ## The graph
 

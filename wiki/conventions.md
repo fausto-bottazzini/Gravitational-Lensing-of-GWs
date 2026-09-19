@@ -38,9 +38,15 @@ examples. Pinned once in `src/gwlens/system.py`.
     outer periods. `y(t)` sweeps and modulates the pattern. `w_B = 0.31`:
     full diffraction.
 - The triple is Galactic, so `D_L`, `D_S`, `D_LS` are ordinary Euclidean
-  distances and the lens redshift is `z_L = 0`. Note that the orbital Doppler
-  shift plays the same role the `(1+z_L)` factor plays in the cosmological
-  literature (theory §4.4).
+  distances and the lens redshift is `z_L = 0`. The orbital Doppler shift does
+  *not* step into the role `(1+z_L)` plays in the cosmological literature
+  (theory §4.4). That factor exists because the lens sits in another epoch than
+  the observer, so the frequency in the lens plane is not the observed one.
+  Here lens and observer share one static background and the frequency is
+  conserved along the ray, while the kinematic shift happens at emission,
+  upstream of the lens, and is therefore already inside `f_obs` — which is what
+  `w` is built from. The diffraction pattern fixes `M_L` with no bias, and a
+  time-dependent `beta_los` could not have been a bias on a constant anyway.
 
 ## Units
 

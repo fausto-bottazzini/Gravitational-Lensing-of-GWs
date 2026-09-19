@@ -5,11 +5,12 @@ What is still open. Everything that is done and why it was done that way is in
 
 ## Pending
 
-The folder-by-folder tidy-up pass is finished: `theory/`, `src/`+`tests/`, the
-case figures, `report/` (both the deck and the written report), the provenance
-and `RESULTS.md` files, `wiki/`, `README.md` and `reproduce.sh` have each had
-one, and the two items that used to live here — the validity numbers reaching
-the report, and the README's stale description of `tests/` — are done.
+The folder-by-folder pass is finished and most of the repository is closed:
+`theory/` and `bibliography/` on 2026-09-18, then `src/`+`tests/`, `cases/` and
+`report/` on 2026-09-19, each with its own entry in `log.md`. The root was
+reviewed on 2026-09-19; it and `wiki/` are what is still open. The two items
+that used to live here — the validity numbers reaching the report, and the
+README's stale description of `tests/` — are done.
 
 What follows is what the six-reviewer round of 2026-09-18 (`log.md`) turned up
 and this pass did **not** act on. Each was checked and is real; each was left

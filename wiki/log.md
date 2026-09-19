@@ -530,6 +530,142 @@ here: four presentation defects in the deck, two in the one-turn page, and
 four in `src/`/`cases/`. They are listed there with what was measured, so the
 round's output survives having been filtered.
 
+### An evaluation against the course brief (2026-09-18)
+
+One more reviewer, asked to grade the finished repository the way the course
+would: against the assignment rather than against the physics. Its write-up
+stays in `checks/independent_review/`, local and gitignored, like the others.
+
+Four findings had no judgement in them and were taken as they came.
+`cases/FIGURES.md` opened with "nine figures: four per case", which is neither
+nine nor the actual four and six. `bibliography/README.md` said every entry
+carries a DOI; five of the twenty-six do not, the four books and PyCBC, which
+is exactly why the tables below it have no DOI column. The README spent half a
+page on native Windows and never said that `reproduce.sh` is Bash and will not
+run from PowerShell or `cmd`, which is the first wall a fresh agent on a clean
+Windows box hits. And running the checks dirties two committed files, not one:
+the pycbc clobber was warned about loudly, while `CHECKS_doppler.json` flipping
+`2.35e-10` to `2.36e-10` was mentioned nowhere.
+
+Two were larger. The three documents this project is presented from were
+anonymous: `report.tex`'s `\author` held the course name, `theory.tex`'s title
+page had no author line at all, and `report.html`'s byline was the course and
+the date. The surname appeared only inside a GitHub URL. The course is the
+subtitle now, which is where it belongs, and the author line holds the author.
+
+And `numbers.json` carried `F_evaluation_seconds`, wall-clock time. That is not
+a result: it does not reproduce, no check covers it, and it was the one key
+that changed between two runs of the same case, which is what blocked the
+cheapest test there is on that file, diffing it against a fresh run. It goes to
+stdout now. Both cases were re-run rather than hand-edited, since nothing in
+`numbers.json` is typed: Case B natively, Case A from the WSL venv with pycbc
+2.11.0 so the committed IMRPhenomD results stay IMRPhenomD. The re-run is worth
+recording on its own. In Case A the only change was the removed key; every
+other number, all four figures and the animation JSON came back bit-identical.
+In Case B two values moved in their last bits. `numbers.json` is now
+byte-identical between consecutive runs on one machine, which is the property
+the change was for.
+
+Two findings were declined, on the author's call. The slides that outgrow a
+short viewport stay as they are: the deck is not projected, the browser
+scrolls, and making the four fit would mean cutting content to win back a
+scrollbar. And the colophon's second paragraph, where two agents disagreed
+about whose the surviving errors are, was cut rather than defended: a good
+aside for a working document and the wrong note to end a submitted one on. The
+disclosure stays, and now closes where it should, on the errors being the
+author's.
+
+## Closing the repository, folder by folder (2026-09-18..19)
+
+### Why there is a rule at all
+
+`theory/` had been closed for a day when "review the rest of the folder" was
+read as including `theory.tex`, and a closed file was edited. It was caught
+within the minute and reverted whole with `git checkout -- theory/`, so nothing
+was lost. But nothing in the repository had ever stated that a closed folder is
+closed, so nothing could have stopped it either. `wiki/dependencies.md` was
+written that evening: the rule, a status table, and a Mermaid graph of what is
+built from what.
+
+The rule is short. A folder marked closed is not edited again, not tidied, not
+improved, not "while I am here"; only the author reopens it, and says so.
+Closing is per folder and the date is recorded. If a change to an open folder
+would force a change inside a closed one, that is not a licence to make it:
+stop and ask. Reviews may still *report* on closed folders, and acting on the
+report is a separate decision.
+
+A folder is closed when its own files agree with each other and with what
+produced them, and when everything downstream of it in the graph is still true.
+The second half is the one that takes the work.
+
+### The edges that actually caused damage
+
+The graph is mostly obvious. These are the arrows that are not, each here
+because it broke something at least once.
+
+`theory.tex` reaches `report.tex` by chapter *title*: the `\teoria{}` macro
+cites the theory by its words, not by a label, so renaming a chapter in a
+closed `theory/` silently falsifies a citation in an open `report/` and nothing
+errors. One of them already pointed at the wrong chapter.
+
+`refs.bib` is shared by `theory.tex` and `report.tex`, so an entry can look
+orphaned in one while being cited in the other. A review got this wrong and
+"fixed" two non-orphans.
+
+`case*_animation_data.json` reaches `report.html` by being *embedded*, not
+read. Re-running a case without running `report/update_report_data.py` leaves
+the deck showing stale numbers with no sign of it. And `caseB_pattern_only.png`
+reaches the same page through a marker positioned by percentage of the image,
+which is why that one PNG is saved without `bbox_inches="tight"`: change its
+margins and the marker drifts off the pattern silently.
+
+`numbers.json` reaches everything that quotes a number. `RESULTS.md`,
+`claims.yaml`, `FIGURES.md`, `report.tex` and `report.html` all transcribe
+values by hand, so every re-run needs those swept. This has gone stale
+repeatedly.
+
+`system.py` is upstream of both worlds: it feeds the cases *and*
+`theory/paraxial_validity.py`, whose JSON is transcribed into theory's Table
+4.1. Changing the pinned system reaches inside a closed folder.
+
+And native Windows reaches Case A: running `reproduce.sh checks` or `cases`
+without `pycbc` overwrites the committed IMRPhenomD results with the TaylorF2
+fallback. Case A is regenerated from the WSL venv, never natively.
+
+### theory/ closed (2026-09-18)
+
+Closed after the two review rounds above had been acted on: Eq. (A.36)'s
+doubled `5/3` exponent, the 4.4 claim about the kinematics standing in for a
+cosmological `(1+z_L)`, 7.2 contradicting itself about what separates the lens
+from the kinematics, and Eq. (7.5)'s analytic signal.
+
+One change was made to `theory.tex` after that, and only one: babel-spanish
+labels tables "Cuadro" while the prose calls them "Tabla", twice, so the same
+object had two names in one document. It goes through `\addto\captionsspanish`
+because babel sets `\tablename` at `\begin{document}` and a bare
+`\renewcommand` in the preamble is overwritten, which is how the first attempt
+silently did nothing.
+
+`OUTLINE.md` described a folder slightly different from the one on disk: "a
+single figure (4.1)" where there are three, two of them drawn in TikZ inside
+the `.tex`; numbers appearing "only in ejemplo boxes" where Table 4.1 is this
+system's numbers and is not one; every reference having a DOI, the same wrong
+count corrected in `bibliography/README.md`; and a package list missing
+`booktabs` and `hyperref`.
+
+Checked and left alone: `paraxial_validity.py` reproduces its JSON exactly and
+all six values match Table 4.1, `pulsos_esquema.py` reproduces its PDF byte for
+byte apart from the timestamp, all 26 `refs.bib` entries are cited, and the
+`.tex` contains no repository path, no `run.py` and no check name, which is the
+separation `OUTLINE.md` promises.
+
+### bibliography/ closed (2026-09-18)
+
+Its `README.md` is the only file in it. It agrees with `refs.bib` entry for
+entry and DOI for DOI, and it now says the `.bib` is shared with `report.tex`,
+which is the fact a review had already tripped over: an entry can look uncited
+in either document while being cited in the other.
+
 ### src/gwlens closed (2026-09-19)
 
 Verified rather than assumed. All 44 checks run from the WSL venv with pycbc,
@@ -652,6 +788,49 @@ section now called Conclusiones.
 Left as it is, on the author's call: slides 8, 9, 12 and 14 of report.html
 outgrow a short viewport (todo.md), and the fifth panel of Figure 5 stays
 because removing it would mean reopening cases/.
+
+### root closed (2026-09-19)
+
+Reviewed against the state of everything else rather than on its own. The one
+thing that mattered was a physics error: the README's Case B bullet still said
+the lens and the kinematics are separable "because they happen a quarter period
+apart", the same error corrected in `theory.tex` and then again in
+`report.tex`, and the sentence contradicted itself in passing by locating the
+delay's extremum at the instant of conjunction. It now says what the other two
+say: the Roemer delay is extremal exactly where the pulse peaks, it is the
+Doppler shift that is in quadrature, and what separates them is not when they
+happen but what each one touches.
+
+The rest was drift. The `report/` row of the repository map did not mention
+`report.tex` or the new `report.bib`; `cases/FIGURES.md` and `src/gwlens`'s
+`units.py` were not in the map at all. The usage block documented four of
+`reproduce.sh`'s six targets, leaving out `cases` and `html`, and said nothing
+about the fact that `cases` and the default run both end by regenerating
+`report/report.html` -- which now matters, because `report/` is closed and a
+reader following the README leaves it modified. And "checked that way three
+times over" had stopped being true three review rounds ago.
+
+Verified rather than assumed, since the point of the pass was agreement with
+the rest: `theory.tex` is 135 524 characters against a 538 KB PDF, which is
+what the file claims; the four pins in `requirements.txt` match; no markdown
+link is broken; and every number in the two case bullets matches
+`numbers.json`, down to the echo at 3.434 s, the 49.94% that the text calls
+"exactly half", and the 5206 ratio.
+
+A second pass over the root, before closing it, found the one thing the first
+had missed and the one that would have mattered most to a stranger:
+`reproduce.sh` was tracked as mode `100644`. The file has its shebang and runs
+fine here, because Windows does not carry the bit, but git does, so every
+clone on Linux, macOS or WSL got a `reproduce.sh` without `+x` and the
+`./reproduce.sh` the README prints on its third line fails with "Permission
+denied". Exactly the wall the repository's own reproducibility test exists to
+find, on the one file it would hit first, and three fresh-agent passes missed
+it because each was run from a working tree that already had the bit. Now
+`100755`.
+
+Otherwise `reproduce.sh`, `requirements.txt` and `.gitignore` needed nothing:
+the script parses under `bash -n`, its six targets are the six the README now
+lists, and nothing it references has moved.
 
 ## Stated limits
 
