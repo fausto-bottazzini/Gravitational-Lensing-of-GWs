@@ -1,8 +1,21 @@
 \documentclass[11pt]{article}
 \usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage[spanish,es-nodecimaldot,es-noquoting]{babel}
+
+% --- tipografia: cuerpo y matematica en la misma familia (Times/newtx), la
+%     misma que theory.tex. Sin esto el documento sale en Computer Modern, el
+%     default de LaTeX, cuyos trazos finos a 11 pt dan una pagina palida y
+%     despareja. microtype cierra el rio blanco que queda en las columnas. ---
+\usepackage{amsmath}
+\usepackage{newtxtext}
+\let\openbox\relax
+\usepackage{newtxmath}
+\let\Bbbk\relax
+\usepackage{amssymb}
+\usepackage{microtype}
+
 \usepackage[a4paper,margin=2.4cm]{geometry}
-\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[numbers,sort&compress]{natbib}
@@ -29,7 +42,7 @@ en un Sistema Triple Jer\'arquico\\[4pt]
 \begin{abstract}
 \noindent
 Una binaria compacta que orbita un tercer cuerpo mucho m\'as masivo est\'a
-siendo lensada por su propio compa\~nero. Este informe calcula ese efecto en
+sufriendo el efecto de lente de su propio compa\~nero. Este informe calcula ese efecto en
 \'optica de ondas para un mismo triple jer\'arquico observado en dos \'epocas
 del inspiral de su binaria interna. La elecci\'on de la masa del lente pone a
 esas dos \'epocas a lados opuestos de la transici\'on entre difracci\'on y
@@ -40,8 +53,8 @@ un extremo, pulsos peri\'odicos de amplificaci\'on con anillado de difracci\'on
 y sin im\'agenes separadas; en el otro, dos im\'agenes, franjas de
 interferencia y un eco tard\'io. El informe se ocupa de esos dos l\'imites, de
 c\'omo se conectan, y de un resultado que la geometr\'ia ligada impone y el
-lensing cosmol\'ogico no tiene: la mitad exacta de cada \'orbita no est\'a
-lensada, y la misma \'orbita escribe sobre la se\~nal una huella cinem\'atica
+lensing cosmol\'ogico no tiene: en la mitad exacta de cada \'orbita no hay
+lente, y la misma \'orbita escribe sobre la se\~nal una huella cinem\'atica
 tres \'ordenes de magnitud mayor que la \'optica. Las deducciones est\'an en
 \href{../theory/theory.pdf}{\code{theory/theory.pdf}}, que este documento cita
 y no repite; los n\'umeros y figuras los producen los scripts de
@@ -67,7 +80,7 @@ visi\'on, y por lo tanto se anula dos veces por per\'iodo. Durante la mitad de
 la \'orbita la fuente est\'a \emph{delante} del lente y no hay geometr\'ia de
 lente en absoluto: $F=1$ exactamente, por construcci\'on y no por
 aproximaci\'on. Medido sobre la observaci\'on del Caso~B, la fracci\'on de
-tiempo lensada es $0.4994$. De ah\'i salen los pulsos peri\'odicos.
+tiempo con lente es $0.4994$. De ah\'i salen los pulsos peri\'odicos.
 
 \paragraph{El lente se mueve por el patr\'on.} El par\'ametro de impacto
 adimensional $y(t)$ recorre el patr\'on de difracci\'on una vez por per\'iodo
@@ -158,7 +171,7 @@ y el umbral entre ellas se deducen en
 \teoria{cap.~``De la ecuaci\'on de onda a la integral de difracci\'on'' y
 cap.~``El lente de masa puntual''}. Ac\'a s\'olo se usan.
 
-La forma de onda no lensada del Caso~A es \textbf{IMRPhenomD}
+La forma de onda sin lente del Caso~A es \textbf{IMRPhenomD}
 \citep{Khan2016} v\'ia \code{pycbc} \citep{PyCBC}: un modelo calibrado contra
 relatividad num\'erica, con merger y ringdown reales, no una aproximaci\'on de
 inspiral solamente. El lensing es una \'unica multiplicaci\'on compleja por
@@ -300,16 +313,16 @@ La fuente est\'a quieta en $y_A$ (la cruz): lo que se mueve es la frecuencia.}
 hacia arriba hasta el merger. Abajo con lente: \textbf{dos}, la misma traza
 repetida $\Delta T=3.43$~s m\'as tarde y a $\sqrt{|\mu_-|}=0.24$ de la
 amplitud. Dos im\'agenes son dos trazas --- toda la \'optica geom\'etrica del
-lensing en una figura. El moteado a lo largo de la traza lensada a baja
+lensing en una figura. El moteado a lo largo de la traza con lente a baja
 frecuencia es la interferencia entre ambas.}
 \end{figure}
 
 \subsection*{El eco, y por qu\'e es la firma inequ\'ivoca}
 
-En \'optica geom\'etrica la se\~nal lensada es la suma coherente de dos copias
+En \'optica geom\'etrica la se\~nal con lente es la suma coherente de dos copias
 de la misma onda, separadas por un retardo \textbf{fijo}. En el dominio del
 tiempo eso tiene una consecuencia que no admite otra lectura: despu\'es de que
-la se\~nal sin lente termin\'o, la lensada todav\'ia no.
+la se\~nal sin lente termin\'o, la otra todav\'ia no.
 
 \begin{figure}[H]
 \centering
@@ -325,9 +338,9 @@ l\'imite $q=1$.}
 \subsection*{El cociente de envolventes, y por qu\'e no es $|F|$ en todas
 partes}
 
-Dividir la envolvente lensada por la no lensada deber\'ia dar $|F|$, y en el
+Dividir la envolvente con lente por la de sin lente deber\'ia dar $|F|$, y en el
 medio lo da. En los extremos no, y la raz\'on es la misma vista dos veces.
-Siendo la se\~nal lensada la suma de dos copias y siendo lineal la se\~nal
+Siendo la se\~nal con lente la suma de dos copias y siendo lineal la se\~nal
 anal\'itica, el cociente vale \emph{exactamente}
 \begin{equation}
   \frac{\mathrm{env}_{\rm lente}}{\mathrm{env}_{\rm sin}}
@@ -353,7 +366,7 @@ Los n\'umeros del eco son los siguientes. La segunda imagen entra $11.75$~s
 antes del merger --- la se\~nal empieza $15.18$~s antes y la copia llega
 $\Delta T$ despu\'es --- y desde ah\'i hay interferencia. El pico del eco cae
 en $t_\mathrm{merger}+\Delta T$ a menos de $9.4\times10^{-4}$~s, con una
-amplitud de $0.23948$ del pico no lensado, que coincide con la magnificaci\'on
+amplitud de $0.23948$ del pico sin lente, que coincide con la magnificaci\'on
 de la propia imagen d\'ebil, $\sqrt{|\mu_-|}=0.23960$, al $0.05\%$. En ese
 mismo instante la se\~nal sin lente est\'a en su piso num\'erico, cuatro
 \'ordenes de magnitud por debajo. Es decir: una se\~nal real, separada, que
@@ -361,8 +374,8 @@ llega despu\'es, presente s\'olo por el lente, y cuantitativamente correcta.
 
 Vale se\~nalar que ambas copias se construyen s\'olo con el pasado de la
 fuente, de modo que la causalidad nunca est\'a en juego. $F$ est\'a referida a
-la llegada de la imagen fuerte, as\'i que el pico lensado cae en el mismo
-instante que el no lensado --- a $1.5$~ms, tres pasos de muestreo a $2048$~Hz,
+la llegada de la imagen fuerte, as\'i que el pico con lente cae en el mismo
+instante que el pico sin lente --- a $1.5$~ms, tres pasos de muestreo a $2048$~Hz,
 sobre un retardo entre im\'agenes de $3.43$~s --- y no antes; una fase absoluta no sustra\'ida har\'ia parecer lo contrario sin que
 nada f\'isico hubiera cambiado (\teoria{cap.~``El lente de masa puntual''}).
 
@@ -371,7 +384,7 @@ nada f\'isico hubiera cambiado (\teoria{cap.~``El lente de masa puntual''}).
 El pico de $|h(t)|$ sube un $5.6\%$ y la amplificaci\'on RMS vale $1.05568$.
 Pero $F(f)$ modula \textbf{fase} adem\'as de amplitud, con $\arg F$ acotado en
 $\pm0.235$~rad y oscilando en fase con cada franja, as\'i que la forma de onda
-lensada es una copia \emph{desfasada} y no simplemente reescalada. Esa es la
+con lente es una copia \emph{desfasada} y no simplemente reescalada. Esa es la
 diferencia operativa entre lensing y una recalibraci\'on de distancia: una
 distancia menor multiplica la amplitud y no toca la fase.
 
@@ -459,9 +472,9 @@ pulso, que trae $w_B$ y por lo tanto la masa del lente.
 
 La misma \'orbita externa arrastra a la fuente a lo largo de la l\'inea de
 visi\'on, y el retardo de Roemer que eso produce es de $1810$~s pico a pico:
-a $f_B$, unos $\mathbf{90.5}$ \textbf{ciclos} de fase escritos sobre la onda.
-La fase que escribe el lente mismo, $\arg F/2\pi$, vale $\mathbf{0.017}$
-\textbf{ciclos}. Un factor $5206$. El retardo entre im\'agenes en el pulso,
+a $f_B$, unos $90.5$ ciclos de fase escritos sobre la onda.
+La fase que escribe el lente mismo, $\arg F/2\pi$, vale $0.017$
+ciclos. Un factor $5206$. El retardo entre im\'agenes en el pulso,
 $3.43$~s, es $527$ veces menor que el de Roemer.
 
 Esto no es un defecto del c\'alculo: es c\'omo se ve realmente un triple
@@ -497,7 +510,7 @@ Doppler es m\'inimo justo donde $F$ m\'as importa, evaluar $F$ al $w_B$
 nominal fijo en vez de al $w$ instant\'aneo observado es leg\'itimo. Eso es un
 argumento, as\'i que ac\'a est\'an los n\'umeros, y son cuatro: el error en
 $|F|$ vale $1.1\times10^{-4}$ \emph{en el pulso} y hasta $3.5\times10^{-3}$ en
-el peor punto de la mitad lensada; el error en $\arg F$ vale
+el peor punto de la mitad con lente; el error en $\arg F$ vale
 $2.5\times10^{-5}$ en el pulso y hasta $5.6\times10^{-4}$ en el peor punto.
 Los peores casos caen lejos del pulso, sobre el flanco empinado de una franja,
 donde $|F|$ est\'a cerca de $1$ y no pesa en ning\'un resultado citado ac\'a.
@@ -516,75 +529,124 @@ El mismo lente y el mismo formalismo, dos firmas que no se parecen, y lo que
 las separa es enteramente una raz\'on de escalas temporales entre la
 duraci\'on de la se\~nal, el per\'iodo externo y la ventana de observaci\'on.
 
-\begin{itemize}
-  \item \textbf{Un patr\'on, dos formas de muestrearlo.} En el Caso~A el
-    patr\'on est\'a congelado y se muestrea en un punto, barrido en
-    \emph{frecuencia} por el propio chirp: salen franjas de interferencia
-    densas, $\sim$400 en la banda. En el Caso~B est\'a a frecuencia fija y se
-    muestrea en \emph{tiempo} por el movimiento orbital: salen pulsos
-    peri\'odicos. Es el mismo $F(w,y)$ recorrido por ejes distintos.
+Es un solo patr\'on muestreado de dos maneras. En el Caso~A est\'a congelado y
+se lo muestrea en un punto, barrido en \emph{frecuencia} por el propio chirp:
+de ah\'i las franjas de interferencia densas, unas $400$ en la banda. En el
+Caso~B est\'a a frecuencia fija y se lo muestrea en \emph{tiempo}, por el
+movimiento orbital: de ah\'i los pulsos peri\'odicos. El objeto es el mismo
+$F(w,y)$; lo que cambia es el eje por el que se lo recorre.
 
-  \item \textbf{Los dos l\'imites de la misma integral.} A $w=0.31$ hay
-    difracci\'on y anillado, y ninguna imagen; a $w=62$--$778$ hay dos
-    im\'agenes, un retardo fijo y un eco, y la \'optica geom\'etrica acierta a
-    dos partes en $10^4$. Que un mismo sistema, en dos \'epocas de un mismo
-    inspiral, recorra los dos reg\'imenes es la raz\'on por la que se eligi\'o
-    esta masa de lente.
+Son tambi\'en los dos l\'imites de una misma integral. A $w=0.31$ hay
+difracci\'on y anillado, y ninguna imagen; a $w=62$--$778$ hay dos im\'agenes,
+un retardo fijo y un eco, y la \'optica geom\'etrica acierta a dos partes en
+$10^{4}$. Que un mismo sistema, en dos \'epocas de un mismo inspiral, recorra
+los dos reg\'imenes es la raz\'on por la que se eligi\'o esta masa de lente. Y
+en ninguno de los dos el efecto se reduce a ``m\'as brillante'': $F$ es
+complejo, y su fase deja una marca verificable --- franjas acotadas en el
+Caso~A, un eco separado en el tiempo --- que ninguna recalibraci\'on de
+amplitud reproduce.
 
-  \item \textbf{El lensing no es ``m\'as brillante''.} $F$ es complejo. Su
-    fase deja una marca verificable --- franjas acotadas en el Caso~A, un eco
-    separado en el tiempo --- que ninguna recalibraci\'on de amplitud
-    reproduce.
+Hay adem\'as algo que aparece s\'olo porque el lente est\'a ligado a la
+fuente: en la mitad de la \'orbita no hay lente en absoluto. No es una
+aproximaci\'on ni un corte, es $D_{LS}$ cambiando de signo, y el problema de
+lente cosmol\'ogico no lo tiene.
 
-  \item \textbf{La mitad de la \'orbita no est\'a lensada, por geometr\'ia.}
-    No es una aproximaci\'on ni un corte: es $D_{LS}$ cambiando de signo, algo
-    que el problema de lente cosmol\'ogico no tiene y que un lente ligado
-    impone.
-
-  \item \textbf{Y la misma raz\'on de escalas decide algo que no es
-    \'optica.} Cu\'anto de la velocidad de la fuente es observable. En el
-    Caso~A, $15$~s de una \'orbita de 4 d\'ias, casi todo es degenerado con
-    $t_c$ y con la masa de chirp, y lo que queda vale $0.0068$~rad. En el
-    Caso~B, tres per\'iodos completos, nada es degenerado y el mismo efecto
-    vale $90$ ciclos. La \emph{misma} \'orbita y la misma velocidad; lo que
-    cambia es cu\'anto de ella entra en la ventana.
-\end{itemize}
+Por \'ultimo, esa misma raz\'on de escalas decide algo que ya no es \'optica:
+cu\'anto de la velocidad de la fuente resulta observable. En el Caso~A, $15$~s
+de una \'orbita de 4 d\'ias, casi todo es degenerado con $t_c$ y con la masa
+de chirp, y lo que sobrevive vale $0.0068$~rad. En el Caso~B, tres per\'iodos
+completos, nada es degenerado y el mismo efecto vale $90$ ciclos. La
+\emph{misma} \'orbita y la misma velocidad; lo que cambia es cu\'anto de ella
+entra en la ventana.
 
 % ======================================================================
 \section{Alcance y limitaciones}
 % ======================================================================
 
-Declaradas expl\'icitamente, no dejadas impl\'icitas:
+El alcance de lo que se calcul\'o conviene declararlo antes que dejarlo
+impl\'icito.
 
-\begin{itemize}
-  \item S\'olo lente de masa puntual; sin distribuci\'on de masa extendida.
-  \item IMRPhenomD es un modelo calibrado, no re-derivado ac\'a; el generador
-    de respaldo TaylorF2 est\'a truncado a 2PN y no tiene merger ni ringdown;
-    la evoluci\'on de frecuencia del Caso~B es s\'olo de orden dominante.
-  \item Sin calibraci\'on absoluta de strain: los prefactores de
-    inclinaci\'on y polarizaci\'on quedan plegados en una constante de orden
-    $1$. S\'olo las amplitudes relativas y el factor de amplificaci\'on son
-    afirmaciones f\'isicas.
-  \item La vista de detector no tiene ruido, patr\'on de antena ni filtrado
-    adaptado: es ilustrativa.
-  \item La aproximaci\'on de lente delgado se empuja de manera cuantificable
-    cerca de cada cruce $D_{LS}=0$ del Caso~B, en una ventana de $\sim$60~s
-    por cruce que coincide con la regi\'on ya trivial $F\approx1$
-    (\teoria{cap.~``Geometr\'ia del triple como sistema de lente''}).
-  \item En el Caso~B, $\arg F$ es la fase residual respecto de la primera
-    imagen instant\'anea: el retardo gravitatorio com\'un variable de esa
-    imagen no se modela, y el factor $5206$ compara Roemer contra esa fase
-    residual, no contra todo el retardo gravitatorio.
-  \item La cinem\'atica de la fuente entra por tiempo retardado. El resto ---
-    corrimiento gravitatorio m\'as Doppler transverso --- es exactamente
-    constante para una \'orbita circular, $4.076\times10^{-4}$, y por lo tanto
-    exactamente degenerado con la masa de chirp: es un sesgo sobre cualquier
-    $\mathcal M$ inferida, no un rasgo de ninguna forma de onda. Se reporta
-    sin aplicarse. Para una \'orbita externa exc\'entrica dejar\'ia de ser
-    constante y habr\'ia que aplicarlo.
-  \item El Doppler entra en la forma de onda pero \textbf{no} en $F$, con los
-    cuatro n\'umeros del \S\ref{sec:caseB} como cota.
-\end{itemize}
+El lente es una masa puntual, sin distribuci\'on extendida, tratada en la
+aproximaci\'on de lente delgado. Esa aproximaci\'on se tensa de manera
+cuantificable cerca de cada cruce $D_{LS}=0$ del Caso~B, en una ventana de
+unos $60$~s por cruce; es tambi\'en, y no por casualidad, la regi\'on donde
+$y\to\infty$ y $F\to1$, de modo que lo que ah\'i se describir\'ia mal no tiene
+ning\'un efecto de lente que describir
+(\teoria{cap.~``Geometr\'ia del triple como sistema de lente''}).
+
+La forma de onda de la fuente no se re-deduce ac\'a. IMRPhenomD es un modelo
+calibrado que se usa tal cual, y el generador de respaldo TaylorF2 est\'a
+truncado a 2PN, sin merger ni ringdown; la evoluci\'on de frecuencia del
+Caso~B es s\'olo de orden dominante. Tampoco hay calibraci\'on absoluta de
+strain: los prefactores de inclinaci\'on y polarizaci\'on quedan plegados en
+una constante de orden $1$, as\'i que las afirmaciones f\'isicas son las
+amplitudes \emph{relativas} y el factor de amplificaci\'on, no el nivel de la
+se\~nal. La vista de detector es, en consecuencia, ilustrativa --- no tiene
+ruido, ni patr\'on de antena, ni filtrado adaptado --- y no sostiene ninguna
+afirmaci\'on de detectabilidad.
+
+Sobre qu\'e mide exactamente la fase en el Caso~B hay una salvedad que vale la
+pena. $F$ est\'a referida a la llegada de la primera imagen, y cuando $y$
+depende del tiempo esa sustracci\'on tambi\'en: lo que queda es una fase
+\emph{residual} respecto de la primera imagen instant\'anea. El retardo
+gravitatorio com\'un de esa imagen no se modela, de manera que el factor
+$5206$ compara Roemer contra esa fase residual y no contra todo el retardo
+gravitatorio.
+
+De la cinem\'atica de la fuente entra lo que es observable, y lo que no, se
+reporta. El retardo de Roemer entra por tiempo de emisi\'on retardado. El
+resto --- corrimiento gravitatorio m\'as Doppler transverso --- es exactamente
+constante para una \'orbita circular, $4.076\times10^{-4}$, y por lo tanto
+exactamente degenerado con la masa de chirp: es un sesgo sobre cualquier
+$\mathcal M$ que se infiera, no un rasgo de ninguna forma de onda, y por eso
+se reporta sin aplicarse. Para una \'orbita externa exc\'entrica dejar\'ia de
+ser constante y habr\'ia que aplicarlo. El Doppler, por \'ultimo, entra en la
+forma de onda pero \textbf{no} en $F$, con los cuatro n\'umeros del
+\S\ref{sec:caseB} como cota de lo que esa omisi\'on cuesta.
+
+% ======================================================================
+\section{Conclusiones}
+% ======================================================================
+
+Un mismo triple jer\'arquico, observado en dos \'epocas de un solo inspiral,
+cae a lados opuestos de la transici\'on entre \'optica de ondas y \'optica
+geom\'etrica, y eso alcanza para que un \'unico factor de amplificaci\'on
+produzca dos firmas que no se parecen en nada.
+
+En el Caso~A, con $w$ entre $62$ y $778$, el c\'alculo en \'optica de ondas
+confirma el l\'imite geom\'etrico en lugar de contradecirlo: las dos
+descripciones coinciden a dos partes en $10^{4}$, las $\sim$400 franjas de la
+banda tienen el per\'iodo fijo $1/\Delta T$ que predice el retardo entre
+im\'agenes, y en el dominio del tiempo aparece un eco separado cuya amplitud,
+$0.23948$ del pico sin lente, es la magnificaci\'on
+$\sqrt{|\mu_-|}=0.23960$ de la imagen d\'ebil. Ese acuerdo al $0.05\%$ entre
+un n\'umero medido sobre la se\~nal reconstruida y otro que sale de la
+\'optica geom\'etrica, sin nada ajustado en el medio, es la validaci\'on de
+punta a punta de toda la cadena; la amplificaci\'on RMS contra el
+$\sqrt{A(y_A)}$ de Parseval, que cierra a $1.6\times10^{-4}$, es la segunda.
+
+En el Caso~B, con $w=0.31$, no hay im\'agenes que separar: hay difracci\'on y
+anillado, y el movimiento orbital recorre ese patr\'on una vez por per\'iodo,
+produciendo pulsos de amplificaci\'on repetidos. La mitad exacta de cada
+\'orbita no tiene lente en absoluto, porque $D_{LS}$ cambia de signo ---
+consecuencia directa de que el lente est\'e ligado a la fuente, que es
+justamente lo que el problema cosmol\'ogico no tiene.
+
+El resultado que este trabajo no esperaba es el tercero. Lo m\'as grande que
+la \'orbita externa le hace a la se\~nal no es el lensing, sino la
+cinem\'atica de la propia fuente: el retardo de Roemer escribe $90.5$ ciclos
+de fase donde el lente escribe $0.017$, un factor $5206$. Los pulsos son
+reales y son los que llevan la masa del lente, pero no son el efecto m\'as
+grande, y decirlo en las dos direcciones es parte del resultado. Que adem\'as
+sigan siendo separables no es por su tama\~no sino por su naturaleza: la
+cinem\'atica es puro \emph{timing} y deja $|F|$ intacto, mientras que el pulso
+vive precisamente en $|F|$.
+
+Lo que queda por hacer est\'a delimitado por lo mismo que se declar\'o arriba.
+Una \'orbita externa exc\'entrica volver\'ia variable el corrimiento que ac\'a
+es constante y asim\'etricos los pulsos; y el retardo gravitatorio com\'un de
+la primera imagen m\'ovil es lo que har\'ia del Caso~B una plantilla temporal
+completa en lugar de un c\'alculo de modulaci\'on.
 
 \renewcommand{\refname}{Referencias}
 \bibliographystyle{unsrtnat}
