@@ -10,10 +10,12 @@ and the folder arrives empty.
 Download them yourself from the links below. Every journal article has a DOI;
 the four books and the PyCBC software entry do not, which is why the Books and
 Software tables further down have no DOI column. Where a free preprint exists,
-the arXiv link is given and is the one to use, since it needs no subscription. Authoritative bibliographic data — the same DOIs, in
-BibTeX — is in `theory/refs.bib`, which is what `theory/theory.tex` actually
-compiles against; this file is the human-readable version of it plus the
-download links.
+the arXiv link is given and is the one to use, since it needs no
+subscription. Authoritative bibliographic data — the same DOIs, in BibTeX —
+is in `theory/refs.bib`, which both `theory/theory.tex` and
+`report/report.tex` compile against; an entry can therefore look uncited in
+one of them and be cited in the other. This file is the human-readable
+version of that `.bib`, plus the download links.
 
 Nothing in this repository reads these PDFs. They are here for a reader who
 wants to check a citation against its source, and every equation cited in
