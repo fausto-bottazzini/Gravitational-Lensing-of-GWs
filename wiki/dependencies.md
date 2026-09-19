@@ -21,7 +21,7 @@ thing to read before editing anything in this repository.
 |---|---|---|---|
 | `theory/` | **CLOSED** | 2026-09-18 | `theory.tex`/`.pdf`, `OUTLINE.md`, `refs.bib`, `paraxial_validity.py` + its JSON, `pulsos_esquema.py` + its PDF |
 | `src/gwlens/` | **CLOSED** | 2026-09-19 | the physics library and the pinned system |
-| `tests/` | open | — | the checks and their `CHECKS*.json` records |
+| `tests/` | **CLOSED** | 2026-09-19 | the checks and their `CHECKS*.json` records |
 | `cases/` | open | — | both `run.py`, the figures, `RESULTS.md`, `provenance/`, `FIGURES.md` |
 | `report/` | open | — | `report.tex`/`.pdf`, `report.html`, `update_report_data.py` |
 | `wiki/` | open | — | these notes, plus the course brief |
@@ -37,7 +37,7 @@ flowchart LR
     LIB["waveoptics · geometry<br/>doppler · chirp<br/>taylorf2 · imr_waveform"]
   end
 
-  subgraph TST["tests/ · open"]
+  subgraph TST["tests/ · CLOSED"]
     TESTS["test_*.py"]
     CHK["CHECKS*.json"]
   end
@@ -92,7 +92,7 @@ flowchart LR
   FIGS --> RHTML
 
   classDef closed fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  class PVPY,PVJS,PUPY,PUPDF,BIB,TEX,TPDF,OUT,SYS,LIB closed;
+  class PVPY,PVJS,PUPY,PUPDF,BIB,TEX,TPDF,OUT,SYS,LIB,TESTS,CHK closed;
 ```
 
 ## Edges that have actually caused damage

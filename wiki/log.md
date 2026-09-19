@@ -552,6 +552,31 @@ with only a numpy warning. geometry.impact_parameter_of_time returns inf on
 the unlensed half by design and the F = 1 substitution is the caller's job; no
 caller forgets it today.
 
+### tests/ closed (2026-09-19)
+
+Closed with src/, since the same pass covers both: the checks live here, they
+run against src/, and every CHECKS*.json came back byte-identical.
+
+What changed here this round is worth recording, because it is the reason the
+folder can be closed at all. A review mutation-tested the suite instead of
+reading it and found three checks that could not fail:
+check_leading_order_group_delay claimed to validate spa_phase and never called
+it, which left every TaylorF2 phase coefficient untested; the envelope check
+asserted only monotonicity, which any positive power of f satisfies; and the
+causality check's weak-image window was one-sided and 5x wide, so it passed
+with the exact normalization bug its own docstring says it rules out.
+
+Three checks were added -- one that inverts spa_phase's own output for the PN
+polynomial and compares it against Buonanno et al. (2009) Eq. 3.18, and two
+ratio checks for the amplitude exponents -- and the weak-image window was made
+two-sided at 5%. Six mutations that previously passed the suite in silence now
+fail it: phi2, phi3's sign, v^5 to v^6, the f^(-7/6) amplitude exponent, the
+envelope's f^(2/3), and doubling the entire leading-order phase. Verified on a
+copy of the tree, never in place.
+
+44 checks, none skipped, run from the WSL venv so the IMR one executes rather
+than being skipped for want of pycbc.
+
 ## Stated limits
 
 Deliberately not done, and why:
