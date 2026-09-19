@@ -23,7 +23,7 @@ thing to read before editing anything in this repository.
 | `src/gwlens/` | **CLOSED** | 2026-09-19 | the physics library and the pinned system |
 | `tests/` | **CLOSED** | 2026-09-19 | the checks and their `CHECKS*.json` records |
 | `cases/` | **CLOSED** | 2026-09-19 | both `run.py`, the figures, `RESULTS.md`, `provenance/`, `FIGURES.md` |
-| `report/` | open | — | `report.tex`/`.pdf`, `report.html`, `update_report_data.py` |
+| `report/` | **CLOSED** | 2026-09-19 | `report.tex`/`.pdf`/`.bib`, `report.html`, `update_report_data.py` |
 | `wiki/` | open | — | these notes, plus the course brief |
 | `bibliography/` | **CLOSED** | 2026-09-18 | `README.md` (mirrors `refs.bib`) |
 | root | open | — | `README.md`, `reproduce.sh`, `requirements.txt` |
@@ -62,7 +62,7 @@ flowchart LR
     OUT["OUTLINE.md"]
   end
 
-  subgraph REP["report/ · open"]
+  subgraph REP["report/ · CLOSED"]
     UPD["update_report_data.py"]
     RTEX["report.tex"]
     RPDF["report.pdf"]
@@ -93,7 +93,7 @@ flowchart LR
 
   classDef closed fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
   class PVPY,PVJS,PUPY,PUPDF,BIB,TEX,TPDF,OUT,SYS,LIB,TESTS,CHK,
-        RUNA,RUNB,NUM,FIGS,ANIM,PROV closed;
+        RUNA,RUNB,NUM,FIGS,ANIM,PROV,UPD,RTEX,RPDF,RHTML closed;
 ```
 
 ## Edges that have actually caused damage

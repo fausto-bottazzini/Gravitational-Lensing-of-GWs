@@ -605,6 +605,54 @@ Not acted on, and the author's call: FIGURES.md documents caseB_pattern.png
 last, after the interactive page that uses it, and the stated run time for
 Case B is ~10 s in FIGURES.md against ~7 s in its own RESULTS.md.
 
+### report/ closed (2026-09-19)
+
+Closed after four rounds of annotations on the PDF, worked as a whole rather
+than patch by patch. What the rounds turned up, in the order they mattered:
+
+The typeface. report.tex loaded no font package, so it came out in Computer
+Modern and read pale and thin. newtx now, the same Times as the theory.
+
+The structure. It had no conclusion, and its two closing sections were
+bulleted lists. Then, once there was one, the conclusions repeated the
+synthesis section three pages above them almost point for point. Those three
+sections are now two: scope and limitations, then a single Conclusiones.
+
+The introduction. It pointed at theory.pdf and assumed the reader knew: no
+schematic, no distances, F used before being defined. There is now a TikZ
+figure with the observer, the lens, the source on its outer orbit and D_L,
+D_S, D_LS drawn; F is defined as h_L = F h before it is used; and section 2
+states the diffraction integral and its two approximations instead of
+asserting a closed form exists.
+
+The figures. Nine of them, one label between them, and not one reference from
+the text; three sat stacked with no prose in between. All labelled, all called
+by number from the paragraph that needs them.
+
+The citations to the theory. \teoria{} expanded to an \href at a neighbouring
+PDF that resolves in no viewer. It is a bibliography entry now, in
+report/report.bib so that the closed theory/ is untouched.
+
+And the register: "lensada" fifteen times, forty em dashes where Spanish uses
+commas, ten bold words, notes-to-self left in the text, and several passages
+that repeated themselves.
+
+One physics correction among them: the report still said the lens and the
+kinematics separate because they fall at different orbital phases. The Roemer
+delay is extremal exactly where the pulse peaks; only the Doppler shift is in
+quadrature. Same error already corrected in theory.tex.
+
+Verified before closing: nine citations with no orphans, twenty-two labels
+with no dangling reference, eight \includegraphics that all resolve, no broken
+local target in report.html, both embedded data blocks parsing equal to the
+case exports, and update_report_data.py running clean without dirtying the
+tree. Renamed one label that survived the section merge, sec:juntos on a
+section now called Conclusiones.
+
+Left as it is, on the author's call: slides 8, 9, 12 and 14 of report.html
+outgrow a short viewport (todo.md), and the fifth panel of Figure 5 stays
+because removing it would mean reopening cases/.
+
 ## Stated limits
 
 Deliberately not done, and why:
