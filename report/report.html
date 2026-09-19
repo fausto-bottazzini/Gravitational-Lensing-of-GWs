@@ -131,7 +131,66 @@
   .slide.cover h1 { font-size: 2.4rem; line-height: 1.25; margin: 0 0 .8rem; }
   .slide.cover .subtitle { font-size: 1.3rem; color: var(--sub); margin-bottom: 1.4rem; }
   .slide.cover .byline { font-family: -apple-system, sans-serif; font-size: 1rem; color: var(--sub); }
-  .agenda ol { font-size: 1.25rem; line-height: 2; }
+  /* Apertura de seccion. El kicker (0.72rem) queda como etiqueta corriente
+     dentro de una seccion; esto marca donde EMPIEZA una, que antes no se
+     distinguia de cualquier diapositiva de contenido. */
+  .seccion {
+    font-family: -apple-system, sans-serif;
+    display: flex; align-items: baseline; gap: .85rem;
+    margin: 0 0 1.5rem; padding-bottom: .6rem;
+    border-bottom: 2px solid var(--accent);
+  }
+  .seccion .num {
+    font-size: 2.7rem; font-weight: 800; line-height: .9;
+    color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  .seccion .nombre {
+    font-size: .95rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .13em; color: var(--sub);
+  }
+  .slide.abre h2 { font-size: 2.1rem; }
+
+  /* Indice: numeros grandes y un renglon que dice de que va cada seccion. */
+  .agenda ol { list-style: none; margin: 0; padding: 0; }
+  .agenda li {
+    display: grid; grid-template-columns: 2.4rem 1fr; gap: .1rem 1rem;
+    align-items: baseline; padding: .75rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .agenda li:last-child { border-bottom: 1px solid var(--rule); }
+  .agenda .n {
+    grid-row: span 2; font-family: -apple-system, sans-serif;
+    font-size: 1.7rem; font-weight: 800; color: var(--accent);
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .agenda .t { font-size: 1.3rem; line-height: 1.25; }
+  .agenda .d {
+    font-family: -apple-system, sans-serif; font-size: .92rem;
+    color: var(--sub); line-height: 1.45;
+  }
+
+  /* Simbolos y valores del sistema: iban en la sans en negrita del <th>
+     global, contra un cuerpo serif, sin aire alrededor del '=' y con dos
+     magnitudes por renglon. */
+  .params { border-collapse: collapse; width: 100%; }
+  .params th {
+    font-family: -apple-system, sans-serif; font-size: .7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .09em; color: var(--sub);
+    background: none; border: 0; border-top: 1px solid var(--rule);
+    padding: .55rem .9rem .55rem 0; text-align: left; vertical-align: top;
+    white-space: nowrap;
+  }
+  .params td {
+    border: 0; border-top: 1px solid var(--rule);
+    padding: .55rem 0; vertical-align: top;
+  }
+  .params tr:first-child th, .params tr:first-child td { border-top: 0; }
+  .params .q {
+    display: block; font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem; line-height: 1.75; font-variant-numeric: tabular-nums;
+  }
+  .params .q i { font-style: italic; }
+  .params .q em { font-style: normal; color: var(--sub); }
 
   /* ---- chrome ---- */
   .progress {
@@ -211,8 +270,9 @@
 
 <section class="slide">
   <div class="kicker">Resumen</div>
-  <p>Calculamos cómo una onda gravitacional (GW) de una binaria compacta es lensada, en óptica
-  de ondas, por un tercer cuerpo del mismo sistema triple jerárquico — el mismo triple en dos
+  <p>Calculamos el efecto de lente que un tercer cuerpo del mismo sistema triple
+  jerárquico ejerce, en óptica de ondas, sobre la onda gravitacional (GW) de una binaria
+  compacta — el mismo triple en dos
   épocas de su inspiral: un chirp tardío (lente congelado) y una fase temprana
   cuasi-monocromática (el lente se mueve, y produce pulsos de lensing repetidos).</p>
   <p>Esta presentación es la versión visual; <a href="report.pdf"><code>report.pdf</code></a>
@@ -225,16 +285,28 @@
 <section class="slide agenda">
   <div class="kicker">Contenidos</div>
   <ol>
-    <li>El sistema</li>
-    <li>Caso A — el chirp, lente estático</li>
-    <li>Caso B — cuasi-monocromático, lente en movimiento</li>
-    <li>Lo que muestran juntos</li>
-    <li>Alcance y limitaciones</li>
+    <li><span class="n">1</span><span class="t">El sistema</span>
+      <span class="d">Qué es un triple jerárquico, y por qué éste: el mismo inspiral mirado en
+      dos épocas que caen a lados opuestos de la transición entre difracción y óptica
+      geométrica.</span></li>
+    <li><span class="n">2</span><span class="t">Caso A — el chirp, lente estático</span>
+      <span class="d">La binaria barre de 10 Hz al merger en 15 s. El lente no llega a moverse:
+      franjas de interferencia en frecuencia, y un eco en el tiempo.</span></li>
+    <li><span class="n">3</span><span class="t">Caso B — cuasi-monocromático, lente en movimiento</span>
+      <span class="d">La misma binaria, mucho antes, a 0.05 Hz durante 12 días. Ahora el que se
+      mueve es el lente, y el patrón se recorre en el tiempo.</span></li>
+    <li><span class="n">4</span><span class="t">Lo que muestran juntos</span>
+      <span class="d">Un único factor de amplificación F(w,y), recorrido por dos ejes distintos,
+      y el puente entre óptica de ondas y óptica geométrica.</span></li>
+    <li><span class="n">5</span><span class="t">Alcance y limitaciones</span>
+      <span class="d">Qué se modeló, qué no, y cuánto vale cada aproximación — declarado, no
+      dejado implícito.</span></li>
   </ol>
 </section>
 
-<section class="slide">
-  <h2>El sistema</h2>
+<section class="slide abre">
+  <div class="seccion"><span class="num">1</span><span class="nombre">El sistema</span></div>
+  <h2>Un triple jerárquico, en dos épocas del mismo inspiral</h2>
   <p>Un triple jerárquico: una binaria interna (la fuente de GWs) orbita un tercer cuerpo mucho
   más masivo (el lente), lo bastante lejos como para que la marea sea despreciable. Seguimos el
   mismo sistema en dos momentos de la vida de la binaria interna: el chirp final
@@ -247,10 +319,21 @@
       </div>
       <div class="viz-panel">
         <h4>Parámetros</h4>
-        <table>
-          <tr><th>Binaria interna<br>(fuente)</th><td>m₁=20 M<sub>☉</sub>, m₂=15 M<sub>☉</sub><br>masa de chirp 15.05 M<sub>☉</sub></td></tr>
-          <tr><th>Lente</th><td>M<sub>L</sub>=5×10⁴ M<sub>☉</sub><br>a D<sub>L</sub>=5 kpc</td></tr>
-          <tr><th>Órbita externa</th><td>a<sub>out</sub>=1.82 UA, P<sub>out</sub>=4 d<br>i<sub>out</sub>=87°, circular</td></tr>
+        <table class="params">
+          <tr><th>Binaria interna<br>(la fuente)</th><td>
+            <span class="q"><i>m</i><sub>1</sub> = 20 <i>M</i><sub>☉</sub></span>
+            <span class="q"><i>m</i><sub>2</sub> = 15 <i>M</i><sub>☉</sub></span>
+            <span class="q"><i>ℳ</i> = 15.05 <i>M</i><sub>☉</sub> <em>(masa de chirp)</em></span>
+          </td></tr>
+          <tr><th>Lente</th><td>
+            <span class="q"><i>M</i><sub>L</sub> = 5 × 10<sup>4</sup> <i>M</i><sub>☉</sub></span>
+            <span class="q"><i>D</i><sub>L</sub> = 5 kpc</span>
+          </td></tr>
+          <tr><th>Órbita externa</th><td>
+            <span class="q"><i>a</i><sub>out</sub> = 1.82 UA</span>
+            <span class="q"><i>P</i><sub>out</sub> = 4 d</span>
+            <span class="q"><i>i</i><sub>out</sub> = 87° <em>(casi de canto, circular)</em></span>
+          </td></tr>
         </table>
       </div>
     </div>
@@ -258,8 +341,8 @@
   </div>
 </section>
 
-<section class="slide">
-  <div class="kicker">Caso A</div>
+<section class="slide abre">
+  <div class="seccion"><span class="num">2</span><span class="nombre">Caso A</span></div>
   <h2>El chirp, lente estático</h2>
   <p>La binaria interna hace inspiral de 10 Hz a 125.6 Hz en <span class="metric">15.2 s</span> —
   muchísimo más rápido que la órbita externa (4 días), así que el lente queda congelado en un
@@ -355,9 +438,9 @@
   <h2>Lo que el lente le hace a la onda</h2>
   <p>Amplificación de la muestra pico: <b>1.0557</b>. Amplificación RMS: <b>1.0557</b>, que por
   Parseval es √A(y<sub>A</sub>). Coinciden: la amplitud sola no delata nada. Lo que hace que la
-  forma de onda lensada sea una copia <i>desfasada</i> y no simplemente reescalada es arg F, que
+  forma de onda con lente sea una copia <i>desfasada</i> y no simplemente reescalada es arg F, que
   oscila a lo largo de la banda dentro de ±0.235 rad.</p>
-  <p>El pico lensado llega exactamente al mismo tiempo que el no lensado (F está referida a la
+  <p>El pico con lente llega exactamente al mismo tiempo que el pico sin lente (F está referida a la
   llegada de la imagen fuerte, sin desfasaje absoluto arbitrario). Una segunda copia, ~4× más
   débil — la amplitud exacta coincide con la magnificación geométrica de la imagen débil,
   √|μ₋|, a menos del 1% — de todo el merger reaparece más tarde, exactamente en el retraso fijo
@@ -366,8 +449,8 @@
   <code>caseA_spectrogram.png</code> como una segunda traza en el plano tiempo-frecuencia.</p>
 </section>
 
-<section class="slide">
-  <div class="kicker">Caso B</div>
+<section class="slide abre">
+  <div class="seccion"><span class="num">3</span><span class="nombre">Caso B</span></div>
   <h2>Cuasi-monocromático, lente en movimiento</h2>
   <p>Más temprano en el mismo inspiral: f=0.05 Hz, casi constante durante una observación de 12
   días (3 períodos externos). Acá el lente <i>sí</i> se mueve — el parámetro de impacto barre el
@@ -413,9 +496,9 @@
 
 <section class="slide">
   <div class="kicker">Caso B</div>
-  <h2>Media órbita no está lensada en absoluto</h2>
-  <p>Exactamente la mitad de la órbita resulta <b>no lensada</b>: cuando la fuente está delante
-  del lente (no detrás), no existe geometría de lensing en absoluto — no es una aproximación, es
+  <h2>En media órbita no hay lente en absoluto</h2>
+  <p>En exactamente la mitad de la órbita <b>no hay lente</b>: cuando la fuente está delante
+  del lente y no detrás, no hay ninguna configuración de lente que resolver — no es una aproximación, es
   F=1 por construcción, y se ve en la diapositiva anterior como el marcador saliendo del patrón
   (cian/gris) durante la mitad "de adelante" de cada vuelta.</p>
   <p>Esto es exactamente el origen de los pulsos periódicos: "lensing repetido", el análogo en
@@ -463,13 +546,14 @@
   amplitud quedan sin cambio, de manera demostrada.</p>
 </section>
 
-<section class="slide">
-  <h2>Lo que los dos casos muestran juntos</h2>
+<section class="slide abre">
+  <div class="seccion"><span class="num">4</span><span class="nombre">Lo que muestran juntos</span></div>
+  <h2>Un solo F(w,y), recorrido por dos ejes distintos</h2>
   <ul>
     <li><b>Caso A:</b> un patrón de difracción congelado, barrido en <i>frecuencia</i> por el
     propio chirp — franjas de interferencia densas, acercándose al límite de óptica geométrica.</li>
     <li><b>Caso B:</b> el mismo tipo de patrón, a frecuencia fija, barrido en <i>tiempo</i> por el
-    movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente no lensada.</li>
+    movimiento orbital — pulsos periódicos, con la mitad de la órbita simplemente sin lente.</li>
     <li><b>Ambos:</b> el lensing no es sólo "más brillante" — F es complejo, y su fase deja una
     marca real y verificable en la forma de onda.</li>
     <li><b>Y la misma razón de escalas decide algo más</b>, que no es óptica sino cinemática:
@@ -480,8 +564,9 @@
   </ul>
 </section>
 
-<section class="slide">
-  <h2>Alcance y limitaciones</h2>
+<section class="slide abre">
+  <div class="seccion"><span class="num">5</span><span class="nombre">Alcance y limitaciones</span></div>
+  <h2>Qué se modeló, qué no, y cuánto vale cada aproximación</h2>
   <div class="callout">
   <ul>
     <li>Sólo lente de masa puntual, sin distribución extendida.</li>
@@ -498,7 +583,7 @@
     reporta como sesgo sobre 𝓜, no se aplica.</li>
     <li>El Doppler entra en la forma de onda pero no en F, que se evalúa al w<sub>B</sub> nominal
     fijo. Cuantificado: 1.0×10<sup>−4</sup> de error en |F| en el pulso, hasta
-    3.5×10<sup>−3</sup> en el peor punto de la mitad lensada.</li>
+    3.5×10<sup>−3</sup> en el peor punto de la mitad con lente.</li>
   </ul>
   </div>
 </section>
@@ -1283,7 +1368,7 @@
       aCtx.beginPath(); aCtx.moveTo(x0, Y(sMm)); aCtx.lineTo(x1, Y(sMm)); aCtx.stroke();
       aCtx.setLineDash([]);
 
-      // la curva sin lente va ARRIBA: la lensada oscila alrededor de ella
+      // la curva sin lente va ARRIBA: la de con lente oscila alrededor de ella
       // (son las franjas, vistas en el tiempo) y taparla dejaba la
       // comparacion sin referencia
       for (const [arr, col, lw, guion] of
