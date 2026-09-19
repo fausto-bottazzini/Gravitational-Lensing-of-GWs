@@ -25,7 +25,7 @@ thing to read before editing anything in this repository.
 | `cases/` | open | — | both `run.py`, the figures, `RESULTS.md`, `provenance/`, `FIGURES.md` |
 | `report/` | open | — | `report.tex`/`.pdf`, `report.html`, `update_report_data.py` |
 | `wiki/` | open | — | these notes, plus the course brief |
-| `bibliography/` | open | — | `README.md` (mirrors `refs.bib`) |
+| `bibliography/` | **CLOSED** | 2026-09-18 | `README.md` (mirrors `refs.bib`) |
 | root | open | — | `README.md`, `reproduce.sh`, `requirements.txt` |
 
 ## The graph
