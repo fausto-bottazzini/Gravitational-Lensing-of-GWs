@@ -17,6 +17,8 @@
 
 \usepackage[a4paper,margin=2.4cm]{geometry}
 \usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 \usepackage{float}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{booktabs}
@@ -41,10 +43,10 @@ en un Sistema Triple Jer\'arquico\\[4pt]
 
 \begin{abstract}
 \noindent
-Una binaria compacta que orbita un tercer cuerpo mucho m\'as masivo est\'a
-sufriendo el efecto de lente de su propio compa\~nero. Este informe calcula ese efecto en
-\'optica de ondas para un mismo triple jer\'arquico observado en dos \'epocas
-del inspiral de su binaria interna. La elecci\'on de la masa del lente pone a
+En un triple jer\'arquico, la onda gravitacional que emite la binaria interna
+atraviesa el campo del tercer cuerpo, que act\'ua sobre ella como una lente.
+Este informe calcula ese efecto en \'optica de ondas, sobre un mismo sistema
+observado en dos \'epocas del inspiral de su binaria interna. La elecci\'on de la masa del lente pone a
 esas dos \'epocas a lados opuestos de la transici\'on entre difracci\'on y
 \'optica geom\'etrica --- el par\'ametro adimensional $w$ vale $0.31$ en una y
 va de $62$ a $778$ en la otra --- de modo que el mismo factor de
@@ -62,50 +64,131 @@ y no repite; los n\'umeros y figuras los producen los scripts de
 \end{abstract}
 
 % ======================================================================
-\section{Por qu\'e este sistema}
+\section{Introducci\'on}
+\label{sec:intro}
 % ======================================================================
 
-En el problema de lente est\'andar la fuente y el lente no tienen nada que ver
-entre s\'i. Son dos objetos a distancias cosmol\'ogicas independientes, las
-tres distancias $D_L$, $D_S$, $D_{LS}$ son constantes, y el factor de
-amplificaci\'on $F(w,y)$ es un objeto fijo: se evalu\'a una vez y multiplica a
-la se\~nal.
+Cuando una onda gravitacional pasa cerca de una masa, el campo de esa masa la
+desv\'ia y la amplifica, del mismo modo que una lente desv\'ia la luz. Si la
+longitud de onda es corta frente a la escala del lente, el problema se resuelve
+por rayos y la onda llega al observador por dos caminos distintos; si no lo es,
+hay que resolver la difracci\'on y esos dos caminos dejan de existir como
+objetos separados. Este informe calcula ese efecto, en \'optica de ondas, para
+una configuraci\'on que la literatura de lentes rara vez considera: la fuente y
+el lente ligados gravitatoriamente en un mismo sistema triple jer\'arquico.
 
-Si el lente es el tercer cuerpo del propio triple de la fuente, nada de eso
-vale, y las tres cosas que cambian son f\'isicas, no t\'ecnicas.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Latex,font=\footnotesize]
+  % linea de vision
+  \draw[dashed,gray!70] (-0.2,0) -- (9.5,0);
+  % observador
+  \fill (0,0) circle (0.10);
+  \node[anchor=east] at (-0.28,0) {observador};
+  % plano del lente
+  \draw[gray!55] (6,-1.25) -- (6,1.55);
+  \node[gray,anchor=south,font=\scriptsize] at (6,1.57) {plano del lente};
+  % orbita externa: dibujada abierta, la real es casi de canto
+  \draw[thick] (6,0) ellipse (2.45 and 1.00);
+  \node[anchor=north,font=\scriptsize] at (4.05,-0.88) {\'orbita externa, $P_\mathrm{out}$};
+  % el lente
+  \fill (6,0) circle (0.11);
+  \node[anchor=north east,inner sep=1pt] at (5.93,-0.05) {$M_L$};
+  % la fuente, sobre su orbita
+  \fill (7.405,0.819) circle (0.085);
+  \node[anchor=south west,inner sep=2pt] at (7.47,0.86) {fuente: $m_1,m_2$};
+  % los dos caminos hasta el observador
+  \draw[blue!55!black] (7.405,0.819) -- (6,0.95) -- (0,0);
+  \draw[blue!55!black] (7.405,0.819) -- (6,-0.35) -- (0,0);
+  \node[blue!55!black,anchor=east,inner sep=2pt,font=\scriptsize] at (5.95,1.06) {$\xi_+$};
+  \node[blue!55!black,anchor=east,inner sep=2pt,font=\scriptsize] at (5.95,-0.58) {$\xi_-$};
+  % separacion transversal
+  \draw[dotted] (7.405,0.819) -- (7.405,-1.95);
+  \draw[<->] (7.62,0.02) -- (7.62,0.80);
+  \node[anchor=west,inner sep=2pt,font=\scriptsize] at (7.66,0.42) {$\xi$};
+  % distancias
+  \draw[dotted,gray] (6,-1.25) -- (6,-1.95);
+  \draw[<->] (0,-1.95) -- (6,-1.95) node[midway,fill=white,inner sep=2pt] {$D_L$};
+  \draw[<->] (6,-1.95) -- (7.405,-1.95) node[midway,fill=white,inner sep=2pt] {$D_{LS}$};
+  \draw[<->] (0,-2.55) -- (7.405,-2.55) node[midway,fill=white,inner sep=2pt] {$D_S$};
+  \draw[dotted,gray] (7.405,-2.03) -- (7.405,-2.55);
+\end{tikzpicture}
+\caption{La geometr\'ia y la notaci\'on, fuera de escala en dos sentidos: ac\'a
+$D_{LS}$ es del orden de la unidad astron\'omica y $D_L$ de los kiloparsec, y la
+\'orbita, que en realidad es casi de canto ($i_\mathrm{out}=87^\circ$), se dibuja
+abierta para que la separaci\'on transversal se vea. La binaria interna
+--- de masas $m_1$ y $m_2$, y puntual a esta escala --- emite la onda y orbita
+al tercer cuerpo, de masa $M_L$, con per\'iodo $P_\mathrm{out}$. La onda llega
+al observador por dos caminos, que cruzan el plano del lente a distancias
+$\xi_\pm$ de \'el. Como la fuente orbita al lente, la separaci\'on transversal
+$\xi$ y la separaci\'on longitudinal $D_{LS}$ son las dos componentes de una
+misma \'orbita, y ambas cambian a lo largo del per\'iodo.}
+\label{fig:geometria}
+\end{figure}
 
-\paragraph{La geometr\'ia de lente la fija la \'orbita.} $D_{LS}(t)$ ya no es
-un par\'ametro sino la separaci\'on proyectada a lo largo de la l\'inea de
-visi\'on, y por lo tanto se anula dos veces por per\'iodo. Durante la mitad de
-la \'orbita la fuente est\'a \emph{delante} del lente y no hay geometr\'ia de
-lente en absoluto: $F=1$ exactamente, por construcci\'on y no por
-aproximaci\'on. Medido sobre la observaci\'on del Caso~B, la fracci\'on de
-tiempo con lente es $0.4994$. De ah\'i salen los pulsos peri\'odicos.
+La Figura~\ref{fig:geometria} fija la geometr\'ia y los s\'imbolos que se usan
+en todo el informe: un observador, un lente de masa $M_L$ a distancia $D_L$ de
+\'el, y una fuente a distancia $D_S$, separada del lente por $D_{LS}$ a lo
+largo de la l\'inea de visi\'on. La fuente es una binaria compacta de masas
+$m_1$ y $m_2$ que, a estas distancias, es un \'unico punto emisor.
 
-\paragraph{El lente se mueve por el patr\'on.} El par\'ametro de impacto
-adimensional $y(t)$ recorre el patr\'on de difracci\'on una vez por per\'iodo
-externo. Qu\'e parte de $F(w,y)$ se muestrea deja de ser un dato del problema
-y pasa a ser una funci\'on del tiempo.
+Todo el efecto del lente sobre la onda se concentra en un \'unico n\'umero
+complejo, el \emph{factor de amplificaci\'on} $F$, que se define como el
+cociente entre la onda que llega y la que llegar\'ia sin lente:
+\begin{equation}
+  h_L(f)\;=\;F(w,y)\,h(f) .
+  \label{eq:Fdef}
+\end{equation}
+Su m\'odulo dice cu\'anto se amplifica la se\~nal y su fase, cu\'anto se la
+retrasa; que sea complejo, y no un simple factor de brillo, es lo que hace que
+el lensing deje una marca que una recalibraci\'on de amplitud no puede imitar.
+$F$ depende de s\'olo dos cantidades adimensionales. La primera es la
+frecuencia adimensional
+\begin{equation}
+  w=\frac{8\pi G M_L f}{c^{3}} ,
+  \label{eq:w}
+\end{equation}
+que es, en radianes, la fase que el retardo gravitatorio del lente imprime
+sobre una onda de frecuencia $f$: con $w\gg1$ vale la \'optica geom\'etrica y
+hay im\'agenes separadas, y con $w\lesssim1$ hay difracci\'on plena y no las
+hay. La segunda es el par\'ametro de impacto $y$, que es la separaci\'on
+transversal $\xi$ medida en unidades del radio de Einstein del lente.
 
-\paragraph{La misma \'orbita deja otra huella, mucho m\'as grande.} Arrastra a
-la fuente a lo largo de la l\'inea de visi\'on a
+En el problema de lente habitual, el cosmol\'ogico, la fuente y el lente son
+objetos independientes que est\'an alineados por casualidad: las tres
+distancias son constantes y $F$ se eval\'ua una sola vez. Cuando el lente es el
+tercer cuerpo del propio triple de la fuente, ninguna de esas tres cosas se
+mantiene, y lo que cambia no es un detalle t\'ecnico sino la f\'isica del
+problema.
+
+Lo primero es que la \'orbita fija la geometr\'ia del lente. $D_{LS}(t)$ deja
+de ser un par\'ametro y pasa a ser la separaci\'on proyectada sobre la l\'inea
+de visi\'on, de modo que se anula dos veces por per\'iodo: durante la mitad de
+la \'orbita la fuente est\'a \emph{delante} del lente y no hay configuraci\'on
+de lente en absoluto, con $F=1$ exactamente, por construcci\'on y no por
+aproximaci\'on. Medida sobre la observaci\'on del Caso~B, la fracci\'on de
+tiempo con lente es $0.4994$, y de ah\'i salen los pulsos peri\'odicos.
+
+Lo segundo es que el par\'ametro de impacto $y(t)$ recorre el patr\'on de
+difracci\'on una vez por per\'iodo externo. Qu\'e parte de $F(w,y)$ se muestrea
+deja de ser un dato del problema y pasa a ser una funci\'on del tiempo.
+
+Y lo tercero es que la misma \'orbita deja sobre la se\~nal una huella que no
+es \'optica y que resulta mucho mayor que la que s\'i lo es. Arrastra a la
+fuente a lo largo de la l\'inea de visi\'on a
 $\beta_{\rm los}^{\max}=1.645\times10^{-2}$, y el retardo de Roemer que eso
 produce escribe sobre la fase de la onda tres \'ordenes de magnitud m\'as que
 el lente. No es un efecto espurio que haya que descontar: es lo que realmente
-se ve, y es la raz\'on por la que \citet{DOrazioLoeb2020} modelan las dos
+se observa, y es la raz\'on por la que \citet{DOrazioLoeb2020} modelan las dos
 cosas juntas. Lo que las separa no es el tama\~no sino la \emph{fase orbital}
-en que ocurren, y eso se trata en el \S\ref{sec:caseB}.
+en que ocurren, y de eso se ocupa el \S\ref{sec:caseB}.
 
 A esto se agrega la elecci\'on que organiza todo el informe. La masa del lente
-se elige --- no es astrof\'isicamente t\'ipica --- para que el par\'ametro de
-\'optica de ondas
-\begin{equation}
-  w=\frac{8\pi G M_L f}{c^{3}}
-  \label{eq:w}
-\end{equation}
-caiga a lados opuestos de la transici\'on difracci\'on/\'optica geom\'etrica en
-las dos \'epocas observadas del mismo inspiral. El sistema es entonces un
-\'unico laboratorio en el que se ven los dos reg\'imenes del mismo $F$.
+se elige --- no es astrof\'isicamente t\'ipica --- para que el $w$ de la
+Ec.~\eqref{eq:w} caiga a lados opuestos de la transici\'on
+difracci\'on/\'optica geom\'etrica en las dos \'epocas observadas del mismo
+inspiral. El sistema es entonces un \'unico laboratorio en el que se ven los
+dos reg\'imenes del mismo $F$, con los par\'ametros siguientes:
 
 \begin{center}
 \begin{tabular}{ll}
@@ -119,33 +202,32 @@ lente & $M_L=5\times10^4\,\Msun$, a $D_L=5$ kpc \\
 
 \subsection*{Las condiciones de validez, con los n\'umeros de este sistema}
 
-\href{../theory/theory.pdf}{\emph{Teor\'ia}} enuncia cada condici\'on y dice
-que su par\'ametro de expansi\'on es
-peque\~no, que es lo que corresponde a un texto te\'orico. Si es peque\~no
-\emph{para este sistema} es una afirmaci\'on sobre estos n\'umeros, y va ac\'a
-(todos de \code{tests/test\_system.py}, que los recalcula en cada corrida):
+\href{../theory/theory.pdf}{\emph{Teor\'ia}} enuncia cada condici\'on y muestra
+que su par\'ametro de expansi\'on es peque\~no, que es lo que corresponde a un
+texto te\'orico. Que lo sea \emph{para este sistema} es una afirmaci\'on sobre
+estos n\'umeros, y va ac\'a; todos salen de \code{tests/test\_system.py}, que
+los recalcula en cada corrida.
 
-\begin{itemize}
-  \item \textbf{Jerarqu\'ia.} El criterio de estabilidad de
-    \citet{MardlingAarseth2001} exige $a_\mathrm{out}/a_\mathrm{in}>51.2$ en la
-    \'epoca m\'as ajustada; el sistema est\'a $93\times$ por encima. La
-    binaria interna queda $292\times$ dentro de su radio de Hill alrededor del
-    lente.
-  \item \textbf{Fuente puntual.} La condici\'on que gobierna no es la
-    geom\'etrica $a_\mathrm{in}/a_\mathrm{out}=2.1\times10^{-4}$ sino la de
-    \'optica de ondas, el tama\~no de la fuente contra el radio de Einstein
-    proyectado al plano de la fuente: $a_\mathrm{in}/\eta_0=6.4\times10^{-3}$
-    en la conjunci\'on, $30\times$ m\'as exigente que la otra.
-  \item \textbf{Adiabaticidad} (Caso~B, donde el lente se mueve). El tiempo de
-    respuesta del lente es $4GM_L/c^3=0.985$~s. Donde $|F|>1.01$, el tiempo
-    caracter\'istico del movimiento es $5844\times$ mayor --- medido en dos
-    densidades de grilla, para que el n\'umero sea del sistema y no del
-    muestreo.
-  \item \textbf{Deflexi\'on d\'ebil.} Ning\'un rayo pasa m\'as cerca que el
-    anillo de Einstein, $\xi_0=121\,r_g$. La correcci\'on de segundo orden de
-    Schwarzschild vale ah\'i $2.43\%$ (la cota $y\to0$) y $1.17\%$ en el $y$
-    que este trabajo efectivamente usa.
-\end{itemize}
+La jerarqu\'ia del triple est\'a holgadamente satisfecha. El criterio de
+estabilidad de \citet{MardlingAarseth2001} exige
+$a_\mathrm{out}/a_\mathrm{in}>51.2$ en la \'epoca m\'as ajustada, y el sistema
+est\'a $93\times$ por encima; la binaria interna queda, adem\'as, $292\times$
+dentro de su radio de Hill alrededor del lente. Que la fuente pueda tratarse
+como puntual no lo decide, en cambio, la condici\'on geom\'etrica
+$a_\mathrm{in}/a_\mathrm{out}=2.1\times10^{-4}$, sino la de \'optica de ondas:
+el tama\~no de la fuente contra el radio de Einstein proyectado al plano de la
+fuente, $a_\mathrm{in}/\eta_0=6.4\times10^{-3}$ en la conjunci\'on, que es
+$30\times$ m\'as exigente que la otra.
+
+Para el Caso~B, donde el lente se mueve, hace falta adem\'as que ese
+movimiento sea adiab\'atico. El tiempo de respuesta del lente es
+$4GM_L/c^{3}=0.985$~s, y donde $|F|>1.01$ el tiempo caracter\'istico del
+movimiento resulta $5844\times$ mayor --- medido en dos densidades de grilla,
+para que el n\'umero sea del sistema y no del muestreo. Por \'ultimo, la
+deflexi\'on es d\'ebil en todo el problema: ning\'un rayo pasa m\'as cerca que
+el anillo de Einstein, $\xi_0=121\,r_g$, y ah\'i la correcci\'on de segundo
+orden de Schwarzschild vale $2.43\%$ --- la cota $y\to0$ --- y $1.17\%$ en el
+$y$ que este trabajo efectivamente usa.
 
 \begin{center}
 \begin{tabular}{lccl}
@@ -523,6 +605,7 @@ cambia, y mucho, es la fase.
 
 % ======================================================================
 \section{Lo que los dos casos muestran juntos}
+\label{sec:juntos}
 % ======================================================================
 
 El mismo lente y el mismo formalismo, dos firmas que no se parecen, y lo que
@@ -608,45 +691,37 @@ forma de onda pero \textbf{no} en $F$, con los cuatro n\'umeros del
 \section{Conclusiones}
 % ======================================================================
 
-Un mismo triple jer\'arquico, observado en dos \'epocas de un solo inspiral,
-cae a lados opuestos de la transici\'on entre \'optica de ondas y \'optica
-geom\'etrica, y eso alcanza para que un \'unico factor de amplificaci\'on
-produzca dos firmas que no se parecen en nada.
+Este informe calcul\'o, en \'optica de ondas, el efecto de lente de un triple
+jer\'arquico sobre la onda de su propia binaria interna, en dos \'epocas de un
+mismo inspiral. La secci\'on~\ref{sec:juntos} resume qu\'e muestra cada una y
+qu\'e muestran juntas; lo que queda por decir es sobre qu\'e se apoyan.
 
-En el Caso~A, con $w$ entre $62$ y $778$, el c\'alculo en \'optica de ondas
-confirma el l\'imite geom\'etrico en lugar de contradecirlo: las dos
-descripciones coinciden a dos partes en $10^{4}$, las $\sim$400 franjas de la
-banda tienen el per\'iodo fijo $1/\Delta T$ que predice el retardo entre
-im\'agenes, y en el dominio del tiempo aparece un eco separado cuya amplitud,
-$0.23948$ del pico sin lente, es la magnificaci\'on
-$\sqrt{|\mu_-|}=0.23960$ de la imagen d\'ebil. Ese acuerdo al $0.05\%$ entre
-un n\'umero medido sobre la se\~nal reconstruida y otro que sale de la
-\'optica geom\'etrica, sin nada ajustado en el medio, es la validaci\'on de
-punta a punta de toda la cadena; la amplificaci\'on RMS contra el
-$\sqrt{A(y_A)}$ de Parseval, que cierra a $1.6\times10^{-4}$, es la segunda.
+Dos comprobaciones son de punta a punta, y no de un componente contra otro. La
+primera: el eco medido sobre la se\~nal reconstruida vale $0.23948$ del pico
+sin lente, y la magnificaci\'on de la imagen d\'ebil, que sale de la \'optica
+geom\'etrica sin tocar la se\~nal, vale $0.23960$. Coinciden al $0.05\%$, sin
+nada ajustado en el medio. La segunda: la amplificaci\'on RMS de la forma de
+onda debe ser, por Parseval, la ra\'iz de la magnificaci\'on total de
+Paczy\'nski, y vale $1.05568$ contra $1.05585$. Entre las dos atraviesan el
+generador de forma de onda, el evaluador de $F$, la convenci\'on de Fourier,
+la fase de referencia y la ventana; los dem\'as chequeos del repositorio
+validan una pieza contra otra, y \'estos validan la cadena entera contra un
+resultado cl\'asico independiente.
 
-En el Caso~B, con $w=0.31$, no hay im\'agenes que separar: hay difracci\'on y
-anillado, y el movimiento orbital recorre ese patr\'on una vez por per\'iodo,
-produciendo pulsos de amplificaci\'on repetidos. La mitad exacta de cada
-\'orbita no tiene lente en absoluto, porque $D_{LS}$ cambia de signo ---
-consecuencia directa de que el lente est\'e ligado a la fuente, que es
-justamente lo que el problema cosmol\'ogico no tiene.
+El resultado que oblig\'o a rehacer parte del trabajo fue darse cuenta, tarde,
+de que el lensing no es lo m\'as grande que la \'orbita externa le hace a la
+se\~nal. Con la cinem\'atica de la fuente ya modelada, el retardo de Roemer
+result\'o tres \'ordenes de magnitud mayor que la fase que escribe el lente.
+Los pulsos siguen siendo reales y siguen siendo los que llevan la masa del
+lente; lo que cambi\'o es que dejaron de poder presentarse como el efecto
+dominante, y este informe lo dice en las dos direcciones.
 
-El resultado que este trabajo no esperaba es el tercero. Lo m\'as grande que
-la \'orbita externa le hace a la se\~nal no es el lensing, sino la
-cinem\'atica de la propia fuente: el retardo de Roemer escribe $90.5$ ciclos
-de fase donde el lente escribe $0.017$, un factor $5206$. Los pulsos son
-reales y son los que llevan la masa del lente, pero no son el efecto m\'as
-grande, y decirlo en las dos direcciones es parte del resultado. Que adem\'as
-sigan siendo separables no es por su tama\~no sino por su naturaleza: la
-cinem\'atica es puro \emph{timing} y deja $|F|$ intacto, mientras que el pulso
-vive precisamente en $|F|$.
-
-Lo que queda por hacer est\'a delimitado por lo mismo que se declar\'o arriba.
-Una \'orbita externa exc\'entrica volver\'ia variable el corrimiento que ac\'a
-es constante y asim\'etricos los pulsos; y el retardo gravitatorio com\'un de
-la primera imagen m\'ovil es lo que har\'ia del Caso~B una plantilla temporal
-completa en lugar de un c\'alculo de modulaci\'on.
+Quedan dos extensiones naturales, y las dos salen de las limitaciones
+declaradas m\'as arriba. Una \'orbita externa exc\'entrica volver\'ia variable
+el corrimiento que ac\'a es constante, y asim\'etricos los pulsos. Y el
+retardo gravitatorio com\'un de la primera imagen m\'ovil es lo que
+convertir\'ia al Caso~B de un c\'alculo de modulaci\'on en una plantilla
+temporal completa.
 
 \renewcommand{\refname}{Referencias}
 \bibliographystyle{unsrtnat}
