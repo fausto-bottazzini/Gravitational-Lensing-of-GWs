@@ -199,7 +199,27 @@ figures:
     supports: [repeated_lensing_pulses, doppler_dominates_the_lensing]
   - file: caseB_repeated_pulses.png
     produced_by: run.py::main
-    shows: "|F(w_B,y(t))|^2 over the full 3-period observation."
+    shows: >
+      |F(w_B,y(t))|^2 over the full 3-period observation, in two stacked
+      panels. Top: the three amplification pulses across the 12 days, one per
+      outer period, flat at 1 over the half of each orbit where the source is
+      in front of the lens. Bottom: a +-1 day zoom on the tallest pulse, where
+      the diffraction ringing that flanks it is resolved.
+    choices:
+      - "The zoom panel exists because the ringing is real and invisible
+        without it. At the full 12-day width it is compressed into a few
+        pixels; it was re-checked on a 40x finer grid and agrees
+        point-for-point, so it is diffraction and not aliasing."
+      - "The zoom runs on its own grid, 6000 points over +-1 day (29 s apart),
+        not on a slice of the observation grid. That one is 600 samples per
+        outer period, 576 s apart, which is right for three pulses across 12
+        days but leaves ~300 points in this window and drew the ringing
+        visibly polygonal. The dedicated grid costs about three seconds of F
+        evaluation."
+      - "A y(t)-against-time panel was tried here first and dropped. The
+        divergence at each D_LS=0 crossing dominates the frame and leaves no
+        room for anything else, and it adds nothing that
+        fraction_of_time_lensed does not already state."
     from_scratch: The F(t) evaluation via F_hybrid at each sampled y(t).
     from_library: matplotlib.
     supports: [repeated_lensing_pulses]

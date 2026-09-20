@@ -45,8 +45,25 @@ else
 fi
 echo "== using venv interpreter: $PY =="
 
-echo "== installing pinned dependencies =="
-"$PY" -m pip install --quiet -r requirements.txt
+# requirements.txt is pinned, and the pins have wheels through Python 3.12
+# only: numpy 1.26.4 and scipy 1.12.0 both predate cp313. On a newer
+# interpreter pip falls back to building them from source, which spends ten
+# minutes on numpy and then dies in scipy for want of a system OpenBLAS -- the
+# first wall a fresh agent hits on a current distro (Ubuntu 26.04 ships 3.14
+# and nothing older). So ask the interpreter first, and let pip resolve modern
+# versions when the pins cannot apply. That path is not a degraded fallback:
+# an independent reproduction on Python 3.14 with numpy 2.3.5 / scipy 1.16.3 /
+# matplotlib 3.11.2 returned 44/44 checks and Case A bit-identical, figures
+# included (wiki/log.md).
+PYVER=$("$PY" -c 'import sys; print("%d%02d" % sys.version_info[:2])')
+PYTAG=$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+if [ "$PYVER" -ge 313 ]; then
+  echo "== Python $PYTAG is newer than the pins, resolving dependencies unpinned =="
+  "$PY" -m pip install --quiet numpy scipy matplotlib mpmath
+else
+  echo "== installing pinned dependencies =="
+  "$PY" -m pip install --quiet -r requirements.txt
+fi
 
 # Case A's committed numbers and figures come from pycbc's IMRPhenomD, which
 # does not install on native Windows (README.md, "One waveform, two possible

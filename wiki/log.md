@@ -835,6 +835,45 @@ Otherwise `reproduce.sh`, `requirements.txt` and `.gitignore` needed nothing:
 the script parses under `bash -n`, its six targets are the six the README now
 lists, and nothing it references has moved.
 
+### Reopened twice, after an outside reproduction (2026-09-19)
+
+A fresh agent cloned the pushed repository into WSL2 and ran the whole thing on
+Ubuntu 26.04 with Python 3.14. It got to the end. Case A came back bit-identical
+across a different OS, Python, NumPy and SciPy: 47 of 47 numbers and all four
+figures pixel for pixel, with 44/44 checks passing and every CHECKS*.json
+byte-identical. Case B moved two values in their last bits and four figure
+canvases by 1 to 26 px, which is matplotlib 3.11.2 against the pinned 3.8.3.
+It found no published number wrong, no claim without a check and no broken
+evidence pointer, and it recomputed nine headline numbers straight from the
+formulas without importing anything from here, matching to its own constant.
+
+Two of its findings were worth reopening a closed folder for.
+
+The pins do not install on a current distro. numpy 1.26.4 and scipy 1.12.0 have
+wheels through Python 3.12, and Ubuntu 26.04 ships 3.14 and nothing older, so
+`./reproduce.sh` spends ten minutes building numpy from source and then dies in
+scipy for want of a system OpenBLAS. The repository already knew this -- the
+README says so in the pycbc section, about a different venv -- but that is not
+where the person who hits it is looking. `reproduce.sh` now asks the
+interpreter its version and resolves unpinned on 3.13 and up, with the pins
+still applying wherever they can. The unpinned path is not a degraded
+fallback: it is the one that just reproduced Case A bit for bit.
+
+And `caseB_repeated_pulses.png` had no `choices:`, the only figure of the ten
+without one, and the thinnest `shows:` besides -- on Case B's headline figure.
+The material was in `run.py` and had never reached the YAML: why the zoom panel
+exists at all, why it runs on its own 6000-point grid instead of a slice of the
+observation grid, and the `y(t)` panel that was tried first and dropped.
+
+Declined. The two PNGs that `report.html` loads by relative path stay that way;
+they only break if the deck is copied away from the repository, and the other
+thirteen panels are canvases drawn from the embedded data, not files. The
+sixteen `numbers.json` keys that no claim cites stay in `todo.md`: about half
+are grid parameters rather than results, and no claim is left unsupported by
+it. And `wiki/final-project.html` is a superseded revision of the brief, which
+the author confirmed and which changes nothing, the older text being the more
+demanding of the two.
+
 ## Stated limits
 
 Deliberately not done, and why:
