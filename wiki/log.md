@@ -8,11 +8,11 @@ traceable to a `numbers.json` or a test.
 
 ## Decisions
 
-**The assignment is in the repo.** `wiki/final-project.html` is a byte-identical
-copy of the course brief (`matiaszaldarriaga/GW-AI-course`), verbatim, because
-it is the specification this work is measured against and a paraphrase of a
-specification is not one. It used to be reachable only as
-`../GW-AI-course/final-project.html`, a sibling checkout outside this
+**The assignment is in the repo.** `wiki/final-project.html` is a local copy
+of the course brief (`matiaszaldarriaga/GW-AI-course`). It first entered as a
+byte-identical copy, then its wording was shortened on 2026-09-27 (see below),
+so it is no longer a verbatim archive. Before it was copied, it was reachable
+only as `../GW-AI-course/final-project.html`, a sibling checkout outside this
 repository — so the one document stating the test the repo is held to, *hand it
 to a fresh agent that knows nothing*, was the one document that agent could not
 read.
@@ -873,6 +873,34 @@ are grid parameters rather than results, and no claim is left unsupported by
 it. And `wiki/final-project.html` is a superseded revision of the brief, which
 the author confirmed and which changes nothing, the older text being the more
 demanding of the two.
+
+### Short report and presentation pass (2026-09-27)
+
+The 15-page `report/report.pdf` and its source were preserved byte for byte as
+`informe_long.pdf` and `informe_long.tex`. The active `report.tex` was cut to
+five pages and rebuilt as `report.pdf`, keeping the newtx typography, layout
+and four figures from the longer version: the geometry, the Case A echo in a
+spectrogram, the Case B diffraction pattern and the idealized detector view.
+The prose retains the two regimes, the shared system, the Roemer comparison,
+the end-to-end checks and the main limitations. `reproduce.sh report` now
+regenerates the short PDF; it does not overwrite the archived one.
+
+Five minor PDF annotations were applied to the short source: the two geometry
+wording marks, the echo's amplitude wording, "remuestrear", and an explicit
+statement that the RMS comparison tests the complete calculation. The PDF
+still has five A4 pages; citations resolved, the TeX log has no layout or
+undefined-reference warnings, and the rendered pages were inspected.
+
+The working copy of `wiki/final-project.html` was shortened from the earlier
+verbatim snapshot, and README and this log now describe it as a local copy.
+While writing an oral script for the slide deck, one remaining contradiction
+was found on slide 14: its last sentence says the kinematics dominate
+amplitude and separate from lensing by orbital timing. The preceding lines,
+slide 15, theory and the case results say the opposite: Roemer delay peaks
+with the lensing pulse; the Doppler shift is in quadrature; lensing marks
+amplitude while the kinematics move phase. The deck was left as it stood for
+this push and the correction is recorded in `todo.md`. The oral script was
+kept local and is not versioned.
 
 ## Stated limits
 

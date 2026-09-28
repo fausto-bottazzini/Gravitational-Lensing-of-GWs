@@ -10,9 +10,11 @@ differ between the late inspiral (a fast chirp, lens effectively frozen) and
 an earlier, wider phase of the same binary (quasi-monochromatic, lens
 genuinely moving)?
 
-**Where to start reading**: [`report/report.html`](report/report.html) or
-[`report/report.pdf`](report/report.pdf) — the results, with figures, meant
-to be read start to finish. For the full derivation (wave equation to scalar
+**Where to start reading**: [`report/report.pdf`](report/report.pdf), the
+five-page summary, or [`report/report.html`](report/report.html), the slide
+deck with live figures. The previous 15-page report is preserved as
+[`report/informe_long.pdf`](report/informe_long.pdf), with its source in
+[`report/informe_long.tex`](report/informe_long.tex). For the full derivation (wave equation to scalar
 field, the point-lens closed form and its checks, the triple's geometry),
 read [`theory/theory.pdf`](theory/theory.pdf), written as a self-contained
 textbook chapter. Everything below this line is either a map of the repo or
@@ -28,14 +30,14 @@ of it, and explains why there is deliberately no Markdown copy.
 
 | | |
 |---|---|
-| `report/` | the results: `report.html` (a slide deck with live figures) and `report.pdf` (the written report), the two documents this project is presented from. The PDF is built from `report.tex` with `report.bib` (which cites `theory/refs.bib` as well). `report.html` is the file itself, not a build artefact; `update_report_data.py` refreshes the animation data embedded in it from `cases/*/caseX_animation_data.json` |
+| `report/` | the results: `report.html` (a slide deck with live figures), `report.pdf` (the five-page written report), and `informe_long.pdf` (the archived 15-page version). Each PDF has its matching `.tex` source; `report.bib` cites `theory/refs.bib` as well. `report.html` is the file itself, not a build artefact; `update_report_data.py` refreshes the animation data embedded in it from `cases/*/caseX_animation_data.json` |
 | `theory/` | the derivation, as a textbook chapter: `theory.tex` -> `theory.pdf` |
 | `src/gwlens/` | the physics library: wave optics (`waveoptics.py`), orbits (`geometry.py`), the source's line-of-sight kinematics (`doppler.py`), the inner-binary waveform (`imr_waveform.py`, `taylorf2.py`, `chirp.py`), the one pinned system (`system.py`) and the constants everything works in (`units.py`) |
 | `cases/` | `FIGURES.md`, what every figure in both cases shows and which script writes it |
 | `cases/case_A_chirp/` | the static-lens case: `run.py`, its figures, `RESULTS.md` (what they show), and `provenance/` — `numbers.json`, every number the case reports, written by the run rather than typed, and `claims.yaml`, which ties each claim to the code and the check behind it |
 | `cases/case_B_monochromatic/` | the moving-lens case, same structure |
 | `tests/` | every correctness check the case `RESULTS.md` files and `provenance/claims.yaml` point at; each file runs on its own and prints one PASS/FAIL line per check |
-| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md`. Also `final-project.html`, a verbatim copy of the course assignment this project is answering, kept here so the repository carries its own brief |
+| `wiki/` | this project's own working notes: `conventions.md` (notation/units, read this before the code), `log.md` (decision log, including every bug caught and what caught it), `todo.md`. Also `final-project.html`, a local copy of the course assignment this project is answering, kept here so the repository carries its own brief |
 | `bibliography/` | the DOI of every work cited and an arXiv link where there is a free preprint. The PDFs are deliberately not committed — they are copyrighted by their journals |
 | `checks/independent_review/` | gitignored working space for fresh-agent reviews; kept empty between them |
 | `reproduce.sh` | the entry point for rebuilding any of it (below) |
@@ -102,7 +104,7 @@ cd Gravitational-Lensing-of-GWs
 ./reproduce.sh cases    # just the two cases: figures, numbers, report.html
 ./reproduce.sh html     # just report.html, from the case data already on disk
 ./reproduce.sh theory   # rebuilds theory/theory.pdf (needs a LaTeX install)
-./reproduce.sh report   # rebuilds report/report.pdf and report.html (LaTeX)
+./reproduce.sh report   # rebuilds the five-page report.pdf and report.html (LaTeX)
 ```
 
 Note that `cases` and the default run both end by regenerating
@@ -187,7 +189,7 @@ check run are expected; only one of them is the pycbc clobber.
 
 ## Reproducibility test this repo was held to
 
-Per the assignment ([`wiki/final-project.html`](wiki/final-project.html), copied verbatim from the course repository): *hand it to a fresh
+Per the assignment ([`wiki/final-project.html`](wiki/final-project.html), kept here as a local copy): *hand it to a fresh
 agent that knows nothing, ask it to reproduce a result, and see how far it
 gets.* This repo was checked that way repeatedly, always by agents with no
 prior context: three passes during the build, each fixing what the last one
