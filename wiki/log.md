@@ -902,6 +902,23 @@ amplitude while the kinematics move phase. The deck was left as it stood for
 this push and the correction is recorded in `todo.md`. The oral script was
 kept local and is not versioned.
 
+### Slide 14 correction and repository audit (2026-09-27)
+
+Corrected the slide's claim that kinematics dominate amplitude and can be
+separated from lensing by their orbital timing. The Roemer delay peaks with
+the lensing pulse; only the instantaneous Doppler shift is a quarter orbit
+away. The deck now distinguishes the phase dominated by kinematics from the
+amplitude pulse produced by lensing. The oral script's obsolete warning was
+removed locally, and the resolved item was removed from `todo.md`.
+
+The audit found the same timing claim in the introduction to
+`informe_long.tex`. Its Case B section gives the correct account. The long
+source and PDF remain unchanged as archival copies; README records the
+erratum. The active short report, theory and README's physics summary were
+checked and already agree with the corrected slide. The Case B result,
+figure description and generator comment also overstated that the lens writes
+amplitude and no phase; they now say its phase is small compared with Roemer's.
+
 ## Stated limits
 
 Deliberately not done, and why:

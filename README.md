@@ -14,7 +14,11 @@ genuinely moving)?
 five-page summary, or [`report/report.html`](report/report.html), the slide
 deck with live figures. The previous 15-page report is preserved as
 [`report/informe_long.pdf`](report/informe_long.pdf), with its source in
-[`report/informe_long.tex`](report/informe_long.tex). For the full derivation (wave equation to scalar
+[`report/informe_long.tex`](report/informe_long.tex). Archival erratum: its
+introduction says lensing and orbital kinematics separate by orbital phase;
+the Roemer delay actually peaks with the lensing pulse. The current report
+and the long report's Case B section give the correct distinction between
+amplitude and phase. For the full derivation (wave equation to scalar
 field, the point-lens closed form and its checks, the triple's geometry),
 read [`theory/theory.pdf`](theory/theory.pdf), written as a self-contained
 textbook chapter. Everything below this line is either a map of the repo or

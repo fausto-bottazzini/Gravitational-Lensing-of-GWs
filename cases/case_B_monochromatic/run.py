@@ -490,8 +490,8 @@ def main():
     # F, whose phase runs over lens_phase_ptp_cycles = 0.0174 cycles across
     # the WHOLE observation. At this scale that is sub-pixel by construction,
     # so crests that line up here are not evidence of anything. The evidence
-    # that the lens writes amplitude and not phase is the number itself, 0.017
-    # cycles against Roemer's 90.5, and its figure is
+    # that amplitude is the lens's distinctive mark is its small 0.017-cycle
+    # phase contribution against Roemer's 90.5, shown in
     # caseB_doppler_vs_lensing.png.
     # Nor is it a zoom on the pulse SHAPE: that (the sinc-like diffraction
     # ringing) lives on a ~day timescale and is caseB_repeated_pulses.png.

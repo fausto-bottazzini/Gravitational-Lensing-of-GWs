@@ -228,8 +228,9 @@ the same retarded time, so the 90-cycle Roemer delay is common to them and
 cancels; what is left is `F`, whose phase runs over `lens_phase_ptp_cycles =
 0.0174` cycles across the *whole* observation, sub-pixel here by construction.
 Crests that line up in this panel are therefore not evidence of anything. The
-evidence that the lens writes amplitude and not phase is that number against
-Roemer's 90.5, and its figure is `caseB_doppler_vs_lensing.png`. An earlier
+evidence that amplitude is the lens's distinctive mark is its 0.0174-cycle
+phase contribution against Roemer's 90.5, shown in
+`caseB_doppler_vs_lensing.png`. An earlier
 title claimed the dephasing was visible cycle by cycle; it is not.
 
 ### `caseB_doppler_vs_lensing.png` — the orbit's two imprints

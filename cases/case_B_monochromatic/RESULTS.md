@@ -212,8 +212,9 @@ even if the effect were larger. Both curves are evaluated at the same retarded
 time, so the 90-cycle Roemer delay is common to them and cancels; what is left
 is `F`, whose phase runs over `lens_phase_ptp_cycles` = 0.0174 cycles across
 the *whole* observation, sub-pixel at any window that resolves cycles. Crests
-that line up here are therefore not evidence of anything. The evidence that
-the lens writes amplitude and not phase is that number against Roemer's 90.5.
+that line up here are therefore not evidence of anything. The lens's
+distinctive mark is in amplitude; its 0.0174-cycle phase contribution is much
+smaller than Roemer's 90.5 cycles.
 Two earlier versions of this file claimed the panel demonstrated it.
 
 ## One outer turn, at any magnification (`caseB_one_period.html`)

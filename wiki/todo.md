@@ -12,19 +12,13 @@ reviewed on 2026-09-19; it and `wiki/` are what is still open. The two items
 that used to live here — the validity numbers reaching the report, and the
 README's stale description of `tests/` — are done.
 
-The first `report.html` item below was found while preparing the talk on
-2026-09-27 and is a content error. The remaining items came from the
-six-reviewer round of 2026-09-18 (`log.md`); each was checked and left as
-presentation work or because the fix was larger than the defect. Measurements
+The remaining items came from the six-reviewer round of 2026-09-18 (`log.md`);
+each was checked and left as presentation work or because the fix was larger
+than the defect. Measurements
 in brackets are from that round, not re-verified here.
 
 ### `report/report.html`
 
-- [ ] Slide 14 ends by saying the kinematics dominate amplitude and can be
-  separated from lensing by when they occur. This contradicts its own
-  Roemer/Doppler paragraph, slide 15, and the physics elsewhere in the repo.
-  The Roemer delay peaks with the lensing pulse; only the Doppler shift is in
-  quadrature. Kinematics move phase, while the lens makes the amplitude pulse.
 - [ ] The ring rendering on slide 9 keeps full per-pixel resolution down to
   `per > 2*pix`, which is exactly Nyquist rather than the comfortable margin
   its comment claims. In the middle of the sweep that draws beat structure
